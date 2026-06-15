@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#090B10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nos Jeux">
+<title>Nos Jeux 🎮</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, push, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+const firebaseConfig = {
+  apiKey:"AIzaSyCsoSLJEDsN-RWjJYrWOehaG5TCZOf6al0",
+  authDomain:"nous-appp.firebaseapp.com",
+  databaseURL:"https://nous-appp-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"nous-appp",
+  storageBucket:"nous-appp.firebasestorage.app",
+  messagingSenderId:"822850358555",
+  appId:"1:822850358555:web:9414f3665bb589696157be"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+window._db=db;window._ref=ref;window._set=set;window._get=get;
+window._onValue=onValue;window._push=push;window._update=update;
+window.firebaseReady=true;
+document.dispatchEvent(new Event("firebaseReady"));
+</script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#090B10;--surface:#111318;--card:#181C24;--border:#252B38;
+  --gold:#C9A84C;--gold-soft:rgba(201,168,76,.15);--gold-border:rgba(201,168,76,.3);
+  --rose:#E8637A;--rose-soft:rgba(232,99,122,.12);--rose-border:rgba(232,99,122,.3);
+  --blue:#4A9EE8;--blue-soft:rgba(74,158,232,.12);--blue-border:rgba(74,158,232,.3);
+  --purple:#8B6FD4;--purple-soft:rgba(139,111,212,.12);
+  --green:#3A9E6A;--green-soft:rgba(58,158,106,.12);
+  --text:#F0EDE8;--muted:#8B90A0;--dim:#3A4055;
+  --radius:16px;--nav-h:74px;
+  --font-d:'Playfair Display',serif;--font-b:'Inter',sans-serif;
+}
+html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:var(--font-b);overflow:hidden}
+button{font-family:var(--font-b);cursor:pointer;border:none;background:none;color:inherit}
+input,textarea{font-family:var(--font-b)}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+
+/* HEADER */
+.app-header{background:rgba(9,11,16,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 18px 12px;flex-shrink:0;z-index:50}
+.header-row{display:flex;align-items:center;justify-content:space-between}
+.header-back{display:flex;align-items:center;gap:8px;color:var(--gold);font-size:14px;font-weight:700;text-decoration:none}
+.header-title{font-family:var(--font-d);font-size:20px;font-weight:900;background:linear-gradient(135deg,var(--gold),var(--rose));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.score-bar{display:flex;gap:8px;align-items:center}
+.score-pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+
+/* LAYOUT */
+.app-wrap{display:flex;flex-direction:column;height:100%;overflow:hidden}
+.pages{flex:1;overflow:hidden;position:relative}
+.page{position:absolute;inset:0;overflow-y:auto;padding:16px 16px calc(var(--nav-h)+16px);opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .25s,transform .25s}
+.page.active{opacity:1;pointer-events:all;transform:translateY(0)}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;height:var(--nav-h);background:rgba(17,19,24,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:0 4px 8px;z-index:100}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 10px;border-radius:12px;transition:all .2s;flex:1;position:relative}
+.nav-btn.active{background:var(--gold-soft)}
+.nav-icon{font-size:20px;line-height:1}
+.nav-label{font-size:8px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.3px}
+.nav-btn.active .nav-label{color:var(--gold)}
+.nav-turn{position:absolute;top:2px;right:8px;width:8px;height:8px;background:var(--rose);border-radius:50%;border:1.5px solid var(--bg);display:none}
+.nav-turn.show{display:block}
+
+/* COMPONENTS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.section-title{font-family:var(--font-d);font-size:20px;font-weight:800;margin-bottom:14px}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 20px;border-radius:14px;font-size:14px;font-weight:700;background:linear-gradient(135deg,var(--gold),#E8A84C);color:#0D0F14;transition:all .2s;border:none;cursor:pointer;width:100%;font-family:var(--font-b)}
+.btn:active{transform:scale(.97)}
+.btn-rose{background:linear-gradient(135deg,var(--rose),#F07A8A);color:white}
+.btn-blue{background:linear-gradient(135deg,var(--blue),#6AB4F0);color:white}
+.btn-purple{background:linear-gradient(135deg,var(--purple),#A88FE4);color:white}
+.btn-green{background:linear-gradient(135deg,var(--green),#5ABA8A);color:white}
+.btn-outline{background:transparent;border:1.5px solid var(--gold);color:var(--gold)}
+.btn-outline-rose{background:transparent;border:1.5px solid var(--rose);color:var(--rose)}
+.btn-sm{padding:9px 16px;font-size:12px;border-radius:10px;width:auto}
+.btn-lg{padding:18px 20px;font-size:16px;border-radius:16px}
+.input{width:100%;padding:12px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s}
+.input:focus{border-color:var(--gold)}
+.input::placeholder{color:var(--dim)}
+.toast{position:fixed;bottom:calc(var(--nav-h)+14px);left:50%;transform:translateX(-50%) translateY(16px);background:var(--card);border:1px solid var(--gold-border);color:var(--text);padding:10px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.empty-state{text-align:center;color:var(--dim);padding:40px 0}
+.empty-icon{font-size:48px;margin-bottom:10px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .3s ease forwards}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+.pop{animation:pop .3s ease}
+.conf-wrap{position:fixed;inset:0;z-index:3000;pointer-events:none;overflow:hidden}
+.conf{position:absolute;width:8px;height:8px;animation:confFall var(--d) ease-in var(--dl) forwards;top:-10px;left:var(--x);background:var(--c);border-radius:var(--br);transform:rotate(var(--r))}
+@keyframes confFall{to{transform:translateY(110vh) rotate(calc(var(--r)+720deg));opacity:0}}
+
+/* ACCUEIL JEUX */
+.games-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.game-card{background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:16px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden}
+.game-card:active{transform:scale(.96)}
+.game-card.turn{border-color:var(--rose);box-shadow:0 0 16px rgba(232,99,122,.2)}
+.game-card.turn::before{content:'À TON TOUR';position:absolute;top:8px;right:8px;background:var(--rose);color:white;font-size:8px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.5px}
+.game-icon{font-size:36px;margin-bottom:8px;display:block}
+.game-name{font-family:var(--font-d);font-size:15px;font-weight:800;margin-bottom:4px}
+.game-desc{font-size:10px;color:var(--muted);line-height:1.4}
+.game-scores{display:flex;gap:6px;margin-top:8px}
+.game-score-pill{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+
+/* SCOREBOARD */
+.scoreboard{background:linear-gradient(135deg,var(--gold-soft),var(--rose-soft));border:1px solid var(--gold-border);border-radius:20px;padding:16px;margin-bottom:16px}
+.score-vs{display:flex;align-items:center;justify-content:space-around}
+.score-player{text-align:center}
+.score-name{font-size:11px;font-weight:700;margin-bottom:4px}
+.score-num{font-family:var(--font-d);font-size:36px;font-weight:900}
+.score-vs-sep{font-size:18px;color:var(--dim)}
+.score-bar-wrap{height:6px;background:var(--surface);border-radius:3px;margin-top:12px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--rose),var(--gold));transition:width .6s}
+
+/* QUIZ */
+.quiz-header{text-align:center;margin-bottom:16px}
+.quiz-cat-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;padding-bottom:2px}
+.quiz-cat-tabs::-webkit-scrollbar{display:none}
+.quiz-cat-btn{flex:0 0 auto;padding:7px 14px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid var(--border);color:var(--muted);white-space:nowrap;transition:all .2s;background:transparent}
+.quiz-cat-btn.active{background:var(--gold-soft);border-color:var(--gold);color:var(--gold)}
+.quiz-question-card{background:linear-gradient(135deg,var(--gold-soft),var(--purple-soft));border:1px solid var(--gold-border);border-radius:20px;padding:20px;text-align:center;margin-bottom:16px}
+.quiz-q-num{font-size:10px;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.quiz-q-text{font-family:var(--font-d);font-size:18px;font-weight:800;line-height:1.4;margin-bottom:6px}
+.quiz-q-about{font-size:11px;color:var(--gold);font-weight:700}
+.quiz-answer-btn{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:14px 16px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;text-align:left;transition:all .2s;width:100%;margin-bottom:8px;font-family:var(--font-b);display:flex;align-items:center;gap:10px}
+.quiz-answer-btn:active{transform:scale(.98)}
+.quiz-answer-btn.correct{border-color:var(--green);background:var(--green-soft);color:var(--green)}
+.quiz-answer-btn.wrong{border-color:var(--rose);background:var(--rose-soft);color:var(--rose)}
+.quiz-answer-btn.reveal{border-color:var(--gold);background:var(--gold-soft)}
+.quiz-letter{width:28px;height:28px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.quiz-result-card{text-align:center;padding:30px 0}
+.quiz-result-score{font-family:var(--font-d);font-size:52px;font-weight:900;background:linear-gradient(135deg,var(--gold),var(--rose));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.quiz-progress{height:6px;background:var(--surface);border-radius:3px;margin-bottom:16px;overflow:hidden}
+.quiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--rose));border-radius:3px;transition:width .4s}
+
+/* DEVINE MA PENSÉE */
+.devine-word-display{font-family:var(--font-d);font-size:48px;font-weight:900;text-align:center;letter-spacing:8px;margin:20px 0;color:var(--gold)}
+.devine-clue{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.devine-clue-num{width:28px;height:28px;border-radius:50%;background:var(--gold-soft);border:1px solid var(--gold-border);color:var(--gold);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.devine-clue-text{font-size:13px;color:var(--text)}
+.devine-guess-row{display:flex;gap:8px}
+.devine-lives{display:flex;gap:6px;justify-content:center;margin:12px 0}
+.devine-life{font-size:20px;transition:all .3s}
+.devine-life.lost{opacity:.2;transform:scale(.8)}
+.devine-category-card{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px;cursor:pointer;transition:all .2s;text-align:center;margin-bottom:8px}
+.devine-category-card:active{border-color:var(--gold);background:var(--gold-soft)}
+
+/* VRAI OU FAUX */
+.vf-statement{background:linear-gradient(135deg,var(--purple-soft),var(--rose-soft));border:1px solid rgba(139,111,212,.3);border-radius:20px;padding:22px;text-align:center;margin-bottom:20px}
+.vf-statement-text{font-family:var(--font-d);font-size:18px;font-weight:800;line-height:1.5}
+.vf-about{font-size:11px;color:var(--purple);font-weight:700;margin-top:8px}
+.vf-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.vf-btn{padding:20px;border-radius:18px;font-size:22px;font-family:var(--font-d);font-weight:900;cursor:pointer;transition:all .2s;border:2px solid var(--border);background:var(--card)}
+.vf-btn:active{transform:scale(.95)}
+.vf-btn.vrai{border-color:var(--green);background:var(--green-soft);color:var(--green)}
+.vf-btn.faux{border-color:var(--rose);background:var(--rose-soft);color:var(--rose)}
+.vf-reveal{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px}
+.vf-reveal-answer{font-size:13px;font-weight:700;margin-bottom:4px}
+.vf-reveal-expl{font-size:12px;color:var(--muted);line-height:1.5}
+
+/* NIVEAU DE COMPLICITÉ */
+.complic-q{background:linear-gradient(135deg,var(--rose-soft),var(--gold-soft));border:1px solid var(--rose-border);border-radius:20px;padding:20px;text-align:center;margin-bottom:16px}
+.complic-q-text{font-family:var(--font-d);font-size:17px;font-weight:800;line-height:1.5;margin-bottom:14px}
+.complic-answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.complic-answer-card{background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:12px;text-align:center}
+.complic-answer-who{font-size:9px;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px}
+.complic-answer-val{font-size:15px;font-weight:700}
+.complic-match{text-align:center;padding:16px;background:var(--green-soft);border:1px solid rgba(58,158,106,.3);border-radius:14px;margin-bottom:10px}
+.complic-nomatch{text-align:center;padding:16px;background:var(--rose-soft);border:1px solid var(--rose-border);border-radius:14px;margin-bottom:10px}
+.complic-level{font-family:var(--font-d);font-size:28px;font-weight:900;text-align:center;margin:12px 0;background:linear-gradient(135deg,var(--gold),var(--rose));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* BAC À DEUX */
+.bac-letter{font-family:var(--font-d);font-size:80px;font-weight:900;text-align:center;background:linear-gradient(135deg,var(--gold),var(--rose));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:10px 0;line-height:1}
+.bac-timer{font-family:var(--font-d);font-size:36px;font-weight:900;text-align:center;color:var(--gold);margin:8px 0}
+.bac-timer.urgent{color:var(--rose);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.bac-category{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px}
+.bac-cat-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.bac-cat-input{background:transparent;border:none;color:var(--text);font-size:16px;font-weight:700;width:100%;outline:none;padding:0}
+.bac-cat-input::placeholder{color:var(--dim);font-weight:400}
+.bac-reveal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.bac-reveal-col{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px}
+.bac-reveal-who{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.bac-reveal-item{font-size:12px;padding:5px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.bac-reveal-item:last-child{border:none}
+.bac-point-btn{font-size:16px;cursor:pointer;padding:2px}
+
+/* 20 QUESTIONS */
+.vingt-item{font-family:var(--font-d);font-size:24px;font-weight:900;text-align:center;background:linear-gradient(135deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;padding:20px 0;margin-bottom:8px}
+.vingt-q-num{text-align:center;font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.vingt-question-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px}
+.vingt-q-text{font-size:14px;font-weight:600;margin-bottom:10px}
+.vingt-q-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.vingt-q-btn{padding:9px 4px;border-radius:10px;font-size:11px;font-weight:700;border:1.5px solid var(--border);color:var(--muted);text-align:center;cursor:pointer;transition:all .2s;background:transparent}
+.vingt-q-btn:active{transform:scale(.95)}
+.vingt-q-btn.oui{border-color:var(--green);background:var(--green-soft);color:var(--green)}
+.vingt-q-btn.non{border-color:var(--rose);background:var(--rose-soft);color:var(--rose)}
+.vingt-q-btn.peut{border-color:var(--gold);background:var(--gold-soft);color:var(--gold)}
+.vingt-answered{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-radius:10px;padding:8px 12px;margin-bottom:5px}
+.vingt-answered-q{font-size:12px;color:var(--text);flex:1}
+.vingt-answered-r{font-size:18px;flex-shrink:0}
+.vingt-guess-area{background:linear-gradient(135deg,var(--blue-soft),var(--purple-soft));border:1px solid var(--blue-border);border-radius:16px;padding:16px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="app-wrap">
+  <div class="app-header">
+    <div class="header-row">
+      <button onclick="window.location.href='index.html'" class="header-back" style="text-decoration:none;background:none;border:none;cursor:pointer">← App</button>
+      <div class="header-title">Nos Jeux 🎮</div>
+      <div style="font-size:10px;color:var(--muted);font-weight:600" id="jeux-profile-label"></div>
+      <div class="score-bar">
+        <div class="score-pill" style="background:var(--rose-soft);color:var(--rose)" id="hdr-raphy">💗 0</div>
+        <div class="score-pill" style="background:var(--blue-soft);color:var(--blue)" id="hdr-mehdi">💙 0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pages">
+
+    <!-- ACCUEIL JEUX -->
+    <div class="page active" id="page-home">
+      <div class="scoreboard" id="scoreboard"></div>
+      <div class="games-grid" id="games-grid"></div>
+    </div>
+
+    <!-- QUIZ -->
+    <div class="page" id="page-quiz">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button>
+        <div class="section-title" style="margin-bottom:0">🧠 Quiz sur l'autre</div>
+      </div>
+      <div class="quiz-cat-tabs" id="quiz-cat-tabs"></div>
+      <div class="quiz-progress"><div class="quiz-progress-fill" id="quiz-prog-fill" style="width:0%"></div></div>
+      <div id="quiz-zone"></div>
+    </div>
+
+    <!-- DEVINE MA PENSÉE -->
+    <div class="page" id="page-devine">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button>
+        <div class="section-title" style="margin-bottom:0">💭 Devine ma pensée</div>
+      </div>
+      <div id="devine-zone"></div>
+    </div>
+
+    <!-- VRAI OU FAUX -->
+    <div class="page" id="page-vf">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button>
+        <div class="section-title" style="margin-bottom:0">✅ Vrai ou Faux</div>
+      </div>
+      <div id="vf-zone"></div>
+    </div>
+
+    <!-- NIVEAU DE COMPLICITÉ -->
+    <div class="page" id="page-complic">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button>
+        <div class="section-title" style="margin-bottom:0">💑 Niveau de complicité</div>
+      </div>
+      <div id="complic-zone"></div>
+    </div>
+
+    <!-- BAC À DEUX -->
+    <div class="page" id="page-bac">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button>
+        <div class="section-title" style="margin-bottom:0">🔤 Bac à deux</div>
+      </div>
+      <div id="bac-zone"></div>
+    </div>
+
+    <!-- 20 QUESTIONS -->
+    <div class="page" id="page-vingt">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button>
+        <div class="section-title" style="margin-bottom:0">🎯 20 Questions</div>
+      </div>
+      <div id="vingt-zone"></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="goTo('home',this)" id="nav-home">
+      <span class="nav-icon">🏠</span><span class="nav-label">Accueil</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('quiz',this)">
+      <span class="nav-icon">🧠</span><span class="nav-label">Quiz</span>
+      <div class="nav-turn" id="turn-quiz"></div>
+    </button>
+    <button class="nav-btn" onclick="goTo('devine',this)">
+      <span class="nav-icon">💭</span><span class="nav-label">Devine</span>
+      <div class="nav-turn" id="turn-devine"></div>
+    </button>
+    <button class="nav-btn" onclick="goTo('vf',this)">
+      <span class="nav-icon">✅</span><span class="nav-label">V ou F</span>
+      <div class="nav-turn" id="turn-vf"></div>
+    </button>
+    <button class="nav-btn" onclick="goTo('complic',this)">
+      <span class="nav-icon">💑</span><span class="nav-label">Complic.</span>
+      <div class="nav-turn" id="turn-complic"></div>
+    </button>
+    <button class="nav-btn" onclick="goTo('bac',this)">
+      <span class="nav-icon">🔤</span><span class="nav-label">Bac</span>
+      <div class="nav-turn" id="turn-bac"></div>
+    </button>
+    <button class="nav-btn" onclick="goTo('vingt',this)">
+      <span class="nav-icon">🎯</span><span class="nav-label">20 Q</span>
+      <div class="nav-turn" id="turn-vingt"></div>
+    </button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="conf-wrap" id="conf-wrap" style="display:none"></div>
+</body>
+<script>
+// ═══════════════════════════ CONSTANTES ═══════════════════════════
+
+const QUIZ_QUESTIONS = {
+  gouts: [
+    {q:"Quel est mon plat préféré ?",who:"raphy",opts:["Pâtes","Sushi","Pizza","Poulet rôti"],correct:1,expl:"Raphy adore les sushis 🍣"},
+    {q:"Ma couleur préférée ?",who:"raphy",opts:["Rose","Violet","Bleu","Beige"],correct:0,expl:"Le rose, comme son emoji 💗"},
+    {q:"Ma boisson préférée ?",who:"mehdi",opts:["Café","Jus d'orange","Coca","Eau"],correct:0,expl:"Mehdi sans café c'est dangereux ☕"},
+    {q:"Mon dessert préféré ?",who:"raphy",opts:["Tiramisu","Fondant chocolat","Crème brûlée","Glace"],correct:3,expl:"Raphy et les glaces, une grande histoire d'amour 🍦"},
+    {q:"Ma série préférée en ce moment ?",who:"mehdi",opts:["Breaking Bad","The Office","Peaky Blinders","Game of Thrones"],correct:2,expl:"Mehdi est fan de Peaky Blinders 🎩"},
+    {q:"Mon type de musique préféré ?",who:"raphy",opts:["R&B","Pop française","Rap","Variété"],correct:1,expl:"Raphy adore la pop française, surtout avant 2000 🎵"},
+    {q:"Ma cuisine préférée ?",who:"mehdi",opts:["Italienne","Japonaise","Française","Libanaise"],correct:3,expl:"Mehdi est fan de cuisine libanaise 🥙"},
+    {q:"Mon snack préféré ?",who:"raphy",opts:["Chips","Chocolat","Bonbons","Fruits"],correct:1,expl:"Raphy et le chocolat... une vraie addiction 🍫"},
+    {q:"Ma saison préférée ?",who:"mehdi",opts:["Printemps","Été","Automne","Hiver"],correct:1,expl:"Mehdi, l'été et la plage c'est son truc ☀️"},
+    {q:"Mon film romantique préféré ?",who:"raphy",opts:["Titanic","Dirty Dancing","The Notebook","Pride & Prejudice"],correct:0,expl:"Titanic, elle pleure à chaque fois 😢"},
+  ],
+  quotidien: [
+    {q:"À quelle heure je me lève naturellement ?",who:"mehdi",opts:["6h","7h30","9h","10h"],correct:1,expl:"Mehdi se lève vers 7h30 sans alarm... à peu près 😅"},
+    {q:"Ce que je fais EN PREMIER le matin ?",who:"raphy",opts:["Téléphone","Café","Douche","Étirements"],correct:0,expl:"Raphy vérifie son téléphone avant même d'ouvrir les yeux 📱"},
+    {q:"Ma position préférée pour dormir ?",who:"mehdi",opts:["Sur le dos","Sur le ventre","Sur le côté droit","Sur le côté gauche"],correct:2,expl:"Mehdi dort sur le côté droit 😴"},
+    {q:"Combien de temps je passe sous la douche ?",who:"raphy",opts:["5 min","10 min","20 min","30 min+"],correct:2,expl:"Raphy... let's say qu'elle prend son temps 🚿"},
+    {q:"Ce que j'ai toujours dans mon sac ?",who:"raphy",opts:["Écouteurs","Crème pour les mains","Chewing-gums","Carnet"],correct:1,expl:"Raphy a toujours sa crème pour les mains 💅"},
+    {q:"Mon péché mignon au travail ?",who:"mehdi",opts:["Regarder son téléphone","Grignoter","Faire des pauses café","Écouter de la musique"],correct:2,expl:"Mehdi et ses pauses café... nombreuses 😄"},
+    {q:"Quand je suis stressé(e), je fais quoi ?",who:"raphy",opts:["Je mange","Je marche","Je regarde une série","Je range"],correct:3,expl:"Raphy range quand elle est stressée, très efficace !"},
+    {q:"Mon emoji le plus utilisé ?",who:"mehdi",opts:["😂","😤","🙏","❤️"],correct:0,expl:"Mehdi envoie des 😂 à tout le monde"},
+    {q:"Ce qui me met de bonne humeur instantanément ?",who:"raphy",opts:["Musique","Soleil","Un câlin","Du café"],correct:2,expl:"Raphy a besoin d'un câlin pour sourire 🥰"},
+    {q:"Mon heure de sommeil idéale ?",who:"mehdi",opts:["22h","23h","0h","1h"],correct:2,expl:"Mehdi se couche vers minuit en général"},
+  ],
+  souvenirs: [
+    {q:"Où était notre premier rendez-vous ?",who:"tous",opts:["Au restaurant","Au cinéma","À la plage","En balade"],correct:2,expl:"Notre premier rendez-vous à la plage, le début de tout 🏖️"},
+    {q:"Quelle est la première chose que j'ai remarquée chez toi ?",who:"mehdi",opts:["Tes yeux","Ton sourire","Ta façon de parler","Ta gentillesse"],correct:1,expl:"Mehdi a remarqué le sourire de Raphy en premier 😊"},
+    {q:"Quel mois on s'est rencontrés ?",who:"tous",opts:["Janvier","Mars","Mai","Juillet"],correct:2,expl:"Mai 2026, le mois où tout a commencé ❤️"},
+    {q:"Qu'est-ce qu'on a fait pour notre premier jour off ensemble ?",who:"tous",opts:["Resté à la maison","Sorti manger","Plage","Cinéma"],correct:1,expl:"On a sorti manger ensemble 🍽️"},
+    {q:"Quelle est ma catchphrase préférée ?",who:"raphy",opts:["'C'est bon ça'","'On verra'","'Comme tu veux'","'Sérieusement ?'"],correct:3,expl:"Raphy dit 'Sérieusement ?' tout le temps 😄"},
+    {q:"Quel est le surnom que j'ai pour toi ?",who:"mehdi",opts:["Bébé","Mon amour","Chéri(e)","Un truc spécial"],correct:3,expl:"Mehdi a son petit surnom bien à lui... 💙"},
+    {q:"Notre premier voyage ensemble c'était où ?",who:"tous",opts:["Paris","Pas encore voyagé","Mer","Montagne"],correct:1,expl:"Notre premier grand voyage est encore à venir 🌍"},
+    {q:"Qu'est-ce que je t'ai dit la première fois que je t'ai écrit ?",who:"tous",opts:["'Salut'","'Bonjour'","Quelque chose de créatif","Je sais plus 😄"],correct:2,expl:"Le premier message était mémorable !"},
+    {q:"Quel film on a regardé ensemble en premier ?",who:"tous",opts:["Une comédie","Un thriller","Un drame","Un Disney"],correct:3,expl:"Notre premier film ensemble, un classique Disney 🏰"},
+    {q:"Comment Mehdi a senti qu'il aimait vraiment Raphy ?",who:"mehdi",opts:["Quand elle a ri","Quand elle était pas là","Un soir particulier","Ça s'est imposé"],correct:1,expl:"Mehdi a réalisé qu'il aimait Raphy quand elle était loin 💙"},
+  ],
+  reves: [
+    {q:"Mon rêve de voyage #1 ?",who:"raphy",opts:["Maldives","Japon","New York","Bali"],correct:0,expl:"Raphy rêve des Maldives 🏝️"},
+    {q:"Ce que je veux faire dans 5 ans ?",who:"mehdi",opts:["Être propriétaire","Voyager plus","Changer de métier","Fonder une famille"],correct:0,expl:"Mehdi veut être proprio dans 5 ans 🏠"},
+    {q:"Mon rêve de luxe ?",who:"raphy",opts:["Un sac de marque","Un voyage de folie","Une belle voiture","Une maison de rêve"],correct:1,expl:"Raphy rêve d'un voyage de folie ✈️"},
+    {q:"Si je gagnais 100 000€, je ferais quoi en premier ?",who:"mehdi",opts:["Investir","Voyager","Aider ma famille","Acheter un appart"],correct:2,expl:"Mehdi penserait à sa famille en premier 🙏"},
+    {q:"Mon métier de rêve si je pouvais tout changer ?",who:"raphy",opts:["Créatrice de contenu","Chef cuisinière","Styliste","Décoratrice"],correct:0,expl:"Raphy serait créatrice de contenu 📱"},
+    {q:"Où on vivrait idéalement ensemble ?",who:"tous",opts:["Bord de mer","Grande ville","Campagne","À l'étranger"],correct:0,expl:"Tous les deux, on rêve du bord de mer 🌊"},
+    {q:"Notre plus grand rêve à deux ?",who:"tous",opts:["Voyager le monde","Construire quelque chose","Avoir un chez nous","Une famille"],correct:2,expl:"Notre plus grand rêve : avoir notre chez nous 🏡"},
+    {q:"Si je pouvais apprendre n'importe quoi ?",who:"mehdi",opts:["Une langue","Un instrument","La cuisine gastronomique","Le surf"],correct:0,expl:"Mehdi voudrait apprendre une nouvelle langue 🌍"},
+    {q:"Mon rêve pour nous dans 10 ans ?",who:"raphy",opts:["Heureux et soudés","Voyageurs","Installés","Parents"],correct:0,expl:"Raphy veut juste qu'on soit heureux et soudés 💗"},
+    {q:"Notre activité de rêve à la plage ?",who:"tous",opts:["Bronzer","Nager","Jouer","Regarder le coucher de soleil"],correct:3,expl:"Le coucher de soleil à la plage ensemble 🌅"},
+  ]
+};
+
+const VF_STATEMENTS = [
+  {text:"Raphy peut regarder le même épisode d'une série plusieurs fois",who:"raphy",answer:true,expl:"Oui, Raphy peut regarder ses épisodes préférés en boucle 😄"},
+  {text:"Mehdi préfère le salé au sucré",who:"mehdi",answer:true,expl:"Mehdi est clairement team salé 🧂"},
+  {text:"Raphy a déjà pleuré en regardant un film de Disney",who:"raphy",answer:true,expl:"Raphy pleure devant Disney... tout le monde le fait !"},
+  {text:"Mehdi n'est jamais en retard",who:"mehdi",answer:false,expl:"Mehdi est... disons parfois un peu à la bourre 😅"},
+  {text:"Raphy peut manger de la même chose plusieurs jours de suite",who:"raphy",answer:true,expl:"Quand elle aime quelque chose, elle peut le manger en boucle !"},
+  {text:"Mehdi chante faux mais il chante quand même",who:"mehdi",answer:true,expl:"Mehdi chante faux et s'en fout complètement 🎵"},
+  {text:"Raphy s'endort facilement dans les transports",who:"raphy",answer:true,expl:"Raphy dort partout, bus, métro, voiture... zzz 😴"},
+  {text:"Mehdi a peur des araignées",who:"mehdi",answer:true,expl:"Mehdi et les araignées... pas copains du tout 🕷️"},
+  {text:"Raphy préfère les films aux séries",who:"raphy",answer:false,expl:"Raphy est plutôt série, elle aime les saisons entières !"},
+  {text:"Mehdi vérifie le menu avant d'aller au restaurant",who:"mehdi",answer:true,expl:"Mehdi fait toujours ses recherches avant 🍽️"},
+  {text:"Raphy a une chanson française avant 2000 dans ses favoris",who:"raphy",answer:true,expl:"Les années 90 françaises, Raphy connaît tout 🎤"},
+  {text:"Mehdi est du matin",who:"mehdi",answer:false,expl:"Mehdi n'est clairement pas du matin, surtout sans café ☕"},
+  {text:"Raphy peut mémoriser des répliques de ses films préférés",who:"raphy",answer:true,expl:"Raphy connaît Titanic par cœur 🚢"},
+  {text:"Mehdi cuisine mieux qu'il ne le dit",who:"mehdi",answer:true,expl:"Mehdi cuisine bien mais il fait le modeste 😄"},
+  {text:"Raphy et Mehdi ont déjà failli se perdre quelque part",who:"tous",answer:true,expl:"L'aventure avant tout ! 😂"},
+  {text:"Mehdi préfère un message vocal à un long texte",who:"mehdi",answer:false,expl:"Mehdi préfère les messages texte courts et directs"},
+  {text:"Raphy passe au moins 30 min à choisir quoi regarder",who:"raphy",answer:true,expl:"Le scroll infini de Netflix, Raphy connaît bien 📺"},
+  {text:"Mehdi connaît les paroles d'au moins une chanson française des années 90",who:"mehdi",answer:true,expl:"Raphy lui a déjà converti quelques classiques 😄"},
+  {text:"Raphy se souvient de la date de chaque moment important",who:"raphy",answer:true,expl:"Raphy a une mémoire des dates extraordinaire 📅"},
+  {text:"Mehdi et Raphy ont déjà mangé exactement la même chose sans se concerter",who:"tous",answer:true,expl:"La complicité, ça va jusque dans les assiettes 🍽️"},
+];
+
+const COMPLIC_QUESTIONS = [
+  {q:"Si on devait choisir une destination de vacances maintenant, ce serait ?",opts:["Plage tropicale","Ville culturelle","Montagne","Road trip"],emoji:"✈️"},
+  {q:"Notre soirée parfaite ensemble ressemble à quoi ?",opts:["Film + canapé","Sortie restaurant","Plage au coucher du soleil","Jeux en mode compet"],emoji:"🌙"},
+  {q:"Si on avait une journée entière ensemble demain, on fait quoi ?",opts:["Plage toute la journée","Explorer une nouvelle ville","Rester à la maison","Activité surprise"],emoji:"📅"},
+  {q:"Le mot qui définit le mieux notre relation ?",opts:["Complicité","Passion","Amour","Tendresse"],emoji:"💑"},
+  {q:"Notre prochain grand projet ensemble, c'est quoi ?",opts:["Voyage","Emménager","Un projet créatif","Profiter du présent"],emoji:"🚀"},
+  {q:"Ce qui nous fait le plus rire ensemble ?",opts:["Nos blagues internes","Nos galères","Les films/séries","Les situations absurdes"],emoji:"😂"},
+  {q:"Notre plus beau souvenir ensemble jusqu'ici ?",opts:["Notre première fois à la plage","Un moment de tendresse","Une soirée mémorable","Encore à écrire"],emoji:"📸"},
+  {q:"Si on devait se décrire en un animal ?",opts:["Dauphins (joueurs)","Lions (forts)","Chats (indépendants mais câlins)","Aigles (ambitieux)"],emoji:"🦁"},
+  {q:"Ce qu'on aime faire le plus à la plage ?",opts:["Bronzer et se détendre","Nager et s'éclabousser","Regarder le coucher de soleil","Manger des glaces"],emoji:"🏖️"},
+  {q:"Dans 5 ans, on est où ?",opts:["Ensemble dans notre appart","En voyage","Même endroit, plus épanouis","Une belle surprise"],emoji:"🔮"},
+  {q:"Notre chanson si on en avait une ?",opts:["Quelque chose de romantique","Un classique français","Un truc qu'on a découvert ensemble","Elle reste à écrire"],emoji:"🎵"},
+  {q:"Ce qui nous rend uniques comme couple ?",opts:["Notre humour","Notre complicité naturelle","Nos différences","Notre amour de la plage"],emoji:"💫"},
+];
+
+const DEVINE_CATEGORIES = [
+  {id:"stars",label:"Célébrité",emoji:"⭐",
+   words:["Beyoncé","Leonardo DiCaprio","Taylor Swift","Zendaya","Will Smith","Rihanna","Brad Pitt","Adele","Cristiano Ronaldo","Dua Lipa","Harry Styles","Kylie Jenner","Drake","Margot Robbie","Bad Bunny"]},
+  {id:"films",label:"Film/Série",emoji:"🎬",
+   words:["Titanic","Walking Dead","Stranger Things","Dirty Dancing","The Office","Desperate Housewives","Les Simpsons","Toy Story","Le Roi Lion","Interstellar","Squid Game","Breaking Bad","Clueless","Grease","La La Land"]},
+  {id:"objets",label:"Objet",emoji:"📦",
+   words:["Parapluie","Trampoline","Aquarium","Microscope","Calèche","Marionnette","Boussole","Télescope","Origami","Cactus","Thermos","Baguette magique","Igloo","Sablier","Totem"]},
+  {id:"plage",label:"Plage & Été",emoji:"🏖️",
+   words:["Crème solaire","Parasol","Tuba","Jet-ski","Méduse","Concombre de mer","Château de sable","Planète d'eau","Bain de mer","Homard","Poulpe","Surfeur","Cocktail","Lunettes de soleil","Serviette de plage"]},
+  {id:"emotions",label:"Émotion/Concept",emoji:"💭",
+   words:["Jalousie","Nostalgie","Impatience","Fierté","Timidité","Euphorie","Mélancolie","Curiosité","Complicité","Sérénité","Excitation","Tendresse","Vulnérabilité","Inspiration","Gratitude"]},
+];
+
+const VINGT_QUESTIONS = [
+  "Est-ce que c'est une personne ?",
+  "Est-ce que c'est un lieu ?",
+  "Est-ce que c'est un objet ?",
+  "Est-ce que c'est quelque chose de grand ?",
+  "Est-ce que c'est quelque chose qu'on peut toucher ?",
+  "Est-ce que c'est quelque chose de vivant ?",
+  "Est-ce que c'est quelque chose qu'on utilise tous les jours ?",
+  "Est-ce que c'est quelque chose de romantique ?",
+  "Est-ce que c'est lié à notre relation ?",
+  "Est-ce que ça fait référence à un souvenir ensemble ?",
+  "Est-ce que c'est quelque chose qu'on a vu récemment ?",
+  "Est-ce que c'est lié à la plage ?",
+  "Est-ce que c'est quelque chose de précieux ?",
+  "Est-ce que c'est une chose abstraite ?",
+  "Est-ce que c'est quelque chose de drôle ?",
+  "Est-ce que ça commence par une voyelle ?",
+  "Est-ce que c'est quelque chose qu'on fait ensemble ?",
+  "Est-ce que c'est quelque chose qu'on mange ou boit ?",
+  "Est-ce que c'est quelque chose de coloré ?",
+  "Est-ce que tu penses à ça souvent ?",
+];
+
+const BAC_CATEGORIES = ["Prénom","Animal","Pays","Film/Série","Plat","Chanteur/Groupe","Métier","Marque","Mot tendre"];
+const LETTERS = "ABCDEFGHIJLMNOPRSTV".split("");
+const GEMINI_KEY = "AIzaSyD9o6exESRrRkej_7c7zxVl4lc-6uLTx88";
+
+// ═══════════════════════════ STATE ═══════════════════════════
+let S = {
+  profile: null,
+  scores: {raphy:0, mehdi:0},
+  currentPage: "home",
+  quiz: {cat:"gouts", idx:0, score:0, answered:[], sessionScore:{raphy:0,mehdi:0}},
+  vf: {idx:0, answered:[]},
+  complic: {idx:0, answers:{raphy:{},mehdi:{}}, history:[]},
+  devine: {phase:"pick", category:null, word:null, guesses:0, clues:[], guessedLetters:[]},
+  bac: {phase:"waiting", letter:null, timer:null, timeLeft:60, answers:{raphy:{},mehdi:{}}, points:{raphy:0,mehdi:0}},
+  vingt: {phase:"pick", item:null, questions:[], currentQ:0, answered:[], guesser:null, picker:null},
+};
+
+// ═══════════════════════════ UTILS ═══════════════════════════
+function lsGet(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch{return null}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+function toast(msg,dur=2500){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),dur)}
+function celebrate(){
+  const w=document.getElementById("conf-wrap");w.style.display="block";w.innerHTML="";
+  const colors=["#C9A84C","#E8637A","#4A9EE8","#8B6FD4","#3A9E6A"];
+  for(let i=0;i<50;i++){const p=document.createElement("div");p.className="conf";const c=colors[Math.floor(Math.random()*colors.length)];p.style.cssText=`--x:${Math.random()*100}%;--d:${1+Math.random()*2}s;--dl:${Math.random()*.5}s;--c:${c};--r:${Math.random()*360}deg;--br:${Math.random()>.5?"50%":"2px"}`;w.appendChild(p);}
+  setTimeout(()=>{w.style.display="none";w.innerHTML=""},3500);
+}
+function dbSave(path, val){if(!window._db)return;window._set(window._ref(window._db,`nous/jeux/${path}`),val).catch(()=>{})}
+function dbGet(path, cb){if(!window._db)return;window._get(window._ref(window._db,`nous/jeux/${path}`)).then(snap=>{cb(snap.val())}).catch(()=>cb(null))}
+function dbListen(path, cb){if(!window._db)return;window._onValue(window._ref(window._db,`nous/jeux/${path}`),snap=>cb(snap.val()))}
+function addPoints(who, pts){
+  S.scores[who]=(S.scores[who]||0)+pts;
+  dbSave("scores", S.scores);
+  lsSet("jeux_scores", S.scores);
+  updateScoreboard();
+  toast(`+${pts} pts ${who==="raphy"?"💗":"💙"} !`);
+}
+function shuffle(arr){return arr.slice().sort(()=>Math.random()-.5)}
+function p2(n){return String(n).padStart(2,"0")}
+
+// ═══════════════════════════ NAVIGATION ═══════════════════════════
+function goTo(page, btn){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  const pg=document.getElementById(`page-${page}`);if(pg)pg.classList.add("active");
+  if(btn)btn.classList.add("active");
+  else document.querySelectorAll(".nav-btn").forEach(b=>{if(b.getAttribute("onclick")?.includes(`'${page}'`))b.classList.add("active")});
+  S.currentPage=page;
+  switch(page){
+    case"home":renderHome();break;
+    case"quiz":renderQuiz();break;
+    case"devine":renderDevine();break;
+    case"vf":renderVF();break;
+    case"complic":renderComplic();break;
+    case"bac":renderBac();break;
+    case"vingt":renderVingt();break;
+  }
+}
+
+// ═══════════════════════════ INIT ═══════════════════════════
+function initApp(){
+  // Récupérer le profil depuis l'app principale
+  S.profile = sessionStorage.getItem("nous_profile") || lsGet("profile") || "raphy";
+  S.scores = lsGet("jeux_scores") || {raphy:0,mehdi:0};
+  // Sync scores depuis Firebase
+  dbListen("scores", val=>{if(val){S.scores=val;lsSet("jeux_scores",val);updateScoreboard();updateHeaderScores();}});
+  // Sync états des jeux
+  dbListen("divine_state", val=>{if(val)S.devineFB=val;checkTurns();});
+  dbListen("vf_state", val=>{if(val)S.vfFB=val;checkTurns();});
+  dbListen("complic_state", val=>{if(val)S.complicFB=val;if(S.currentPage==="complic")renderComplic();checkTurns();});
+  dbListen("bac_state", val=>{if(val)S.bacFB=val;if(S.currentPage==="bac")renderBac();checkTurns();});
+  dbListen("vingt_state", val=>{if(val)S.vingtFB=val;if(S.currentPage==="vingt")renderVingt();checkTurns();});
+  renderHome();
+  updateHeaderScores();
+  const profileEl = document.getElementById("jeux-profile-label");
+  if(profileEl) profileEl.textContent = S.profile==="raphy"?"💗 Raphy":"💙 Mehdi";
+}
+
+function updateHeaderScores(){
+  document.getElementById("hdr-raphy").textContent=`💗 ${S.scores.raphy||0}`;
+  document.getElementById("hdr-mehdi").textContent=`💙 ${S.scores.mehdi||0}`;
+}
+
+function checkTurns(){
+  // Quiz - toujours jouable
+  const other = S.profile==="raphy"?"mehdi":"raphy";
+  // Check complic
+  const cf=S.complicFB;
+  if(cf&&cf.answers&&cf.answers[other]&&!cf.answers[S.profile]){
+    document.getElementById("turn-complic").classList.add("show");
+  } else {
+    document.getElementById("turn-complic").classList.remove("show");
+  }
+  // Check vingt
+  const vf=S.vingtFB;
+  if(vf&&vf.guesser===S.profile&&vf.phase==="asking"){
+    document.getElementById("turn-vingt").classList.add("show");
+  } else {
+    document.getElementById("turn-vingt").classList.remove("show");
+  }
+  // Check bac
+  const bf=S.bacFB;
+  if(bf&&bf.phase==="reveal"&&bf.answers&&bf.answers[other]&&!bf.points){
+    document.getElementById("turn-bac").classList.add("show");
+  } else {
+    document.getElementById("turn-bac").classList.remove("show");
+  }
+}
+
+// ═══════════════════════════ ACCUEIL ═══════════════════════════
+function renderHome(){
+  updateScoreboard();
+  const other = S.profile==="raphy"?"mehdi":"raphy";
+  const GAMES = [
+    {id:"quiz",icon:"🧠",name:"Quiz sur l'autre",desc:"40+ questions sur vos goûts, habitudes & rêves",color:"var(--gold)",turn:false},
+    {id:"devine",icon:"💭",name:"Devine ma pensée",desc:"Fais deviner un mot secret avec des indices",color:"var(--purple)",turn:false},
+    {id:"vf",icon:"✅",name:"Vrai ou Faux",desc:"20 affirmations vraies ou fausses sur vous deux",color:"var(--green)",turn:false},
+    {id:"complic",icon:"💑",name:"Niveau de complicité",desc:"Même question, comparez vos réponses",color:"var(--rose)",turn:!!(S.complicFB?.answers?.[other]&&!S.complicFB?.answers?.[S.profile])},
+    {id:"bac",icon:"🔤",name:"Bac à deux",desc:"Même lettre, mêmes catégories — qui est le plus rapide ?",color:"var(--blue)",turn:false},
+    {id:"vingt",icon:"🎯",name:"20 Questions",desc:"Devine à quoi pense l'autre en 20 questions",color:"#FF7A45",turn:S.vingtFB?.guesser===S.profile&&S.vingtFB?.phase==="asking"},
+  ];
+  const scores = S.scores;
+  document.getElementById("games-grid").innerHTML = GAMES.map(g=>`
+    <div class="game-card${g.turn?" turn":""}" onclick="goTo('${g.id}')">
+      <span class="game-icon">${g.icon}</span>
+      <div class="game-name" style="color:${g.color}">${g.name}</div>
+      <div class="game-desc">${g.desc}</div>
+      <div class="game-scores">
+        <span class="game-score-pill" style="background:var(--rose-soft);color:var(--rose)">💗 ${scores.raphy||0}</span>
+        <span class="game-score-pill" style="background:var(--blue-soft);color:var(--blue)">💙 ${scores.mehdi||0}</span>
+      </div>
+    </div>`).join("");
+}
+
+function updateScoreboard(){
+  updateHeaderScores();
+  const s=S.scores;const total=(s.raphy||0)+(s.mehdi||0);
+  const rPct=total?Math.round((s.raphy||0)/total*100):50;
+  const winner=s.raphy>s.mehdi?"💗 Raphy mène !":s.mehdi>s.raphy?"💙 Mehdi mène !":"Égalité parfaite ! 🤝";
+  document.getElementById("scoreboard").innerHTML=`
+    <div class="score-vs">
+      <div class="score-player"><div class="score-name" style="color:var(--rose)">💗 Raphy</div><div class="score-num" style="color:var(--rose)">${s.raphy||0}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">points</div></div>
+      <div style="text-align:center"><div class="score-vs-sep">VS</div><div style="font-size:11px;color:var(--gold);font-weight:700;margin-top:6px">${winner}</div></div>
+      <div class="score-player"><div class="score-name" style="color:var(--blue)">💙 Mehdi</div><div class="score-num" style="color:var(--blue)">${s.mehdi||0}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">points</div></div>
+    </div>
+    <div class="score-bar-wrap"><div class="score-bar-fill" style="width:${rPct}%"></div></div>`;
+}
+</script>
+<script>
+// ═══════════════════════════ QUIZ ═══════════════════════════
+function renderQuiz(){
+  const cats=[
+    {id:"gouts",label:"🍽️ Goûts"},{id:"quotidien",label:"🌅 Quotidien"},
+    {id:"souvenirs",label:"📸 Souvenirs"},{id:"reves",label:"🌟 Rêves"}
+  ];
+  // Tabs
+  document.getElementById("quiz-cat-tabs").innerHTML = cats.map(c=>
+    `<button class="quiz-cat-btn${S.quiz.cat===c.id?" active":""}" onclick="setQuizCat('${c.id}')">${c.label}</button>`
+  ).join("");
+  renderQuizQuestion();
+}
+
+function setQuizCat(cat){
+  S.quiz.cat=cat; S.quiz.idx=0; S.quiz.score=0; S.quiz.answered=[];
+  document.querySelectorAll(".quiz-cat-btn").forEach(b=>b.classList.toggle("active",b.textContent.includes(cat==="gouts"?"Goûts":cat==="quotidien"?"Quotidien":cat==="souvenirs"?"Souvenirs":"Rêves")));
+  renderQuizQuestion();
+}
+
+function renderQuizQuestion(){
+  const qs = QUIZ_QUESTIONS[S.quiz.cat];
+  const el = document.getElementById("quiz-zone");
+  const prog = document.getElementById("quiz-prog-fill");
+  prog.style.width = `${(S.quiz.idx/qs.length)*100}%`;
+
+  if(S.quiz.idx >= qs.length){
+    const score = S.quiz.score;
+    const total = qs.length;
+    const pct = Math.round(score/total*100);
+    const pts = score*3;
+    let msg = pct>=90?"Parfait ! Tu me connais par cœur 🥰":pct>=70?"Très bien ! On se connaît bien 💑":pct>=50?"Pas mal, encore des trucs à découvrir 😄":"Il faut qu'on passe plus de temps ensemble ! 😂";
+    el.innerHTML=`<div class="quiz-result-card fade-in">
+      <div style="font-size:64px;margin-bottom:12px">${pct>=80?"🏆":pct>=60?"🥈":"🎮"}</div>
+      <div class="quiz-result-score">${score}/${total}</div>
+      <div style="color:var(--muted);font-size:13px;margin-top:6px">${msg}</div>
+      <div style="color:var(--gold);font-size:14px;font-weight:700;margin-top:12px">+${pts} points pour ${S.profile==="raphy"?"Raphy 💗":"Mehdi 💙"}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px">
+        <button class="btn btn-outline" onclick="restartQuiz()">Rejouer 🔄</button>
+        <button class="btn" onclick="claimQuizPoints(${pts})">Récupérer mes points !</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const q = qs[S.quiz.idx];
+  const shuffledOpts = q.opts.map((o,i)=>({o,i})).sort(()=>Math.random()-.5);
+  const correctShuffled = shuffledOpts.findIndex(s=>s.i===q.correct);
+  const who = q.who==="tous"?"les deux":(q.who==="raphy"?"💗 Raphy":"💙 Mehdi");
+  const whoColor = q.who==="raphy"?"var(--rose)":q.who==="mehdi"?"var(--blue)":"var(--gold)";
+
+  el.innerHTML=`<div class="quiz-question-card fade-in">
+    <div class="quiz-q-num">Question ${S.quiz.idx+1} / ${qs.length}</div>
+    <div class="quiz-q-text">${q.q}</div>
+    <div class="quiz-q-about" style="color:${whoColor}">À propos de ${who}</div>
+  </div>
+  ${shuffledOpts.map((item,si)=>`
+    <button class="quiz-answer-btn" id="qa-${si}" onclick="answerQuiz(${si},${correctShuffled},${JSON.stringify(q.expl)})">
+      <div class="quiz-letter">${String.fromCharCode(65+si)}</div>
+      ${item.o}
+    </button>`).join("")}`;
+}
+
+function answerQuiz(chosen, correct, expl){
+  const btns = document.querySelectorAll(".quiz-answer-btn");
+  btns.forEach((b,i)=>{
+    if(i===correct)b.classList.add("correct");
+    else if(i===chosen&&i!==correct)b.classList.add("wrong");
+    b.disabled=true;
+  });
+  if(chosen===correct){S.quiz.score++;celebrate();}
+  // Ajouter explication
+  const q = QUIZ_QUESTIONS[S.quiz.cat][S.quiz.idx];
+  const expEl = document.createElement("div");
+  expEl.className="card fade-in";
+  expEl.style.cssText="margin-top:8px;border-color:"+(chosen===correct?"var(--green)":"var(--rose)");
+  expEl.innerHTML=`<div style="font-size:12px;line-height:1.5">${chosen===correct?"✅ Bien joué ! ":"❌ Raté — "}<span style="color:var(--muted)">${expl}</span></div>`;
+  document.getElementById("quiz-zone").appendChild(expEl);
+  S.quiz.idx++;
+  setTimeout(renderQuizQuestion, 1600);
+}
+
+function restartQuiz(){S.quiz.idx=0;S.quiz.score=0;S.quiz.answered=[];renderQuizQuestion();}
+function claimQuizPoints(pts){addPoints(S.profile, pts);dbSave(`quiz_last/${S.profile}`,{score:S.quiz.score,total:QUIZ_QUESTIONS[S.quiz.cat].length,cat:S.quiz.cat,ts:Date.now()});toast("Points ajoutés ! 🏆");restartQuiz();}
+
+// ═══════════════════════════ VRAI OU FAUX ═══════════════════════════
+function renderVF(){
+  const el = document.getElementById("vf-zone");
+  const qs = S.vfAnswered || [];
+  const remaining = VF_STATEMENTS.filter((_,i)=>!qs.includes(i));
+  if(!remaining.length || S.vf.idx>=VF_STATEMENTS.length){
+    const score = S.vf.score||0;
+    const total = VF_STATEMENTS.length;
+    const pts = score*2;
+    el.innerHTML=`<div class="quiz-result-card fade-in">
+      <div style="font-size:56px;margin-bottom:12px">${score>=15?"🏆":score>=10?"🥈":"🎯"}</div>
+      <div class="quiz-result-score">${score}/${total}</div>
+      <div style="color:var(--muted);font-size:13px;margin:8px 0">${score>=15?"Tu nous connais parfaitement !":score>=10?"Tu nous connais bien 💑":"Il y a encore des mystères ! 😄"}</div>
+      <div style="color:var(--gold);font-size:14px;font-weight:700;margin-bottom:16px">+${pts} points</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button class="btn btn-outline" onclick="resetVF()">Rejouer 🔄</button>
+        <button class="btn" onclick="claimVFPoints(${pts})">Réclamer !</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const idx = S.vf.idx || 0;
+  const stmt = VF_STATEMENTS[idx];
+  const who = stmt.who==="tous"?"les deux":(stmt.who==="raphy"?"💗 Raphy":"💙 Mehdi");
+  const whoColor = stmt.who==="raphy"?"var(--rose)":stmt.who==="mehdi"?"var(--blue)":"var(--gold)";
+
+  el.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);font-weight:600">${idx+1} / ${VF_STATEMENTS.length}</div>
+      <div style="font-size:11px;color:var(--gold);font-weight:700">Score : ${S.vf.score||0}</div>
+    </div>
+    <div class="quiz-progress" style="margin-bottom:16px"><div class="quiz-progress-fill" style="width:${(idx/VF_STATEMENTS.length)*100}%"></div></div>
+    <div class="vf-statement fade-in">
+      <div class="vf-statement-text">"${stmt.text}"</div>
+      <div class="vf-about" style="color:${whoColor}">À propos de ${who}</div>
+    </div>
+    <div class="vf-btns">
+      <button class="vf-btn vrai" onclick="answerVF(true)">✅ VRAI</button>
+      <button class="vf-btn faux" onclick="answerVF(false)">❌ FAUX</button>
+    </div>`;
+}
+
+function answerVF(answer){
+  const idx = S.vf.idx || 0;
+  const stmt = VF_STATEMENTS[idx];
+  const correct = answer === stmt.answer;
+  if(!S.vf.score)S.vf.score=0;
+  if(correct){S.vf.score++;celebrate();}
+  const el = document.getElementById("vf-zone");
+  const result = document.createElement("div");
+  result.className=`vf-reveal fade-in`;
+  result.style.borderColor = correct?"var(--green)":"var(--rose)";
+  result.style.background = correct?"var(--green-soft)":"var(--rose-soft)";
+  result.innerHTML=`
+    <div class="vf-reveal-answer" style="color:${correct?"var(--green)":"var(--rose)"}">${correct?"✅ Bonne réponse !":"❌ Mauvaise réponse"} — C'était <strong>${stmt.answer?"VRAI":"FAUX"}</strong></div>
+    <div class="vf-reveal-expl">${stmt.expl}</div>`;
+  const stmtEl = el.querySelector(".vf-statement");
+  const btnsEl = el.querySelector(".vf-btns");
+  if(btnsEl){btnsEl.querySelectorAll("button").forEach(b=>b.disabled=true);}
+  if(stmtEl)stmtEl.after(result);
+  S.vf.idx = idx+1;
+  setTimeout(renderVF, 1800);
+}
+function resetVF(){S.vf.idx=0;S.vf.score=0;renderVF();}
+function claimVFPoints(pts){addPoints(S.profile, pts);dbSave(`vf_last/${S.profile}`,{score:S.vf.score,ts:Date.now()});toast("Points ajoutés ! 🏆");resetVF();}
+
+// ═══════════════════════════ NIVEAU DE COMPLICITÉ ═══════════════════════════
+function renderComplic(){
+  const el = document.getElementById("complic-zone");
+  const state = S.complicFB || {};
+  const myAns = state.answers?.[S.profile];
+  const otherAns = state.answers?.[S.profile==="raphy"?"mehdi":"raphy"];
+  const q = COMPLIC_QUESTIONS[state.qIdx||0];
+
+  // Phase 1 : choisir une réponse
+  if(!myAns){
+    el.innerHTML=`
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px">Question ${(state.qIdx||0)+1} / ${COMPLIC_QUESTIONS.length}</div>
+        <div style="font-size:13px;color:var(--gold);margin-top:4px">${otherAns?"✅ L'autre a déjà répondu — à toi !":`En attente de ${S.profile==="raphy"?"Mehdi":"Raphy"}...`}</div>
+      </div>
+      <div class="complic-q fade-in">
+        <div style="font-size:24px;margin-bottom:8px">${q.emoji}</div>
+        <div class="complic-q-text">${q.q}</div>
+        ${q.opts.map((o,i)=>`<button onclick="answerComplic('${o}')" style="background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-size:14px;width:100%;margin-bottom:8px;text-align:left;cursor:pointer;font-family:var(--font-b);transition:all .2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="color:var(--gold);font-weight:700;margin-right:8px">${String.fromCharCode(65+i)}.</span>${o}
+        </button>`).join("")}`;
+    return;
+  }
+
+  // Phase 2 : attente de l'autre
+  if(!otherAns){
+    el.innerHTML=`<div class="empty-state fade-in">
+      <div class="empty-icon">⏳</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px">Ta réponse est envoyée !</div>
+      <div style="font-size:13px;color:var(--muted)">En attente de ${S.profile==="raphy"?"Mehdi 💙":"Raphy 💗"}...<br>On verra si vous pensez pareil 😏</div>
+      <div style="margin-top:16px;background:var(--card);border:1px solid var(--gold-border);border-radius:14px;padding:14px;text-align:left">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px">Ta réponse :</div>
+        <div style="font-size:14px;font-weight:700;color:var(--gold)">${myAns}</div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // Phase 3 : révélation
+  const match = myAns === otherAns;
+  const history = state.history || [];
+  const matchCount = history.filter(h=>h.match).length;
+  const totalCount = history.length + 1;
+  let level = matchCount/totalCount >= 0.8 ? "💑 Âmes sœurs" : matchCount/totalCount >= 0.6 ? "🥰 Super complices" : matchCount/totalCount >= 0.4 ? "😊 Bien accordés" : "🤔 Encore à découvrir";
+
+  el.innerHTML=`<div class="fade-in">
+    <div class="complic-q" style="margin-bottom:14px">
+      <div style="font-size:24px;margin-bottom:8px">${q.emoji}</div>
+      <div class="complic-q-text">${q.q}</div>
+    </div>
+    <div class="complic-answers" style="margin-bottom:12px">
+      <div class="complic-answer-card" style="border-color:var(--rose)">
+        <div class="complic-answer-who" style="color:var(--rose)">💗 Raphy</div>
+        <div class="complic-answer-val">${state.answers.raphy||"—"}</div>
+      </div>
+      <div class="complic-answer-card" style="border-color:var(--blue)">
+        <div class="complic-answer-who" style="color:var(--blue)">💙 Mehdi</div>
+        <div class="complic-answer-val">${state.answers.mehdi||"—"}</div>
+      </div>
+    </div>
+    ${match
+      ?`<div class="complic-match"><div style="font-size:24px;margin-bottom:6px">🎉</div><div style="font-size:15px;font-weight:700;color:var(--green)">Même réponse !</div><div style="font-size:12px;color:var(--muted);margin-top:4px">+5 points chacun 💑</div></div>`
+      :`<div class="complic-nomatch"><div style="font-size:24px;margin-bottom:6px">🤔</div><div style="font-size:15px;font-weight:700;color:var(--rose)">Réponses différentes !</div><div style="font-size:12px;color:var(--muted);margin-top:4px">C'est ça qui est intéressant 😄</div></div>`}
+    <div class="complic-level">${level}</div>
+    <div style="color:var(--muted);font-size:12px;text-align:center;margin-bottom:16px">Complicité sur ${totalCount} question${totalCount>1?"s":""} : ${matchCount} fois pareil</div>
+    <button class="btn" onclick="nextComplicQ()">Question suivante →</button>
+  </div>`;
+
+  // Donner points si match
+  if(match && !state.pointed){addPoints("raphy",5);addPoints("mehdi",5);dbSave("complic_state/pointed",true);}
+}
+
+function answerComplic(answer){
+  const idx = S.complicFB?.qIdx||0;
+  const update={};
+  update[`answers/${S.profile}`]=answer;
+  if(!window._db)return;
+  window._update(window._ref(window._db,`nous/jeux/complic_state`),update).then(()=>{
+    if(!S.complicFB)S.complicFB={};
+    if(!S.complicFB.answers)S.complicFB.answers={};
+    S.complicFB.answers[S.profile]=answer;
+    renderComplic();
+  });
+}
+
+function nextComplicQ(){
+  const state = S.complicFB||{};
+  const oldHistory = state.history||[];
+  const myAns = state.answers?.[S.profile]||"";
+  const otherAns = state.answers?.[S.profile==="raphy"?"mehdi":"raphy"]||"";
+  const match = myAns===otherAns;
+  const newHistory = [...oldHistory,{q:COMPLIC_QUESTIONS[state.qIdx||0].q,raphy:state.answers?.raphy,mehdi:state.answers?.mehdi,match}];
+  const nextIdx = ((state.qIdx||0)+1)%COMPLIC_QUESTIONS.length;
+  dbSave("complic_state",{qIdx:nextIdx,answers:{},history:newHistory,pointed:false});
+}
+</script>
+<script>
+// ═══════════════════════════ DEVINE MA PENSÉE ═══════════════════════════
+function renderDevine(){
+  const el = document.getElementById("devine-zone");
+  const state = S.devineFB || {};
+  const other = S.profile==="raphy"?"mehdi":"raphy";
+
+  // Pas de partie en cours — choisir une catégorie
+  if(!state.active){
+    el.innerHTML=`<div class="fade-in">
+      <div class="card" style="text-align:center;margin-bottom:16px;border-color:var(--purple)">
+        <div style="font-size:32px;margin-bottom:8px">💭</div>
+        <div style="font-family:var(--font-d);font-size:16px;font-weight:800;margin-bottom:6px">Devine ma pensée</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">Tu choisis un mot secret dans une catégorie.<br>${other==="raphy"?"Raphy":"Mehdi"} essaie de deviner avec tes indices.</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Choisis ta catégorie :</div>
+      ${DEVINE_CATEGORIES.map(cat=>`
+        <div class="devine-category-card" onclick="startDevine('${cat.id}')">
+          <div style="font-size:28px;margin-bottom:6px">${cat.emoji}</div>
+          <div style="font-family:var(--font-d);font-size:15px;font-weight:800">${cat.label}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${cat.words.length} mots disponibles</div>
+        </div>`).join("")}
+    </div>`;
+    return;
+  }
+
+  // Je suis le PICKER (j'ai choisi le mot)
+  if(state.picker === S.profile){
+    const guesses = state.guesses||[];
+    const found = state.found;
+    if(found){
+      el.innerHTML=`<div class="quiz-result-card fade-in">
+        <div style="font-size:56px;margin-bottom:12px">🎉</div>
+        <div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--gold)">${state.word}</div>
+        <div style="color:var(--muted);font-size:13px;margin:8px 0">${other==="raphy"?"Raphy":"Mehdi"} a trouvé en ${guesses.length} essai${guesses.length>1?"s":""} !</div>
+        <div style="color:var(--gold);font-size:14px;font-weight:700;margin-bottom:16px">+5 pts pour ${other==="raphy"?"💗":"💙"} ${other}</div>
+        <button class="btn" onclick="resetDevine()">Nouvelle partie 🎲</button>
+      </div>`;
+      return;
+    }
+    // Afficher les indices donnés et ajouter un indice
+    el.innerHTML=`<div class="fade-in">
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px">Ton mot secret</div>
+        <div style="font-family:var(--font-d);font-size:32px;font-weight:900;color:var(--gold);margin:8px 0">${state.word}</div>
+        <div style="font-size:11px;color:var(--muted)">Catégorie : ${DEVINE_CATEGORIES.find(c=>c.id===state.category)?.label}</div>
+      </div>
+      <div class="devine-lives" style="margin-bottom:12px">
+        ${[1,2,3,4,5].map(i=>`<span class="devine-life${guesses.length>=i?" lost":""}">💎</span>`).join("")}
+        <span style="font-size:12px;color:var(--muted);margin-left:6px">${5-guesses.length} vie${(5-guesses.length)!==1?"s":""}${guesses.length>0?` — Essais: ${guesses.join(", ")}`:"."}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:8px">Tes indices donnés :</div>
+      ${(state.clues||[]).map((c,i)=>`<div class="devine-clue"><div class="devine-clue-num">${i+1}</div><div class="devine-clue-text">${c}</div></div>`).join("")}
+      ${guesses.length<5&&!found?`
+        <div style="margin-top:12px;font-size:11px;color:var(--muted);margin-bottom:6px">Donne un indice :</div>
+        <div class="devine-guess-row">
+          <input class="input" id="devine-clue-input" placeholder="Un indice sans dire le mot..." style="flex:1">
+          <button class="btn btn-purple btn-sm" style="flex-shrink:0;margin-left:8px" onclick="sendDevineClue()">Envoyer</button>
+        </div>`:`<div class="card" style="text-align:center;color:var(--muted);font-size:13px;margin-top:12px">En attente de la réponse...</div>`}
+    </div>`;
+    return;
+  }
+
+  // Je suis le GUESSER (je dois deviner)
+  if(state.guesser === S.profile){
+    const guesses = state.guesses||[];
+    const found = state.found;
+    const cat = DEVINE_CATEGORIES.find(c=>c.id===state.category);
+
+    if(found){
+      el.innerHTML=`<div class="quiz-result-card fade-in">
+        <div style="font-size:56px;margin-bottom:12px">🏆</div>
+        <div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--gold)">${state.word}</div>
+        <div style="color:var(--green);font-size:16px;font-weight:700;margin:8px 0">Trouvé en ${guesses.length} essai${guesses.length>1?"s":""} !</div>
+        <div style="color:var(--gold);font-size:14px;font-weight:700;margin-bottom:16px">+5 points pour toi 🎉</div>
+        <button class="btn" onclick="resetDevine()">Rejouer 🎲</button>
+      </div>`;
+      if(!state.pointed){addPoints(S.profile,5);dbSave("divine_state/pointed",true);}
+      return;
+    }
+
+    if(guesses.length>=5){
+      el.innerHTML=`<div class="quiz-result-card fade-in">
+        <div style="font-size:56px;margin-bottom:12px">💀</div>
+        <div style="font-family:var(--font-d);font-size:22px;font-weight:900;color:var(--rose)">Perdu !</div>
+        <div style="color:var(--muted);font-size:13px;margin:8px 0">Le mot était...</div>
+        <div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--gold);margin-bottom:16px">${state.word}</div>
+        <button class="btn" onclick="resetDevine()">Nouvelle partie 🎲</button>
+      </div>`;
+      return;
+    }
+
+    // Construire le mot masqué
+    const word = state.word||"";
+    const maskedWord = word.split("").map(c=>c===" "?"  ":guesses.some(g=>g.toLowerCase().includes(c.toLowerCase()))?"_":"_").join(" ");
+
+    el.innerHTML=`<div class="fade-in">
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px">Catégorie : ${cat?.label} ${cat?.emoji}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">${word.length} lettre${word.length>1?"s":""}</div>
+      </div>
+      <div class="devine-word-display">${word.split("").map(c=>c===" "?"&nbsp;&nbsp;":"_").join(" ")}</div>
+      <div class="devine-lives">
+        ${[1,2,3,4,5].map(i=>`<span class="devine-life${guesses.length>=i?" lost":""}">💎</span>`).join("")}
+        <span style="font-size:12px;color:var(--muted);margin-left:6px">${5-guesses.length} essai${(5-guesses.length)!==1?"s":""} restant${(5-guesses.length)!==1?"s":""}</span>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:8px">Indices reçus :</div>
+        ${(state.clues||[]).length===0?`<div style="color:var(--dim);font-size:12px;text-align:center;padding:12px">Aucun indice pour l'instant...</div>`:""}
+        ${(state.clues||[]).map((c,i)=>`<div class="devine-clue"><div class="devine-clue-num">${i+1}</div><div class="devine-clue-text">${c}</div></div>`).join("")}
+      </div>
+      ${(state.clues||[]).length>0?`
+        <div style="margin-bottom:8px;font-size:11px;color:var(--muted)">Essais précédents : ${guesses.length?guesses.join(", "):"aucun"}</div>
+        <div class="devine-guess-row">
+          <input class="input" id="devine-guess-input" placeholder="Ton mot..." style="flex:1" onkeydown="if(event.key==='Enter')sendDevineGuess()">
+          <button class="btn btn-rose btn-sm" style="flex-shrink:0;margin-left:8px" onclick="sendDevineGuess()">Deviner !</button>
+        </div>`:`<div class="card" style="text-align:center;color:var(--muted);font-size:13px">En attente d'un indice de ${state.picker==="raphy"?"Raphy 💗":"Mehdi 💙"}...</div>`}
+    </div>`;
+  }
+}
+
+function startDevine(catId){
+  const cat = DEVINE_CATEGORIES.find(c=>c.id===catId);
+  const word = cat.words[Math.floor(Math.random()*cat.words.length)];
+  const other = S.profile==="raphy"?"mehdi":"raphy";
+  const state = {active:true,picker:S.profile,guesser:other,category:catId,word,guesses:[],clues:[],found:false,pointed:false,ts:Date.now()};
+  dbSave("divine_state",state);S.devineFB=state;renderDevine();
+}
+
+function sendDevineClue(){
+  const inp = document.getElementById("devine-clue-input");const clue=inp.value.trim();if(!clue)return;
+  const state = S.devineFB||{};
+  const clues = [...(state.clues||[]),clue];
+  dbSave("divine_state/clues",clues);inp.value="";toast("Indice envoyé 💭");
+}
+
+function sendDevineGuess(){
+  const inp = document.getElementById("devine-guess-input");const guess=inp.value.trim();if(!guess)return;
+  const state = S.devineFB||{};
+  const guesses = [...(state.guesses||[]),guess];
+  const word = state.word||"";
+  const found = guess.toLowerCase()===word.toLowerCase();
+  dbSave("divine_state/guesses",guesses);
+  if(found)dbSave("divine_state/found",true);
+  inp.value="";
+  if(found){celebrate();toast("TROUVÉ ! 🎉");}
+  else if(guesses.length>=5)toast("Perdu... le mot était "+word+" 💀");
+  else toast(`Raté (${5-guesses.length} essai${(5-guesses.length)!==1?"s":""} restant${(5-guesses.length)!==1?"s":""})`);
+}
+
+function resetDevine(){dbSave("divine_state",{active:false});S.devineFB={active:false};renderDevine();}
+
+// ═══════════════════════════ BAC À DEUX ═══════════════════════════
+function renderBac(){
+  const el = document.getElementById("bac-zone");
+  const state = S.bacFB || {};
+
+  if(!state.active){
+    el.innerHTML=`<div class="fade-in">
+      <div class="card" style="text-align:center;margin-bottom:16px;border-color:var(--blue)">
+        <div style="font-size:32px;margin-bottom:8px">🔤</div>
+        <div style="font-family:var(--font-d);font-size:16px;font-weight:800;margin-bottom:6px">Bac à deux</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">Une lettre est tirée au sort.<br>60 secondes pour remplir toutes les catégories.<br>Comparez vos réponses !</div>
+      </div>
+      <div style="display:grid;gap:6px;margin-bottom:16px">
+        ${BAC_CATEGORIES.map(c=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px"><span style="color:var(--blue);font-size:16px">•</span>${c}</div>`).join("")}
+      </div>
+      <button class="btn btn-blue btn-lg" onclick="startBac()">Lancer le Bac ! 🎲</button>
+    </div>`;
+    return;
+  }
+
+  // Phase jeu
+  if(state.phase==="playing"){
+    const myAnswers = state.answers?.[S.profile] || {};
+    const hasSubmitted = state.submitted?.[S.profile];
+    if(hasSubmitted){
+      el.innerHTML=`<div class="empty-state fade-in">
+        <div class="empty-icon">✅</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:8px">Réponses envoyées !</div>
+        <div style="color:var(--muted);font-size:13px">En attente de ${S.profile==="raphy"?"Mehdi 💙":"Raphy 💗"}...<br>Le chrono tourne pour lui aussi 😅</div>
+      </div>`;
+      return;
+    }
+    el.innerHTML=`<div class="fade-in">
+      <div style="text-align:center;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px">Lettre du tour</div>
+        <div class="bac-letter">${state.letter}</div>
+        <div class="bac-timer${(state.timeLeft||60)<10?" urgent":""}" id="bac-timer">${state.timeLeft||60}</div>
+      </div>
+      ${BAC_CATEGORIES.map(cat=>`
+        <div class="bac-category">
+          <div class="bac-cat-label">${cat}</div>
+          <input class="bac-cat-input" id="bac-${cat.replace(/\//g,"-")}" placeholder="Commence par ${state.letter}..." value="${myAnswers[cat]||""}">
+        </div>`).join("")}
+      <button class="btn btn-rose" style="margin-top:12px" onclick="submitBac()">Temps ! Soumettre ⏰</button>
+    </div>`;
+    // Démarrer le timer local
+    if(!S.bacTimer)startBacTimer();
+    return;
+  }
+
+  // Phase révélation
+  if(state.phase==="reveal"){
+    const rAns = state.answers?.raphy||{};const mAns = state.answers?.mehdi||{};
+    const pts = state.points||{raphy:0,mehdi:0};
+    el.innerHTML=`<div class="fade-in">
+      <div style="text-align:center;margin-bottom:16px">
+        <div class="bac-letter" style="font-size:48px">${state.letter}</div>
+        <div style="font-size:13px;color:var(--muted)">Comparez vos réponses et attribuez les points !</div>
+      </div>
+      ${BAC_CATEGORIES.map(cat=>`
+        <div class="bac-reveal-grid">
+          <div class="bac-reveal-col" style="border-color:var(--rose)">
+            <div class="bac-reveal-who" style="color:var(--rose)">💗 Raphy</div>
+            <div class="bac-reveal-item">
+              <span style="font-size:13px">${rAns[cat]||<span style='color:var(--dim)'>—</span>}</span>
+              ${rAns[cat]?`<button class="bac-point-btn" onclick="giveBacPoint('raphy','${cat}')" title="+1 pt Raphy">💗</button>`:""}
+            </div>
+          </div>
+          <div class="bac-reveal-col" style="border-color:var(--blue)">
+            <div class="bac-reveal-who" style="color:var(--blue)">💙 Mehdi</div>
+            <div class="bac-reveal-item">
+              <span style="font-size:13px">${mAns[cat]||`<span style='color:var(--dim)'>—</span>`}</span>
+              ${mAns[cat]?`<button class="bac-point-btn" onclick="giveBacPoint('mehdi','${cat}')" title="+1 pt Mehdi">💙</button>`:""}
+            </div>
+          </div>
+        </div>`).join("")}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;margin-bottom:12px">
+        <div style="text-align:center;background:var(--rose-soft);border:1px solid var(--rose-border);border-radius:14px;padding:14px"><div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--rose)">${pts.raphy||0}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">💗 Raphy</div></div>
+        <div style="text-align:center;background:var(--blue-soft);border:1px solid var(--blue-border);border-radius:14px;padding:14px"><div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--blue)">${pts.mehdi||0}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">💙 Mehdi</div></div>
+      </div>
+      <button class="btn" onclick="finalizeBac()">Valider les scores 🏆</button>
+    </div>`;
+  }
+}
+
+function startBac(){
+  const letter = LETTERS[Math.floor(Math.random()*LETTERS.length)];
+  const state={active:true,phase:"playing",letter,answers:{raphy:{},mehdi:{}},submitted:{},points:{raphy:0,mehdi:0},timeLeft:60,ts:Date.now()};
+  dbSave("bac_state",state);S.bacFB=state;startBacTimer();renderBac();
+}
+
+function startBacTimer(){
+  if(S.bacTimer)clearInterval(S.bacTimer);
+  let left = S.bacFB?.timeLeft||60;
+  S.bacTimer=setInterval(()=>{
+    left--;
+    const el=document.getElementById("bac-timer");
+    if(el)el.textContent=left;
+    if(left<=0){clearInterval(S.bacTimer);S.bacTimer=null;submitBac();}
+  },1000);
+}
+
+function submitBac(){
+  if(S.bacTimer){clearInterval(S.bacTimer);S.bacTimer=null;}
+  const answers={};
+  BAC_CATEGORIES.forEach(cat=>{
+    const inp=document.getElementById(`bac-${cat.replace(/\//g,"-")}`);
+    if(inp&&inp.value.trim())answers[cat]=inp.value.trim();
+  });
+  const state=S.bacFB||{};const other=S.profile==="raphy"?"mehdi":"raphy";
+  dbSave(`bac_state/answers/${S.profile}`,answers);
+  dbSave(`bac_state/submitted/${S.profile}`,true);
+  // Si les deux ont soumis → révélation
+  if(state.submitted?.[other]){
+    dbSave("bac_state/phase","reveal");
+  }
+  toast("Réponses soumises ! ✅");
+}
+
+function giveBacPoint(who, cat){
+  const state=S.bacFB||{};const pts=state.points||{raphy:0,mehdi:0};
+  pts[who]=(pts[who]||0)+1;
+  dbSave("bac_state/points",pts);toast(`+1 pour ${who==="raphy"?"💗":"💙"} !`);
+}
+
+function finalizeBac(){
+  const pts=S.bacFB?.points||{raphy:0,mehdi:0};
+  if(pts.raphy>0)addPoints("raphy",pts.raphy);
+  if(pts.mehdi>0)addPoints("mehdi",pts.mehdi);
+  celebrate();
+  dbSave("bac_state",{active:false});
+  S.bacFB={active:false};
+  toast("Points ajoutés ! 🎉");
+  setTimeout(()=>renderBac(),500);
+}
+
+// ═══════════════════════════ 20 QUESTIONS ═══════════════════════════
+function renderVingt(){
+  const el = document.getElementById("vingt-zone");
+  const state = S.vingtFB||{};
+
+  if(!state.active){
+    el.innerHTML=`<div class="fade-in">
+      <div class="card" style="text-align:center;margin-bottom:16px;border-color:#FF7A45">
+        <div style="font-size:32px;margin-bottom:8px">🎯</div>
+        <div style="font-family:var(--font-d);font-size:16px;font-weight:800;margin-bottom:6px">20 Questions</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">L'un pense à quelque chose (une personne, un objet, un souvenir...).<br>L'autre pose des questions oui/non pour deviner en max 20 questions.</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;text-align:center">C'est toi qui penses à quelque chose :</div>
+      <input class="input" id="vingt-item-input" placeholder="À quoi tu penses ? (ex: notre plage, un sushi...)" style="margin-bottom:12px">
+      <button class="btn" onclick="startVingt()">Je suis prêt(e) ! L'autre peut deviner →</button>
+      <div style="margin-top:10px;text-align:center;font-size:11px;color:var(--dim)">L'autre ne verra pas ton mot avant d'avoir deviné</div>
+    </div>`;
+    return;
+  }
+
+  const isPicker = state.picker === S.profile;
+  const isGuesser = state.guesser === S.profile;
+  const answered = state.answered||[];
+  const currentQ = state.currentQ||0;
+
+  if(state.phase==="guessed"){
+    el.innerHTML=`<div class="quiz-result-card fade-in">
+      <div style="font-size:56px;margin-bottom:12px">${state.correct?"🎉":"💡"}</div>
+      <div style="font-family:var(--font-d);font-size:22px;font-weight:900;color:var(--gold);margin-bottom:8px">${state.item}</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:12px">${state.correct?"Bien deviné en "+currentQ+" question"+(currentQ>1?"s":"")+" !":"Pas deviné, mais ça valait le coup d'essayer !"}</div>
+      ${state.correct?`<div style="color:var(--gold);font-size:14px;font-weight:700;margin-bottom:16px">+8 pts pour ${state.guesser==="raphy"?"💗 Raphy":"💙 Mehdi"}</div>`:""}
+      <button class="btn" onclick="resetVingt()">Nouvelle partie 🎯</button>
+    </div>`;
+    if(state.correct&&!state.pointed){addPoints(state.guesser,8);dbSave("vingt_state/pointed",true);}
+    return;
+  }
+
+  if(isPicker){
+    el.innerHTML=`<div class="fade-in">
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px">Ton mot secret</div>
+        <div class="vingt-item">${state.item}</div>
+        <div style="font-size:12px;color:var(--muted)">Question ${currentQ+1}/20 — réponds oui ou non !</div>
+      </div>
+      ${currentQ<VINGT_QUESTIONS.length?`
+        <div class="vingt-guess-area">
+          <div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:8px">🎯 ${state.guesser==="raphy"?"Raphy":"Mehdi"} demande :</div>
+          <div style="font-family:var(--font-d);font-size:16px;font-weight:700;margin-bottom:14px">${VINGT_QUESTIONS[currentQ]}</div>
+          <div class="vingt-q-btns" style="grid-template-columns:1fr 1fr 1fr">
+            <button class="vingt-q-btn" onclick="answerVingt('oui')">✅ Oui</button>
+            <button class="vingt-q-btn" onclick="answerVingt('non')">❌ Non</button>
+            <button class="vingt-q-btn" onclick="answerVingt('peut')">🤔 Parfois</button>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <button class="btn btn-green btn-sm" style="width:auto" onclick="vingtGuessed(true)">🎉 Il/Elle a trouvé !</button>
+          <button class="btn btn-outline-rose btn-sm" style="margin-top:8px;width:auto" onclick="vingtGuessed(false)">😅 Impossible, révéler</button>
+        </div>`:"<div class='card' style='text-align:center;color:var(--muted)'>20 questions posées ! A-t-il/elle trouvé ?</div>"}
+      <div style="margin-top:14px">
+        <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:8px">Réponses précédentes :</div>
+        ${answered.map((a,i)=>`<div class="vingt-answered"><span class="vingt-answered-q">${VINGT_QUESTIONS[i]}</span><span class="vingt-answered-r">${a==="oui"?"✅":a==="non"?"❌":"🤔"}</span></div>`).join("")}
+      </div>
+    </div>`;
+  }
+
+  if(isGuesser){
+    el.innerHTML=`<div class="fade-in">
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px">${state.picker==="raphy"?"Raphy":"Mehdi"} pense à quelque chose...</div>
+        <div style="font-size:12px;color:var(--gold);margin-top:4px">Question ${currentQ+1} / 20</div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:8px">Tes réponses jusqu'ici :</div>
+        ${answered.length===0?`<div style="color:var(--dim);font-size:12px;text-align:center;padding:16px">Aucune question posée — ${state.picker==="raphy"?"Raphy":"Mehdi"} doit répondre à la première !</div>`:""}
+        ${answered.map((a,i)=>`<div class="vingt-answered"><span class="vingt-answered-q">${VINGT_QUESTIONS[i]}</span><span class="vingt-answered-r">${a==="oui"?"✅":a==="non"?"❌":"🤔"}</span></div>`).join("")}
+      </div>
+      <div class="vingt-guess-area" style="margin-top:14px">
+        <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:8px">Ta tentative :</div>
+        <input class="input" id="vingt-final-guess" placeholder="J'ai trouvé ! C'est..." style="margin-bottom:10px">
+        <button class="btn btn-rose" onclick="submitVingtGuess()">Je tente ma chance ! 🎯</button>
+      </div>
+    </div>`;
+  }
+}
+
+function startVingt(){
+  const item=document.getElementById("vingt-item-input").value.trim();if(!item){toast("Écris quelque chose !");return}
+  const other=S.profile==="raphy"?"mehdi":"raphy";
+  const state={active:true,item,picker:S.profile,guesser:other,phase:"asking",answered:[],currentQ:0,pointed:false,ts:Date.now()};
+  dbSave("vingt_state",state);S.vingtFB=state;renderVingt();
+  toast("C'est parti ! Attends ses questions 🎯");
+}
+
+function answerVingt(answer){
+  const state=S.vingtFB||{};
+  const answered=[...(state.answered||[]),answer];
+  const nextQ=(state.currentQ||0)+1;
+  dbSave("vingt_state/answered",answered);
+  dbSave("vingt_state/currentQ",nextQ);
+  S.vingtFB={...state,answered,currentQ:nextQ};
+  renderVingt();
+}
+
+function submitVingtGuess(){
+  const guess=document.getElementById("vingt-final-guess")?.value.trim();if(!guess)return;
+  const state=S.vingtFB||{};
+  toast(`"${guess}" envoyé... ${state.picker==="raphy"?"Raphy":"Mehdi"} va valider !`);
+}
+
+function vingtGuessed(correct){
+  const state=S.vingtFB||{};
+  dbSave("vingt_state/phase","guessed");
+  dbSave("vingt_state/correct",correct);
+  S.vingtFB={...state,phase:"guessed",correct};
+  renderVingt();
+}
+
+function resetVingt(){dbSave("vingt_state",{active:false});S.vingtFB={active:false};renderVingt();}
+
+// ═══════════════════════════ DÉMARRAGE ═══════════════════════════
+document.addEventListener("DOMContentLoaded",()=>{
+  document.addEventListener("firebaseReady",()=>{
+    initApp();
+  });
+  if(window.firebaseReady) initApp();
+});
+</script>
