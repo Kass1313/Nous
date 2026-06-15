@@ -1,0 +1,3146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#090B10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mehdi & Raphy">
+<title>Mehdi & Raphy 💫</title>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, get, onValue, push, remove, update }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getStorage, ref as sRef, uploadString, getDownloadURL }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+  // ⚠️ REMPLACE PAR TA CONFIG FIREBASE
+  const firebaseConfig = {
+    apiKey: "VOTRE_API_KEY",
+    authDomain: "VOTRE_AUTH_DOMAIN",
+    databaseURL: "VOTRE_DATABASE_URL",
+    projectId: "VOTRE_PROJECT_ID",
+    storageBucket: "VOTRE_STORAGE_BUCKET",
+    messagingSenderId: "VOTRE_MESSAGING_SENDER_ID",
+    appId: "VOTRE_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+  const storage = getStorage(app);
+  window._db = db;
+  window._storage = storage;
+  window._dbRef = ref;
+  window._dbSet = set;
+  window._dbGet = get;
+  window._dbOnValue = onValue;
+  window._dbPush = push;
+  window._dbRemove = remove;
+  window._dbUpdate = update;
+  window._sRef = sRef;
+  window._uploadString = uploadString;
+  window._getDownloadURL = getDownloadURL;
+  window.firebaseReady = true;
+  document.dispatchEvent(new Event("firebaseReady"));
+</script>
+
+<style>
+/* ── RESET & BASE ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg:        #090B10;
+  --surface:   #111318;
+  --card:      #181C24;
+  --border:    #252B38;
+  --gold:      #C9A84C;
+  --gold-soft: #C9A84C22;
+  --rose:      #E8637A;
+  --rose-soft: #E8637A22;
+  --text:      #F0EDE8;
+  --muted:     #8B90A0;
+  --dim:       #3A4055;
+  --radius:    16px;
+  --nav-h:     72px;
+}
+html, body {
+  height: 100%; width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+  overflow: hidden;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input, textarea { font-family: inherit; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+
+/* ── SCREENS ──────────────────────────────────────────────────────────── */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  transition: opacity .35s ease, transform .35s ease;
+}
+.screen.hidden { opacity: 0; pointer-events: none; transform: scale(.97); }
+
+/* ── PIN SCREEN ───────────────────────────────────────────────────────── */
+#pin-screen {
+  background: var(--bg);
+  align-items: center; justify-content: center;
+  z-index: 1000;
+}
+.pin-bg {
+  position: absolute; inset: 0; overflow: hidden;
+}
+.pin-star {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle var(--d, 3s) ease-in-out infinite var(--delay, 0s);
+  opacity: 0;
+}
+@keyframes twinkle {
+  0%,100% { opacity: 0; transform: scale(1); }
+  50% { opacity: var(--op, .6); transform: scale(1.5); }
+}
+.pin-content {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 32px;
+  width: 100%; padding: 0 40px;
+}
+.pin-logo {
+  text-align: center;
+}
+.pin-logo-title {
+  font-size: 32px; font-weight: 800; letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--gold), var(--rose));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.pin-logo-sub {
+  color: var(--muted); font-size: 13px; margin-top: 4px;
+  letter-spacing: 2px; text-transform: uppercase;
+}
+.pin-dots {
+  display: flex; gap: 16px;
+}
+.pin-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--dim);
+  transition: all .2s ease;
+}
+.pin-dot.filled {
+  background: linear-gradient(135deg, var(--gold), var(--rose));
+  border-color: transparent;
+  box-shadow: 0 0 12px rgba(201,168,76,.5);
+}
+.pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 72px);
+  grid-template-rows: repeat(4, 72px);
+  gap: 12px;
+}
+.pin-key {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  font-size: 24px; font-weight: 600;
+  color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s ease;
+  position: relative; overflow: hidden;
+}
+.pin-key:active { transform: scale(.92); background: var(--gold-soft); border-color: var(--gold); }
+.pin-key.empty { background: transparent; border: none; pointer-events: none; }
+.pin-key.del { font-size: 18px; color: var(--muted); }
+.pin-error { animation: shake .4s ease; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+/* Hearts animation */
+.heart-burst {
+  position: fixed; inset: 0; pointer-events: none; z-index: 2000;
+}
+.heart-particle {
+  position: absolute;
+  font-size: 20px;
+  animation: heartFly 1.2s ease-out forwards;
+  left: var(--x); top: var(--y);
+}
+@keyframes heartFly {
+  0% { opacity: 1; transform: translateY(0) scale(0) rotate(var(--r)); }
+  30% { transform: translateY(-20px) scale(1.2) rotate(var(--r)); }
+  100% { opacity: 0; transform: translateY(calc(-120px - var(--dy))) scale(.5) rotate(calc(var(--r) + 20deg)); }
+}
+
+/* ── APP SCREEN ───────────────────────────────────────────────────────── */
+#app-screen { flex-direction: column; }
+
+/* Header */
+.app-header {
+  background: rgba(9,11,16,.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px 10px;
+  flex-shrink: 0;
+  z-index: 50;
+}
+.header-top {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-title {
+  font-size: 20px; font-weight: 800; letter-spacing: -.5px;
+  background: linear-gradient(135deg, var(--gold), var(--rose));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header-date {
+  color: var(--muted); font-size: 11px; margin-top: 1px;
+  text-transform: capitalize;
+}
+.header-status {
+  display: flex; gap: 6px; align-items: center;
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* Pages */
+.pages {
+  flex: 1; overflow: hidden; position: relative;
+}
+.page {
+  position: absolute; inset: 0;
+  overflow-y: auto;
+  padding: 16px 16px calc(var(--nav-h) + 16px);
+  opacity: 0; pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity .25s ease, transform .25s ease;
+}
+.page.active {
+  opacity: 1; pointer-events: all; transform: translateY(0);
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 500px;
+  height: var(--nav-h);
+  background: rgba(17,19,24,.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 4px 8px;
+  z-index: 100;
+  overflow-x: auto;
+  gap: 0;
+}
+.bottom-nav::-webkit-scrollbar { display: none; }
+.nav-item {
+  flex: 0 0 auto;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px; padding: 6px 10px;
+  border-radius: 14px;
+  transition: all .2s ease;
+  min-width: 54px;
+  position: relative;
+}
+.nav-item.active { background: var(--gold-soft); }
+.nav-icon { font-size: 20px; line-height: 1; }
+.nav-label {
+  font-size: 9px; font-weight: 700; letter-spacing: .3px;
+  color: var(--dim); text-transform: uppercase;
+  white-space: nowrap;
+}
+.nav-item.active .nav-label { color: var(--gold); }
+.nav-badge {
+  position: absolute; top: 4px; right: 6px;
+  width: 8px; height: 8px;
+  background: var(--rose);
+  border-radius: 50%;
+  border: 1.5px solid var(--surface);
+}
+
+/* ── COMPONENTS ───────────────────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.2px; color: var(--muted); margin-bottom: 12px;
+}
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+}
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 12px 20px; border-radius: 14px;
+  font-size: 14px; font-weight: 700;
+  background: linear-gradient(135deg, var(--gold), #E8A84C);
+  color: #0D0F14;
+  transition: all .2s ease;
+  border: none; cursor: pointer; width: 100%;
+}
+.btn:active { transform: scale(.97); opacity: .9; }
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--gold);
+  color: var(--gold);
+}
+.btn-rose {
+  background: linear-gradient(135deg, var(--rose), #F07A8A);
+  color: white;
+}
+.btn-sm {
+  padding: 8px 16px; font-size: 13px; border-radius: 10px; width: auto;
+}
+.input {
+  width: 100%; padding: 11px 14px;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 12px; color: var(--text); font-size: 14px;
+  outline: none; transition: border-color .2s;
+}
+.input:focus { border-color: var(--gold); }
+.input::placeholder { color: var(--dim); }
+textarea.input { resize: vertical; min-height: 80px; font-family: inherit; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: calc(var(--nav-h) + 16px); left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--card); border: 1px solid var(--gold);
+  color: var(--text); padding: 10px 20px;
+  border-radius: 30px; font-size: 13px; font-weight: 600;
+  z-index: 9999; opacity: 0;
+  transition: all .3s ease;
+  white-space: nowrap;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.75);
+  z-index: 500; display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none; transition: opacity .3s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--card); border-radius: 24px 24px 0 0;
+  border-top: 1px solid var(--border);
+  padding: 20px 20px 40px;
+  width: 100%; max-height: 85vh; overflow-y: auto;
+  transform: translateY(100%); transition: transform .35s cubic-bezier(.4,0,.2,1);
+}
+.modal-overlay.open .modal-box { transform: translateY(0); }
+.modal-handle {
+  width: 40px; height: 4px; background: var(--border);
+  border-radius: 2px; margin: 0 auto 20px;
+}
+.modal-title {
+  font-size: 18px; font-weight: 800; margin-bottom: 18px;
+}
+
+/* Section header */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-size: 18px; font-weight: 800; letter-spacing: -.3px;
+}
+
+/* ── HOME PAGE ────────────────────────────────────────────────────────── */
+.home-hero {
+  background: linear-gradient(135deg, rgba(201,168,76,.15), rgba(232,99,122,.1));
+  border: 1px solid rgba(201,168,76,.25);
+  border-radius: 20px;
+  padding: 22px;
+  text-align: center;
+  margin-bottom: 12px;
+  position: relative; overflow: hidden;
+}
+.home-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(201,168,76,.08) 0%, transparent 70%),
+              radial-gradient(ellipse at 70% 50%, rgba(232,99,122,.08) 0%, transparent 70%);
+}
+.hero-days {
+  font-size: 52px; font-weight: 900; letter-spacing: -2px;
+  background: linear-gradient(135deg, var(--gold), var(--rose));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  position: relative;
+}
+.hero-label { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.hero-anniv { color: var(--gold); font-size: 11px; margin-top: 8px; font-weight: 600; }
+
+.home-message {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  margin-bottom: 12px;
+  border-left: 3px solid var(--gold);
+}
+.message-label { color: var(--gold); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.message-text { color: var(--text); font-size: 14px; line-height: 1.6; font-style: italic; }
+
+.humeur-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin-bottom: 12px;
+}
+.humeur-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px;
+  text-align: center;
+}
+.humeur-name { font-size: 11px; font-weight: 700; margin-bottom: 6px; }
+.humeur-emoji { font-size: 32px; display: block; margin-bottom: 4px; cursor: pointer; }
+.humeur-label { color: var(--muted); font-size: 10px; }
+
+.today-schedule {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px;
+  margin-bottom: 12px;
+}
+.schedule-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.schedule-row:last-child { border-bottom: none; }
+.schedule-who { font-size: 13px; font-weight: 700; }
+.schedule-shift {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--muted);
+}
+.shift-badge {
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+}
+
+.next-off {
+  background: linear-gradient(135deg, rgba(201,168,76,.1), rgba(232,99,122,.05));
+  border: 1px solid rgba(201,168,76,.3);
+  border-radius: var(--radius); padding: 14px;
+  margin-bottom: 12px; text-align: center;
+}
+.next-off-label { color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+.next-off-count {
+  font-size: 28px; font-weight: 900;
+  background: linear-gradient(135deg, var(--gold), var(--rose));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.next-off-sub { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+/* ── PLANNING PAGE ────────────────────────────────────────────────────── */
+.planning-tabs {
+  display: flex; gap: 8px; margin-bottom: 16px;
+}
+.plan-tab {
+  flex: 1; padding: 10px; border-radius: 12px;
+  font-size: 13px; font-weight: 700; text-align: center;
+  border: 1.5px solid var(--border); color: var(--muted);
+  transition: all .2s;
+}
+.plan-tab.active {
+  background: var(--gold-soft); border-color: var(--gold); color: var(--gold);
+}
+
+.week-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.week-nav-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--card); border: 1px solid var(--border);
+  color: var(--text); font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+.week-label { font-size: 14px; font-weight: 700; color: var(--text); text-align: center; }
+.week-sub { font-size: 10px; color: var(--muted); text-align: center; margin-top: 1px; }
+
+.planning-grid {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.plan-day-row {
+  display: grid; grid-template-columns: 44px 1fr 1fr;
+  gap: 6px; align-items: stretch;
+}
+.plan-day-label {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 6px 0;
+}
+.plan-day-name { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+.plan-day-num { font-size: 18px; font-weight: 800; color: var(--text); }
+.plan-day-label.today .plan-day-name { color: var(--gold); }
+.plan-day-label.today .plan-day-num { color: var(--gold); }
+
+.plan-slot {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 10px 8px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  cursor: pointer; transition: all .2s; min-height: 68px;
+  justify-content: center;
+}
+.plan-slot:active { transform: scale(.96); }
+.plan-slot.has-shift { border-color: var(--shift-color); background: color-mix(in srgb, var(--shift-color) 12%, transparent); }
+.plan-slot-icon { font-size: 20px; line-height: 1; }
+.plan-slot-label { font-size: 10px; font-weight: 700; color: var(--shift-color, var(--muted)); }
+.plan-slot-hours { font-size: 9px; color: var(--muted); }
+.plan-slot-empty { color: var(--dim); font-size: 18px; }
+
+.free-together-banner {
+  background: linear-gradient(135deg, rgba(58,158,106,.2), rgba(58,158,106,.05));
+  border: 1px solid rgba(58,158,106,.4);
+  border-radius: 10px; padding: 8px 12px;
+  color: #3A9E6A; font-size: 12px; font-weight: 700;
+  text-align: center; margin-bottom: 8px;
+}
+
+/* Shift Picker Modal */
+.shift-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
+}
+.shift-option {
+  background: var(--surface); border: 2px solid var(--border);
+  border-radius: 14px; padding: 14px 10px;
+  text-align: center; cursor: pointer; transition: all .2s;
+}
+.shift-option:active, .shift-option.selected {
+  border-color: var(--s-color, var(--gold));
+  background: color-mix(in srgb, var(--s-color, var(--gold)) 15%, transparent);
+}
+.shift-option-icon { font-size: 26px; margin-bottom: 4px; }
+.shift-option-label { font-size: 12px; font-weight: 700; color: var(--text); }
+.shift-option-hours { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+.time-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.time-label { font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+
+/* ── MOTS DOUX ────────────────────────────────────────────────────────── */
+.chat-container {
+  display: flex; flex-direction: column;
+  gap: 12px; padding-bottom: 8px;
+}
+.chat-bubble-wrap {
+  display: flex; flex-direction: column;
+}
+.chat-bubble-wrap.me { align-items: flex-end; }
+.chat-bubble-wrap.other { align-items: flex-start; }
+.chat-bubble {
+  max-width: 80%; padding: 12px 16px;
+  border-radius: 18px; position: relative;
+}
+.chat-bubble-wrap.me .chat-bubble {
+  background: linear-gradient(135deg, rgba(201,168,76,.25), rgba(232,99,122,.15));
+  border: 1px solid rgba(201,168,76,.3);
+  border-bottom-right-radius: 4px;
+}
+.chat-bubble-wrap.other .chat-bubble {
+  background: var(--card); border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+.bubble-who { font-size: 10px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
+.bubble-text { font-size: 14px; line-height: 1.5; color: var(--text); }
+.bubble-meta { font-size: 10px; color: var(--muted); margin-top: 4px; }
+.bubble-mood { font-size: 18px; }
+.bubble-reactions {
+  display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;
+}
+.reaction-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 3px 8px;
+  font-size: 11px; display: flex; align-items: center; gap: 3px;
+  cursor: pointer; color: var(--muted); transition: all .15s;
+}
+.reaction-btn:active { background: var(--gold-soft); border-color: var(--gold); }
+
+.chat-input-bar {
+  position: sticky; bottom: calc(var(--nav-h)); 
+  background: rgba(9,11,16,.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+  margin: 0 -16px;
+}
+.who-selector {
+  display: flex; gap: 6px; margin-bottom: 8px;
+}
+.who-btn {
+  flex: 1; padding: 7px; border-radius: 10px;
+  font-size: 12px; font-weight: 700;
+  border: 1.5px solid var(--border); color: var(--muted);
+  transition: all .2s;
+}
+.who-btn.active-mehdi { border-color: #4A9EE8; color: #4A9EE8; background: rgba(74,158,232,.12); }
+.who-btn.active-raphy { border-color: var(--rose); color: var(--rose); background: var(--rose-soft); }
+
+.mood-selector { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+.mood-btn { font-size: 20px; padding: 3px; border-radius: 8px; transition: all .15s; }
+.mood-btn.selected { background: var(--gold-soft); }
+
+.chat-row { display: flex; gap: 8px; }
+.chat-send-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--rose));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+  transition: all .2s;
+}
+.chat-send-btn:active { transform: scale(.92); }
+
+/* ── GALERIE ──────────────────────────────────────────────────────────── */
+.album-tabs {
+  display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;
+  margin-bottom: 14px;
+}
+.album-tabs::-webkit-scrollbar { display: none; }
+.album-tab {
+  flex: 0 0 auto; padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
+  border: 1.5px solid var(--border); color: var(--muted);
+  white-space: nowrap; transition: all .2s;
+}
+.album-tab.active { background: var(--gold-soft); border-color: var(--gold); color: var(--gold); }
+
+.photo-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;
+}
+.photo-thumb {
+  aspect-ratio: 1; border-radius: 8px; overflow: hidden;
+  cursor: pointer; position: relative;
+}
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.photo-thumb-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(transparent 50%, rgba(0,0,0,.7));
+  display: flex; align-items: flex-end;
+  padding: 6px; opacity: 0; transition: opacity .2s;
+}
+.photo-thumb:hover .photo-thumb-overlay { opacity: 1; }
+.photo-likes { color: white; font-size: 10px; }
+
+/* ── OBJECTIFS ────────────────────────────────────────────────────────── */
+.goal-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 10px;
+}
+.goal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.goal-title { font-size: 15px; font-weight: 700; }
+.goal-progress-bar {
+  background: var(--surface); border-radius: 6px; height: 8px; overflow: hidden; margin-bottom: 6px;
+}
+.goal-progress-fill {
+  height: 100%; border-radius: 6px;
+  background: linear-gradient(90deg, var(--gold), var(--rose));
+  transition: width .5s ease;
+}
+.goal-progress-row { display: flex; justify-content: space-between; align-items: center; }
+.goal-pct { font-size: 12px; font-weight: 700; color: var(--gold); }
+input[type=range] { width: 100%; accent-color: var(--gold); margin-top: 6px; }
+
+/* ── DÉFIS ────────────────────────────────────────────────────────────── */
+.level-banner {
+  background: linear-gradient(135deg, rgba(201,168,76,.2), rgba(232,99,122,.1));
+  border: 1px solid rgba(201,168,76,.3);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 14px;
+  text-align: center;
+}
+.level-name { font-size: 22px; font-weight: 900; color: var(--gold); }
+.level-pts { color: var(--muted); font-size: 12px; margin-top: 3px; }
+.level-bar { background: var(--surface); border-radius: 6px; height: 6px; margin-top: 10px; overflow: hidden; }
+.level-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--rose)); border-radius: 6px; transition: width .5s; }
+
+.defi-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 10px;
+}
+.defi-header { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+.defi-icon { font-size: 32px; flex-shrink: 0; }
+.defi-title { font-size: 15px; font-weight: 700; }
+.defi-desc { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+.defi-pts { color: var(--gold); font-size: 11px; font-weight: 700; margin-top: 4px; }
+.badge-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.badge-item {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 10px 6px; text-align: center;
+}
+.badge-item.locked { opacity: .4; }
+.badge-icon { font-size: 24px; }
+.badge-name { font-size: 9px; color: var(--muted); margin-top: 4px; font-weight: 600; }
+
+/* ── NOTES ────────────────────────────────────────────────────────────── */
+.note-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px; margin-bottom: 10px;
+  cursor: pointer; transition: border-color .2s;
+}
+.note-card:hover { border-color: var(--gold); }
+.note-card-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.note-card-preview { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.note-card-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.note-card-date { font-size: 10px; color: var(--dim); }
+.checklist-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.checklist-item:last-child { border: none; }
+.check-box {
+  width: 20px; height: 20px; border-radius: 6px;
+  border: 2px solid var(--border); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s;
+}
+.check-box.checked { background: var(--gold); border-color: var(--gold); }
+.check-text { font-size: 13px; flex: 1; }
+.check-text.done { text-decoration: line-through; color: var(--muted); }
+
+/* ── IA ───────────────────────────────────────────────────────────────── */
+.ai-chat { display: flex; flex-direction: column; gap: 12px; }
+.ai-msg {
+  padding: 12px 16px; border-radius: 16px; max-width: 90%; font-size: 13px; line-height: 1.6;
+}
+.ai-msg.user {
+  align-self: flex-end;
+  background: var(--gold-soft); border: 1px solid rgba(201,168,76,.3); color: var(--text);
+  border-bottom-right-radius: 4px;
+}
+.ai-msg.assistant {
+  align-self: flex-start;
+  background: var(--card); border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+.ai-tag { color: var(--gold); font-size: 10px; font-weight: 700; margin-bottom: 4px; }
+.ai-suggestions { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.ai-suggestion-btn {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 10px 14px;
+  color: var(--muted); font-size: 12px; text-align: left;
+  transition: all .2s; cursor: pointer;
+}
+.ai-suggestion-btn:active { border-color: var(--gold); color: var(--text); }
+
+/* ── HISTOIRE ─────────────────────────────────────────────────────────── */
+.timeline { position: relative; padding-left: 28px; }
+.timeline::before {
+  content: ''; position: absolute; left: 10px; top: 0; bottom: 0;
+  width: 2px; background: linear-gradient(to bottom, var(--gold), var(--rose), transparent);
+}
+.timeline-item { position: relative; margin-bottom: 20px; }
+.timeline-dot {
+  position: absolute; left: -22px; top: 4px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--rose));
+  box-shadow: 0 0 10px rgba(201,168,76,.4);
+}
+.timeline-date { font-size: 10px; color: var(--gold); font-weight: 700; margin-bottom: 4px; }
+.timeline-title { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+.timeline-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.timeline-img { width: 100%; border-radius: 10px; margin-top: 8px; object-fit: cover; max-height: 140px; }
+
+/* ── SETTINGS ─────────────────────────────────────────────────────────── */
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.settings-row:last-child { border: none; }
+.settings-label { font-size: 14px; font-weight: 600; }
+.settings-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.settings-value { font-size: 13px; color: var(--muted); }
+.toggle {
+  width: 44px; height: 26px; border-radius: 13px;
+  background: var(--dim); position: relative; cursor: pointer;
+  transition: background .2s;
+}
+.toggle.on { background: var(--gold); }
+.toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: white; transition: transform .2s;
+}
+.toggle.on::after { transform: translateX(18px); }
+
+/* ── QUESTION DU SOIR ────────────────────────────────────────────────── */
+.question-card {
+  background: linear-gradient(135deg, rgba(138,107,212,.2), rgba(232,99,122,.1));
+  border: 1px solid rgba(138,107,212,.3);
+  border-radius: var(--radius); padding: 20px; text-align: center;
+  margin-bottom: 14px;
+}
+.question-emoji { font-size: 40px; margin-bottom: 8px; }
+.question-text { font-size: 16px; font-weight: 700; line-height: 1.5; margin-bottom: 14px; }
+.answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.answer-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px; text-align: center;
+}
+.answer-who { font-size: 10px; font-weight: 700; margin-bottom: 6px; }
+.answer-text { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+/* ── ROUE ─────────────────────────────────────────────────────────────── */
+.wheel-container {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  padding: 10px 0;
+}
+.wheel-wrap { position: relative; width: 260px; height: 260px; }
+canvas#wheel { width: 260px; height: 260px; }
+.wheel-pointer {
+  position: absolute; top: -10px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+}
+.wheel-result {
+  text-align: center; padding: 14px 20px;
+  background: var(--gold-soft); border: 1px solid var(--gold);
+  border-radius: 14px; font-size: 18px; font-weight: 800;
+  color: var(--gold); min-width: 200px;
+}
+.wheel-spin-btn {
+  background: linear-gradient(135deg, var(--gold), var(--rose));
+  color: #0D0F14; font-weight: 800; font-size: 16px;
+  padding: 14px 40px; border-radius: 30px;
+  cursor: pointer; border: none;
+  box-shadow: 0 4px 20px rgba(201,168,76,.4);
+  transition: all .2s;
+}
+.wheel-spin-btn:active { transform: scale(.96); }
+.wheel-spin-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── GRATITUDE ────────────────────────────────────────────────────────── */
+.gratitude-card {
+  background: linear-gradient(135deg, rgba(232,99,122,.12), rgba(201,168,76,.08));
+  border: 1px solid rgba(232,99,122,.25);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 10px;
+}
+.gratitude-who { font-size: 10px; font-weight: 700; color: var(--rose); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+.gratitude-text { font-size: 14px; line-height: 1.6; font-style: italic; }
+.gratitude-date { font-size: 10px; color: var(--muted); margin-top: 6px; }
+
+/* ── STATUT ───────────────────────────────────────────────────────────── */
+.statut-card {
+  border-radius: var(--radius); padding: 16px; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 14px;
+}
+.statut-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+}
+.statut-name { font-size: 15px; font-weight: 800; }
+.statut-text { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.statut-time { font-size: 11px; font-weight: 700; margin-top: 4px; }
+
+/* Animations */
+@keyframes fadeIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform:translateY(0); } }
+@keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-spin { animation: spin 1s linear infinite; display: inline-block; }
+
+/* Celebration */
+.celebration-overlay {
+  position: fixed; inset: 0; z-index: 3000;
+  pointer-events: none; overflow: hidden;
+}
+.confetti-piece {
+  position: absolute; width: 8px; height: 8px;
+  animation: confettiFall var(--dur) ease-in var(--delay) forwards;
+  top: -10px; left: var(--x);
+  background: var(--c);
+  border-radius: var(--br, 2px);
+  transform: rotate(var(--rot));
+}
+@keyframes confettiFall {
+  to { transform: translateY(110vh) rotate(calc(var(--rot) + 720deg)); opacity:0; }
+}
+
+/* Capsule */
+.capsule-locked {
+  background: linear-gradient(135deg, rgba(138,107,212,.15), rgba(201,168,76,.08));
+  border: 1px solid rgba(138,107,212,.3);
+  border-radius: var(--radius); padding: 20px; text-align: center;
+}
+.capsule-lock-icon { font-size: 40px; margin-bottom: 8px; }
+.capsule-unlock-date { color: var(--gold); font-size: 13px; font-weight: 700; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+     PIN SCREEN
+════════════════════════════════════════════════════════════ -->
+<div id="pin-screen" class="screen">
+  <div class="pin-bg" id="pin-bg"></div>
+  <div class="pin-content">
+    <div class="pin-logo">
+      <div class="pin-logo-title">Mehdi & Raphy</div>
+      <div class="pin-logo-sub">Notre espace ✨</div>
+    </div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-pad" id="pin-pad">
+      <!-- Rempli par JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     APP SCREEN
+════════════════════════════════════════════════════════════ -->
+<div id="app-screen" class="screen hidden">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-top">
+      <div>
+        <div class="header-title">Mehdi & Raphy 💫</div>
+        <div class="header-date" id="header-date"></div>
+      </div>
+      <div class="header-status">
+        <div class="status-dot" style="color:#4A9EE8; background:#4A9EE8"></div>
+        <div class="status-dot" style="color:var(--rose); background:var(--rose)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pages -->
+  <div class="pages">
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <div class="home-hero">
+        <div class="hero-days" id="days-count">0</div>
+        <div class="hero-label">jours ensemble ❤️</div>
+        <div class="hero-anniv" id="next-anniv"></div>
+      </div>
+
+      <div class="home-message">
+        <div class="message-label">✨ Message du jour</div>
+        <div class="message-text" id="daily-message">Chargement...</div>
+      </div>
+
+      <div class="humeur-grid">
+        <div class="humeur-card">
+          <div class="humeur-name" style="color:#4A9EE8">💙 Mehdi</div>
+          <span class="humeur-emoji" id="humeur-mehdi" onclick="openHumeur('mehdi')">😊</span>
+          <div class="humeur-label" id="humeur-mehdi-label">Comment tu vas ?</div>
+        </div>
+        <div class="humeur-card">
+          <div class="humeur-name" style="color:var(--rose)">💗 Raphy</div>
+          <span class="humeur-emoji" id="humeur-raphy" onclick="openHumeur('raphy')">🥰</span>
+          <div class="humeur-label" id="humeur-raphy-label">Comment tu vas ?</div>
+        </div>
+      </div>
+
+      <div class="today-schedule card" id="today-schedule">
+        <div class="card-title">📅 Aujourd'hui</div>
+        <div id="today-schedule-content">Aucun planning défini</div>
+      </div>
+
+      <div class="next-off" id="next-off-card">
+        <div class="next-off-label">Prochain jour off ensemble 🎉</div>
+        <div class="next-off-count" id="next-off-count">—</div>
+        <div class="next-off-sub" id="next-off-sub">Remplissez votre planning !</div>
+      </div>
+
+      <div class="card" id="statut-home">
+        <div class="card-title">⚡ Statut en direct</div>
+        <div id="statut-content">Mettez à jour votre statut dans Statut</div>
+      </div>
+    </div>
+
+    <!-- PLANNING -->
+    <div class="page" id="page-planning">
+      <div class="section-header">
+        <div class="section-title">📅 Planning</div>
+        <button class="btn btn-sm" style="width:auto; padding:8px 14px" onclick="openAddEvent()">+ Ajouter</button>
+      </div>
+      <div class="planning-tabs">
+        <button class="plan-tab active" onclick="switchPlanTab('travail',this)">💼 Travail</button>
+        <button class="plan-tab" onclick="switchPlanTab('perso',this)">🗓️ Personnel</button>
+        <button class="plan-tab" onclick="switchPlanTab('mois',this)">📆 Mois</button>
+      </div>
+      <div id="planning-content"><!-- Rempli par JS --></div>
+    </div>
+
+    <!-- MOTS DOUX -->
+    <div class="page" id="page-mots">
+      <div class="section-header">
+        <div class="section-title">💌 Mots Doux</div>
+        <button class="btn btn-sm btn-outline" style="width:auto" onclick="openCapsule()">⏳ Capsule</button>
+      </div>
+      <div class="chat-container" id="chat-container"></div>
+      <div class="chat-input-bar">
+        <div class="who-selector">
+          <button class="who-btn active-mehdi" id="who-mehdi" onclick="setWho('mehdi')">💙 Mehdi</button>
+          <button class="who-btn" id="who-raphy" onclick="setWho('raphy')">💗 Raphy</button>
+        </div>
+        <div class="mood-selector" id="mood-selector"></div>
+        <div class="chat-row">
+          <input class="input" id="chat-input" placeholder="Écris quelque chose de doux..." style="flex:1">
+          <button class="chat-send-btn" onclick="sendMessage()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GALERIE -->
+    <div class="page" id="page-galerie">
+      <div class="section-header">
+        <div class="section-title">📸 Galerie</div>
+        <button class="btn btn-sm" style="width:auto" onclick="document.getElementById('photo-input').click()">+ Photo</button>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)">
+      <div class="album-tabs" id="album-tabs"></div>
+      <div class="photo-grid" id="photo-grid"></div>
+    </div>
+
+    <!-- OBJECTIFS -->
+    <div class="page" id="page-objectifs">
+      <div class="section-header">
+        <div class="section-title">🎯 Objectifs</div>
+        <button class="btn btn-sm" style="width:auto" onclick="openAddGoal()">+ Objectif</button>
+      </div>
+      <div id="goals-list"></div>
+    </div>
+
+    <!-- DÉFIS -->
+    <div class="page" id="page-defis">
+      <div class="section-title" style="margin-bottom:14px">🎮 Défis Couple</div>
+      <div class="level-banner" id="level-banner"></div>
+      <div class="section-header">
+        <span style="font-size:14px;font-weight:700">Défi du jour</span>
+        <button class="btn btn-sm btn-outline" style="width:auto" onclick="loadDefi()">🎲 Nouveau</button>
+      </div>
+      <div id="defi-content"></div>
+      <div class="section-header" style="margin-top:16px">
+        <span style="font-size:14px;font-weight:700">🏆 Badges</span>
+      </div>
+      <div class="badge-grid" id="badge-grid"></div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="page" id="page-notes">
+      <div class="section-header">
+        <div class="section-title">📝 Notes & Listes</div>
+        <button class="btn btn-sm" style="width:auto" onclick="openAddNote()">+ Note</button>
+      </div>
+      <div class="album-tabs" id="note-filter-tabs"></div>
+      <div id="notes-list"></div>
+    </div>
+
+    <!-- IA -->
+    <div class="page" id="page-ia">
+      <div class="section-title" style="margin-bottom:14px">✨ Assistant IA</div>
+      <div id="ai-suggestions-list" class="ai-suggestions"></div>
+      <div class="ai-chat" id="ai-chat"></div>
+      <div class="chat-input-bar">
+        <div class="chat-row">
+          <input class="input" id="ai-input" placeholder="Posez une question..." style="flex:1">
+          <button class="chat-send-btn" onclick="sendAI()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROUE -->
+    <div class="page" id="page-roue">
+      <div class="section-title" style="margin-bottom:14px;text-align:center">🎡 Roue des Activités</div>
+      <div class="wheel-container">
+        <div class="wheel-wrap">
+          <div class="wheel-pointer">▼</div>
+          <canvas id="wheel" width="260" height="260"></canvas>
+        </div>
+        <div class="wheel-result" id="wheel-result" style="display:none"></div>
+        <button class="wheel-spin-btn" id="wheel-btn" onclick="spinWheel()">Tourner ! 🎲</button>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Personnaliser les activités</div>
+        <div id="wheel-activities-list"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input class="input" id="new-activity-input" placeholder="Nouvelle activité..." style="flex:1">
+          <button class="btn btn-sm" style="width:auto" onclick="addActivity()">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUESTION -->
+    <div class="page" id="page-question">
+      <div class="section-title" style="margin-bottom:14px;text-align:center">❓ Questions Couple</div>
+      <div class="question-card" id="question-card">
+        <div class="question-emoji">💭</div>
+        <div class="question-text" id="question-text">Chargement...</div>
+        <button class="btn btn-sm btn-outline" style="width:auto;margin:0 auto" onclick="loadQuestion()">Nouvelle question 🔄</button>
+      </div>
+      <div class="answers-grid">
+        <div class="answer-card">
+          <div class="answer-who" style="color:#4A9EE8">💙 Mehdi</div>
+          <textarea class="input answer-text" id="ans-mehdi" placeholder="Ta réponse..." rows="3" style="margin-top:4px"></textarea>
+        </div>
+        <div class="answer-card">
+          <div class="answer-who" style="color:var(--rose)">💗 Raphy</div>
+          <textarea class="input answer-text" id="ans-raphy" placeholder="Ta réponse..." rows="3" style="margin-top:4px"></textarea>
+        </div>
+      </div>
+      <button class="btn" style="margin-top:10px" onclick="saveAnswers()">Sauvegarder nos réponses 💾</button>
+      <div style="margin-top:16px">
+        <div class="card-title">Questions précédentes</div>
+        <div id="past-questions"></div>
+      </div>
+    </div>
+
+    <!-- GRATITUDE -->
+    <div class="page" id="page-gratitude">
+      <div class="section-title" style="margin-bottom:14px">🙏 Gratitude</div>
+      <div class="card">
+        <div class="card-title">Aujourd'hui je suis reconnaissant(e) pour...</div>
+        <div class="who-selector" style="margin-bottom:10px">
+          <button class="who-btn active-mehdi" id="grat-who-mehdi" onclick="setGratWho('mehdi')">💙 Mehdi</button>
+          <button class="who-btn" id="grat-who-raphy" onclick="setGratWho('raphy')">💗 Raphy</button>
+        </div>
+        <textarea class="input" id="gratitude-input" placeholder="Écris ta gratitude du jour..." rows="3"></textarea>
+        <button class="btn" style="margin-top:10px" onclick="saveGratitude()">Partager 🌸</button>
+      </div>
+      <div id="gratitude-list"></div>
+    </div>
+
+    <!-- STATUT -->
+    <div class="page" id="page-statut">
+      <div class="section-title" style="margin-bottom:14px">⚡ Statut en direct</div>
+      <div id="statut-cards"></div>
+      <div class="card">
+        <div class="card-title">Mettre à jour mon statut</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px" id="statut-options"></div>
+        <input class="input" id="statut-custom" placeholder="Statut personnalisé..." style="margin-bottom:10px">
+        <button class="btn" onclick="saveStatut()">Mettre à jour ⚡</button>
+      </div>
+    </div>
+
+    <!-- HISTOIRE -->
+    <div class="page" id="page-histoire">
+      <div class="section-header">
+        <div class="section-title">📖 Notre Histoire</div>
+        <button class="btn btn-sm" style="width:auto" onclick="openAddMoment()">+ Moment</button>
+      </div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+
+    <!-- DATES IMPORTANTES -->
+    <div class="page" id="page-dates">
+      <div class="section-header">
+        <div class="section-title">🎂 Dates Importantes</div>
+        <button class="btn btn-sm" style="width:auto" onclick="openAddDate()">+ Date</button>
+      </div>
+      <div id="dates-list"></div>
+    </div>
+
+    <!-- QUIZ -->
+    <div class="page" id="page-quiz">
+      <div class="section-title" style="margin-bottom:6px;text-align:center">🧠 Quiz sur l'autre</div>
+      <div style="text-align:center;color:var(--muted);font-size:12px;margin-bottom:16px">Combien tu me connais ?</div>
+      <div id="quiz-content"></div>
+    </div>
+
+    <!-- JOURNAL -->
+    <div class="page" id="page-journal">
+      <div class="section-header">
+        <div class="section-title">📓 Journal IA</div>
+        <button class="btn btn-sm btn-outline" style="width:auto" onclick="generateJournalSummary()">✨ Résumé IA</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Entrée du jour</div>
+        <div class="who-selector" style="margin-bottom:10px">
+          <button class="who-btn active-mehdi" id="jour-who-mehdi" onclick="setJourWho('mehdi')">💙 Mehdi</button>
+          <button class="who-btn" id="jour-who-raphy" onclick="setJourWho('raphy')">💗 Raphy</button>
+        </div>
+        <textarea class="input" id="journal-input" placeholder="Raconte ta journée en quelques mots..." rows="4"></textarea>
+        <button class="btn" style="margin-top:10px" onclick="saveJournal()">Enregistrer 📝</button>
+      </div>
+      <div id="journal-entries"></div>
+    </div>
+
+    <!-- CADEAUX -->
+    <div class="page" id="page-cadeaux">
+      <div class="section-title" style="margin-bottom:6px">🎁 Boîte à idées cadeaux</div>
+      <div style="color:var(--muted);font-size:12px;margin-bottom:14px">Vos envies secrètes — révélées pour les anniversaires !</div>
+      <div class="card" style="border-color:var(--gold)">
+        <div class="card-title" style="color:var(--gold)">⚠️ Visible uniquement par l'autre</div>
+        <div style="color:var(--muted);font-size:12px;margin-bottom:12px">Notez vos envies pour que l'autre puisse offrir le cadeau parfait.</div>
+        <div class="who-selector" style="margin-bottom:10px">
+          <button class="who-btn active-mehdi" id="gift-who-mehdi" onclick="setGiftWho('mehdi')">💙 Mes idées (Mehdi)</button>
+          <button class="who-btn" id="gift-who-raphy" onclick="setGiftWho('raphy')">💗 Mes idées (Raphy)</button>
+        </div>
+        <input class="input" id="gift-input" placeholder="Une envie, un rêve..." style="margin-bottom:8px">
+        <input class="input" id="gift-price" placeholder="Budget approximatif (optionnel)" style="margin-bottom:10px">
+        <button class="btn" onclick="addGift()">Ajouter mon idée 🎁</button>
+      </div>
+      <div id="gifts-list"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="section-title" style="margin-bottom:16px">⚙️ Réglages</div>
+      <div class="card">
+        <div class="card-title">Nos infos</div>
+        <div class="settings-row">
+          <div><div class="settings-label">💙 Mehdi</div><div class="settings-sub">11 Fév 1995</div></div>
+          <div class="settings-value">Moi</div>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">💗 Raphy</div><div class="settings-sub">11 Juin 1996</div></div>
+          <div class="settings-value">Toi</div>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">❤️ Ensemble depuis</div><div class="settings-sub">11 Mai 2026</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Clé API Gemini</div>
+        <input class="input" id="gemini-key-input" type="password" placeholder="AIza..." style="margin-bottom:10px">
+        <button class="btn" onclick="saveGeminiKey()">Sauvegarder la clé 🔑</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Firebase (synchro)</div>
+        <div style="color:var(--muted);font-size:12px;margin-bottom:10px">
+          Configure ta connexion Firebase pour synchroniser les données entre vos téléphones.
+          Remplace VOTRE_API_KEY etc. dans le code par ta config Firebase.
+        </div>
+        <div id="firebase-status" style="color:var(--gold);font-size:12px;font-weight:700">⏳ Vérification...</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Notifications</div>
+        <div class="settings-row">
+          <div><div class="settings-label">Rappels anniversaires</div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Message du matin</div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-rose" style="margin-top:4px" onclick="lockApp()">🔒 Verrouiller l'app</button>
+    </div>
+
+  </div><!-- /pages -->
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="nav-item active" onclick="goTo('home',this)">
+      <span class="nav-icon">🏠</span><span class="nav-label">Accueil</span>
+    </button>
+    <button class="nav-item" onclick="goTo('planning',this)">
+      <span class="nav-icon">📅</span><span class="nav-label">Planning</span>
+    </button>
+    <button class="nav-item" onclick="goTo('mots',this)">
+      <span class="nav-icon">💌</span><span class="nav-label">Mots</span>
+    </button>
+    <button class="nav-item" onclick="goTo('galerie',this)">
+      <span class="nav-icon">📸</span><span class="nav-label">Galerie</span>
+    </button>
+    <button class="nav-item" onclick="goTo('objectifs',this)">
+      <span class="nav-icon">🎯</span><span class="nav-label">Objectifs</span>
+    </button>
+    <button class="nav-item" onclick="goTo('defis',this)">
+      <span class="nav-icon">🎮</span><span class="nav-label">Défis</span>
+    </button>
+    <button class="nav-item" onclick="goTo('notes',this)">
+      <span class="nav-icon">📝</span><span class="nav-label">Notes</span>
+    </button>
+    <button class="nav-item" onclick="goTo('ia',this)">
+      <span class="nav-icon">✨</span><span class="nav-label">IA</span>
+    </button>
+    <button class="nav-item" onclick="goTo('roue',this)">
+      <span class="nav-icon">🎡</span><span class="nav-label">Roue</span>
+    </button>
+    <button class="nav-item" onclick="goTo('question',this)">
+      <span class="nav-icon">❓</span><span class="nav-label">Question</span>
+    </button>
+    <button class="nav-item" onclick="goTo('gratitude',this)">
+      <span class="nav-icon">🙏</span><span class="nav-label">Gratitude</span>
+    </button>
+    <button class="nav-item" onclick="goTo('statut',this)">
+      <span class="nav-icon">⚡</span><span class="nav-label">Statut</span>
+    </button>
+    <button class="nav-item" onclick="goTo('histoire',this)">
+      <span class="nav-icon">📖</span><span class="nav-label">Histoire</span>
+    </button>
+    <button class="nav-item" onclick="goTo('dates',this)">
+      <span class="nav-icon">🎂</span><span class="nav-label">Dates</span>
+    </button>
+    <button class="nav-item" onclick="goTo('quiz',this)">
+      <span class="nav-icon">🧠</span><span class="nav-label">Quiz</span>
+    </button>
+    <button class="nav-item" onclick="goTo('journal',this)">
+      <span class="nav-icon">📓</span><span class="nav-label">Journal</span>
+    </button>
+    <button class="nav-item" onclick="goTo('cadeaux',this)">
+      <span class="nav-icon">🎁</span><span class="nav-label">Cadeaux</span>
+    </button>
+    <button class="nav-item" onclick="goTo('settings',this)">
+      <span class="nav-icon">⚙️</span><span class="nav-label">Réglages</span>
+    </button>
+  </nav>
+
+</div><!-- /app-screen -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Modals -->
+<div class="modal-overlay" id="modal-shift">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-shift-title">Ajouter un horaire</div>
+    <div class="shift-grid" id="shift-options"></div>
+    <div id="shift-custom-fields" style="display:none">
+      <div class="time-inputs">
+        <div><div class="time-label">Heure début</div><input class="input" type="time" id="shift-start" value="09:30"></div>
+        <div><div class="time-label">Heure fin</div><input class="input" type="time" id="shift-end" value="19:00"></div>
+      </div>
+    </div>
+    <button class="btn" onclick="saveShift()">Enregistrer ✓</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-goal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nouvel objectif 🎯</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px" id="goal-cats"></div>
+    <input class="input" id="goal-title" placeholder="Notre objectif..." style="margin-bottom:8px">
+    <textarea class="input" id="goal-desc" placeholder="Description..." style="margin-bottom:8px"></textarea>
+    <input class="input" id="goal-deadline" placeholder="Date cible (ex: Été 2026)" style="margin-bottom:14px">
+    <button class="btn" onclick="saveGoal()">Créer l'objectif 🚀</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-note">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nouvelle note 📝</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="note-type-btns"></div>
+    <input class="input" id="note-title" placeholder="Titre..." style="margin-bottom:8px">
+    <textarea class="input" id="note-body" placeholder="Contenu..." style="margin-bottom:14px"></textarea>
+    <button class="btn" onclick="saveNote()">Créer ✓</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-moment">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nouveau moment 📖</div>
+    <input class="input" id="moment-date" type="date" style="margin-bottom:8px">
+    <input class="input" id="moment-title" placeholder="Titre du moment..." style="margin-bottom:8px">
+    <textarea class="input" id="moment-desc" placeholder="Raconte ce moment..." style="margin-bottom:14px"></textarea>
+    <button class="btn" onclick="saveMoment()">Ajouter à notre histoire ✨</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-date">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nouvelle date importante 🎂</div>
+    <input class="input" id="date-label" placeholder="Nom de l'événement..." style="margin-bottom:8px">
+    <input class="input" id="date-date" type="date" style="margin-bottom:8px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px" id="date-type-grid"></div>
+    <button class="btn" onclick="saveDate()">Ajouter ✓</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-humeur">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-humeur-title">Mon humeur</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px" id="humeur-picker"></div>
+    <button class="btn" onclick="saveHumeur()">C'est ça ! ✓</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-capsule">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⏳ Capsule temporelle</div>
+    <div style="color:var(--muted);font-size:12px;margin-bottom:14px">Écris un message qui s'ouvrira à une date future 💌</div>
+    <div class="who-selector" style="margin-bottom:10px">
+      <button class="who-btn active-mehdi" id="caps-mehdi" onclick="setCapsWho('mehdi')">💙 Mehdi</button>
+      <button class="who-btn" id="caps-raphy" onclick="setCapsWho('raphy')">💗 Raphy</button>
+    </div>
+    <textarea class="input" id="capsule-text" placeholder="Ton message..." style="margin-bottom:8px" rows="4"></textarea>
+    <input class="input" id="capsule-date" type="date" style="margin-bottom:14px">
+    <button class="btn" onclick="saveCapsule()">Sceller la capsule 🔒</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-photo">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter une photo 📸</div>
+    <img id="modal-photo-preview" style="width:100%;border-radius:12px;margin-bottom:12px;max-height:200px;object-fit:cover">
+    <input class="input" id="photo-caption" placeholder="Une légende..." style="margin-bottom:8px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="album-picker"></div>
+    <button class="btn" onclick="savePhoto()">Ajouter à la galerie ✨</button>
+  </div>
+</div>
+
+<!-- Celebration overlay -->
+<div class="celebration-overlay" id="celebration" style="display:none"></div>
+
+<!-- Heart burst -->
+<div class="heart-burst" id="heart-burst" style="display:none"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════════════
+const PIN = "1104";
+const COUPLE_DATE = new Date("2026-05-11");
+const BIRTHDAYS = { mehdi: "1995-02-11", raphy: "1996-06-11" };
+
+const DAILY_MESSAGES = [
+  "Chaque journée avec toi est un cadeau que je déballe avec joie. 🎁",
+  "Tu es ma maison, peu importe où l'on se trouve. 🏡",
+  "Avec toi, les lundis ont un goût de vendredi. ✨",
+  "Je ne cherche pas la perfection, je t'ai toi. 💫",
+  "Ton sourire est ma météo préférée. 🌟",
+  "On est une équipe imbattable. 👑",
+  "Ensemble on est invincibles. 💪❤️",
+  "Merci d'être exactement qui tu es. 🌸",
+  "Tu es la meilleure partie de mes journées. 🌅",
+  "Notre histoire est mon livre préféré. 📖",
+  "Tomber amoureux de toi chaque jour, c'est mon sport quotidien. 🥰",
+  "Ce que j'aime le plus dans le futur, c'est que tu en fais partie. ✨",
+  "Tu transformes mes moments ordinaires en extraordinaires. 💛",
+  "Avec toi, même la pluie a l'air romantique. ☔💕",
+  "Mon cœur a trouvé sa place à côté du tien. ❤️",
+];
+
+const MOODS = [
+  {e:"😍",l:"Amoureux"},
+  {e:"😊",l:"Bien"},
+  {e:"😌",l:"Serein"},
+  {e:"😴",l:"Fatigué"},
+  {e:"😤",l:"Stressé"},
+  {e:"🥰",l:"Câlin"},
+  {e:"😂",l:"De bonne humeur"},
+  {e:"🤩",l:"Excité"},
+  {e:"😢",l:"Mélancolique"},
+  {e:"❤️‍🔥",l:"Passionné"},
+  {e:"🤒",l:"Pas bien"},
+  {e:"💪",l:"Motivé"},
+];
+
+const SHIFT_TYPES = [
+  {id:"travail", icon:"💼", label:"Travail", color:"#4A9EE8", hasHours:true},
+  {id:"repos",   icon:"🛋️", label:"Repos",   color:"#3A9E6A", hours:"Journée off"},
+  {id:"conge",   icon:"🏖️", label:"Congé",   color:"#C9A84C", hours:"Congé"},
+  {id:"maladie", icon:"🤒", label:"Maladie", color:"#E8637A", hours:"Arrêt"},
+  {id:"perso",   icon:"🗓️", label:"Perso",   color:"#8B6FD4", hasHours:true},
+];
+
+const ALBUMS = ["Tous","Quotidien","Sorties","Voyages","Nous 💑","Spécial"];
+const GOAL_CATS = [
+  {id:"voyage",  icon:"✈️",  label:"Voyage",  color:"#8B6FD4"},
+  {id:"maison",  icon:"🏠",  label:"Maison",  color:"#3A9E6A"},
+  {id:"famille", icon:"👨‍👩‍👧", label:"Famille", color:"#E8637A"},
+  {id:"loisir",  icon:"🎉",  label:"Loisir",  color:"#4A9EE8"},
+  {id:"sante",   icon:"💪",  label:"Santé",   color:"#FF7A45"},
+  {id:"projet",  icon:"🚀",  label:"Projet",  color:"#C9A84C"},
+];
+const NOTE_TYPES = [
+  {id:"libre",   icon:"📝",  label:"Note libre",    color:"#8B90A0"},
+  {id:"liste",   icon:"☑️",  label:"Liste",         color:"#4A9EE8"},
+  {id:"recette", icon:"🍽️", label:"Recette",       color:"#3A9E6A"},
+  {id:"voyage",  icon:"✈️",  label:"Idée voyage",  color:"#8B6FD4"},
+  {id:"courses", icon:"🛒",  label:"Courses",      color:"#C9A84C"},
+];
+const STATUT_OPTIONS = [
+  {id:"travail",   icon:"💼", label:"Au travail",    color:"#4A9EE8"},
+  {id:"rentrer",   icon:"🚗", label:"Je rentre",     color:"#C9A84C"},
+  {id:"maison",    icon:"🏠", label:"À la maison",   color:"#3A9E6A"},
+  {id:"pause",     icon:"☕", label:"En pause",      color:"#E8A84C"},
+  {id:"sport",     icon:"💪", label:"Sport",         color:"#FF7A45"},
+  {id:"dodo",      icon:"😴", label:"Je dors",       color:"#8B6FD4"},
+  {id:"courses2",  icon:"🛒", label:"Courses",       color:"#8B90A0"},
+  {id:"sortie",    icon:"🎉", label:"Sortie",        color:"#E8637A"},
+];
+const WHEEL_DEFAULT = ["🎬 Film","🎮 Jeu","🍕 Commander","🚶 Balade","🧁 Cuisiner","💆 Massage","🎲 Jeu de société","🛁 Soirée spa","📚 Lecture","💃 Danser chez nous"];
+const BADGES_DEF = [
+  {id:"d1",    icon:"🥇",  label:"1er défi",       pts:0},
+  {id:"d10",   icon:"🏆",  label:"10 défis",       pts:100},
+  {id:"d50",   icon:"👑",  label:"50 défis",       pts:500},
+  {id:"msg10", icon:"💌",  label:"10 mots doux",   pts:0},
+  {id:"msg50", icon:"❤️‍🔥", label:"50 mots",        pts:0},
+  {id:"photo1",icon:"📸",  label:"1ère photo",     pts:0},
+  {id:"goal1", icon:"🎯",  label:"1er objectif",   pts:0},
+  {id:"days30",icon:"🗓️", label:"30 jours",       pts:0},
+  {id:"days100",icon:"💫", label:"100 jours",      pts:0},
+  {id:"quiz10",icon:"🧠",  label:"10 quiz",        pts:0},
+  {id:"grat7", icon:"🙏",  label:"7 gratitudes",   pts:0},
+  {id:"legend",icon:"🌟",  label:"Légendaires",    pts:1000},
+];
+const DEFI_LIST = [
+  {icon:"💌",title:"Mot surprise",desc:"Laisse un petit mot caché quelque part que l'autre trouvera.",pts:10},
+  {icon:"🍳",title:"Chef étoilé",desc:"Cuisinez un plat ensemble que vous n'avez jamais essayé.",pts:20},
+  {icon:"📸",title:"Selfie du jour",desc:"Prenez une photo ensemble et ajoutez-la à la galerie.",pts:5},
+  {icon:"💆",title:"Massage 10min",desc:"Offrez-vous un massage de 10 minutes chacun.",pts:15},
+  {icon:"🎬",title:"Ciné maison",desc:"Regardez un film avec pop-corn et couverture.",pts:10},
+  {icon:"📖",title:"Chapitre commun",desc:"Lisez un chapitre du même livre à voix haute.",pts:15},
+  {icon:"🚶",title:"Balade surprise",desc:"L'un choisit la destination, l'autre découvre en chemin.",pts:20},
+  {icon:"💐",title:"Geste attention",desc:"Offrez une petite attention (fleurs, chocolat, café...).",pts:10},
+  {icon:"🎵",title:"Notre chanson",desc:"Écoutez vos 5 chansons préférées ensemble.",pts:10},
+  {icon:"✍️",title:"Lettre d'amour",desc:"Écrivez une lettre de 10 lignes l'un à l'autre.",pts:25},
+  {icon:"🌅",title:"Lever de soleil",desc:"Réveillez-vous tôt et regardez le soleil se lever ensemble.",pts:30},
+  {icon:"🎨",title:"Artistes",desc:"Dessinez le portrait de l'autre (peu importe le résultat !)",pts:20},
+];
+const QUESTIONS = [
+  "Si tu pouvais voyager n'importe où demain, où irais-tu ?",
+  "Quel est ton souvenir préféré de nous deux ?",
+  "Si tu pouvais changer une chose dans ta vie, ce serait quoi ?",
+  "Quelle est la qualité que tu admires le plus chez moi ?",
+  "Dans 10 ans, tu nous imagines où ?",
+  "Quel est le moment où tu as su que tu étais amoureux(se) ?",
+  "Si on était un film, lequel ce serait ?",
+  "Quelle est ta tradition de couple préférée (ou qu'on devrait créer) ?",
+  "Qu'est-ce qui te fait te sentir le plus aimé(e) ?",
+  "Si tu avais une journée parfaite avec moi, elle ressemblerait à quoi ?",
+  "Qu'est-ce qui te rend fier(e) de toi en ce moment ?",
+  "Quel est ton rêve secret que tu n'as jamais osé dire ?",
+];
+
+let state = {
+  pinEntry: "",
+  currentPage: "home",
+  currentPlanTab: "travail",
+  currentWho: "mehdi",
+  currentGratWho: "mehdi",
+  currentJourWho: "mehdi",
+  currentGiftWho: "mehdi",
+  currentCapsWho: "mehdi",
+  currentHumeurFor: "mehdi",
+  selectedHumeur: null,
+  selectedShiftType: null,
+  currentShiftDate: null,
+  currentShiftWho: null,
+  selectedGoalCat: "voyage",
+  selectedNoteType: "libre",
+  currentNoteEdit: null,
+  currentAlbum: "Tous",
+  pendingPhotoData: null,
+  pendingPhotoAlbum: "Nous 💑",
+  wheelAnimating: false,
+  wheelAngle: 0,
+  currentDefi: null,
+  currentQuestion: null,
+  weekOffset: 0,
+  schedule: {},
+  messages: [],
+  photos: [],
+  goals: [],
+  notes: [],
+  moments: [],
+  importantDates: [],
+  gratitudes: [],
+  capsules: [],
+  journalEntries: [],
+  gifts: [],
+  questions: [],
+  quizScores: { mehdi:0, raphy:0, total:0 },
+  statuts: { mehdi: null, raphy: null },
+  humeurs: { mehdi: {e:"😊",l:"Bien"}, raphy: {e:"🥰",l:"Bien"} },
+  wheelActivities: [...WHEEL_DEFAULT],
+  badges: {},
+  points: 0,
+  defiHistory: [],
+  geminiKey: "",
+};
+
+// ── LOCAL HELPERS ───────────────────────────────────────────────────────────
+function ls(k,v){if(v===undefined){try{return JSON.parse(localStorage.getItem(k))||null}catch{return null}}else{localStorage.setItem(k,JSON.stringify(v));}}
+
+function loadLocal() {
+  const keys = ["schedule","messages","photos","goals","notes","moments","importantDates",
+    "gratitudes","capsules","journalEntries","gifts","questions","quizScores",
+    "statuts","humeurs","wheelActivities","badges","points","defiHistory","geminiKey"];
+  keys.forEach(k => { const v=ls(k); if(v!==null) state[k]=v; });
+}
+function saveLocal(key) { ls(key, state[key]); }
+
+// ── FIREBASE HELPERS ────────────────────────────────────────────────────────
+function dbSet(path, value) {
+  if (!window._db) return;
+  window._dbSet(window._dbRef(window._db, path), value);
+}
+function dbListen(path, cb) {
+  if (!window._db) return;
+  window._dbOnValue(window._dbRef(window._db, path), snap => cb(snap.val()));
+}
+function syncAll() {
+  if (!window._db) return;
+  const paths = ["schedule","messages","photos","goals","notes","moments","importantDates",
+    "gratitudes","capsules","journalEntries","gifts","questions","quizScores",
+    "statuts","humeurs","wheelActivities","badges","points"];
+  paths.forEach(p => {
+    dbListen(`couple/${p}`, val => {
+      if (val !== null) {
+        state[p] = val;
+        saveLocal(p);
+        renderCurrent();
+      }
+    });
+  });
+}
+function dbSave(key) {
+  saveLocal(key);
+  if (window._db) dbSet(`couple/${key}`, state[key]);
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2500);
+}
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+document.querySelectorAll(".modal-overlay").forEach(m => {
+  m.addEventListener("click", e => { if(e.target===m) m.classList.remove("open"); });
+});
+
+// ── NAVIGATION ──────────────────────────────────────────────────────────────
+function goTo(page, btn) {
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(b=>b.classList.remove("active"));
+  document.getElementById(`page-${page}`).classList.add("active");
+  if(btn) btn.classList.add("active");
+  state.currentPage = page;
+  renderPage(page);
+}
+function renderCurrent() { renderPage(state.currentPage); }
+
+// ── PIN SCREEN ───────────────────────────────────────────────────────────────
+function initPIN() {
+  // Stars
+  const bg = document.getElementById("pin-bg");
+  for(let i=0;i<80;i++){
+    const s=document.createElement("div");
+    s.className="pin-star";
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*3}s;--op:${.3+Math.random()*.7}`;
+    bg.appendChild(s);
+  }
+  // Keypad
+  const pad = document.getElementById("pin-pad");
+  const keys = [1,2,3,4,5,6,7,8,9,"",0,"⌫"];
+  keys.forEach(k => {
+    const btn = document.createElement("button");
+    btn.className = "pin-key" + (k===""?" empty":"") + (k==="⌫"?" del":"");
+    btn.textContent = k;
+    if(k!=="") btn.addEventListener("click",()=>pinPress(k));
+    pad.appendChild(btn);
+  });
+}
+
+function pinPress(key) {
+  if(key==="⌫") {
+    state.pinEntry = state.pinEntry.slice(0,-1);
+  } else {
+    if(state.pinEntry.length>=4) return;
+    state.pinEntry += key;
+  }
+  updatePinDots();
+  if(state.pinEntry.length===4) setTimeout(checkPin, 150);
+}
+
+function updatePinDots() {
+  for(let i=0;i<4;i++){
+    document.getElementById(`pd${i}`).classList.toggle("filled", i<state.pinEntry.length);
+  }
+}
+
+function checkPin() {
+  if(state.pinEntry===PIN) {
+    burstHearts();
+    setTimeout(unlockApp, 900);
+  } else {
+    document.getElementById("pin-dots").classList.add("pin-error");
+    setTimeout(()=>{
+      document.getElementById("pin-dots").classList.remove("pin-error");
+      state.pinEntry="";
+      updatePinDots();
+    },400);
+  }
+}
+
+function burstHearts() {
+  const burst = document.getElementById("heart-burst");
+  burst.style.display="block";
+  burst.innerHTML="";
+  const emojis=["💖","💗","💓","💞","💕","✨","🌸","💫"];
+  const cx=window.innerWidth/2, cy=window.innerHeight/2;
+  for(let i=0;i<24;i++){
+    const h=document.createElement("div");
+    h.className="heart-particle";
+    h.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    const angle=(i/24)*360;
+    const rad=(140+Math.random()*80);
+    const x=cx+Math.cos(angle*Math.PI/180)*rad-20;
+    const y=cy+Math.sin(angle*Math.PI/180)*rad-20;
+    h.style.cssText=`left:${x}px;top:${y}px;--x:${x}px;--y:${y}px;--r:${Math.random()*60-30}deg;--dy:${30+Math.random()*60}px;animation-delay:${Math.random()*.2}s;font-size:${16+Math.random()*16}px`;
+    burst.appendChild(h);
+  }
+  setTimeout(()=>{ burst.style.display="none"; burst.innerHTML=""; }, 1400);
+}
+
+function unlockApp() {
+  document.getElementById("pin-screen").classList.add("hidden");
+  document.getElementById("app-screen").classList.remove("hidden");
+  initApp();
+}
+function lockApp() {
+  state.pinEntry="";
+  updatePinDots();
+  document.getElementById("pin-screen").classList.remove("hidden");
+  document.getElementById("app-screen").classList.add("hidden");
+}
+
+// ── APP INIT ─────────────────────────────────────────────────────────────────
+function initApp() {
+  loadLocal();
+  updateHeaderDate();
+  renderPage("home");
+  initMoods();
+  initShiftModal();
+  initGoalModal();
+  initNoteModal();
+  initDateTypeGrid();
+  initStatutOptions();
+  initWheelActivities();
+  initAlbumTabs();
+  initNoteFilterTabs();
+  initAISuggestions();
+  renderBadges();
+  loadDefi();
+  loadQuestion();
+  syncAll();
+  // Check Firebase
+  setTimeout(()=>{
+    const el=document.getElementById("firebase-status");
+    if(el) el.textContent = window.firebaseReady ? "✅ Firebase connecté" : "⚠️ Firebase non configuré (mode local)";
+  },2000);
+  // Gemini key
+  const gk=ls("geminiKey");
+  if(gk) { state.geminiKey=gk; document.getElementById("gemini-key-input").value=gk; }
+}
+
+function updateHeaderDate() {
+  const now=new Date();
+  document.getElementById("header-date").textContent=
+    now.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+}
+
+// ── RENDER DISPATCHER ────────────────────────────────────────────────────────
+function renderPage(page) {
+  switch(page){
+    case "home":      renderHome(); break;
+    case "planning":  renderPlanning(); break;
+    case "mots":      renderMots(); break;
+    case "galerie":   renderGalerie(); break;
+    case "objectifs": renderObjectifs(); break;
+    case "defis":     renderDefis(); break;
+    case "notes":     renderNotes(); break;
+    case "ia":        renderIA(); break;
+    case "roue":      renderRoue(); break;
+    case "question":  renderQuestion(); break;
+    case "gratitude": renderGratitude(); break;
+    case "statut":    renderStatut(); break;
+    case "histoire":  renderHistoire(); break;
+    case "dates":     renderDates(); break;
+    case "quiz":      renderQuiz(); break;
+    case "journal":   renderJournal(); break;
+    case "cadeaux":   renderCadeaux(); break;
+    case "settings":  break;
+  }
+}
+
+// ── HOME ─────────────────────────────────────────────────────────────────────
+function renderHome() {
+  // Days counter
+  const today=new Date(); today.setHours(0,0,0,0);
+  const diff=Math.floor((today-COUPLE_DATE)/86400000);
+  document.getElementById("days-count").textContent=diff.toLocaleString();
+
+  // Next anniversary
+  const nextAnniv=new Date(COUPLE_DATE);
+  nextAnniv.setFullYear(today.getFullYear());
+  if(nextAnniv<=today) nextAnniv.setFullYear(today.getFullYear()+1);
+  const daysToAnniv=Math.ceil((nextAnniv-today)/86400000);
+  document.getElementById("next-anniv").textContent=
+    daysToAnniv===0?"🎉 C'est votre anniversaire aujourd'hui !!"
+    :`💑 Prochain anniversaire dans ${daysToAnniv} jour${daysToAnniv>1?"s":""}`;
+
+  // Daily message
+  const idx=diff%DAILY_MESSAGES.length;
+  document.getElementById("daily-message").textContent=DAILY_MESSAGES[idx];
+
+  // Humeurs
+  renderHumeurs();
+
+  // Today schedule
+  const todayStr=fmtDate(new Date());
+  const ts=state.schedule[todayStr]||{};
+  let html="";
+  ["mehdi","raphy"].forEach(who=>{
+    const slot=ts[who];
+    const name=who==="mehdi"?"💙 Mehdi":"💗 Raphy";
+    const color=who==="mehdi"?"#4A9EE8":"#E8637A";
+    html+=`<div class="schedule-row">
+      <div class="schedule-who" style="color:${color}">${name}</div>
+      <div class="schedule-shift">`;
+    if(slot){
+      const sh=SHIFT_TYPES.find(s=>s.id===slot.type)||SHIFT_TYPES[0];
+      html+=`<span class="shift-badge" style="background:${sh.color}22;color:${sh.color}">${sh.icon} ${sh.label}</span>`;
+      if(slot.start) html+=`<span>${slot.start}–${slot.end}</span>`;
+    } else {
+      html+=`<span style="color:var(--dim)">Non planifié</span>`;
+    }
+    html+=`</div></div>`;
+  });
+  document.getElementById("today-schedule-content").innerHTML=html||"Aucun planning défini";
+
+  // Next free day
+  renderNextOff();
+
+  // Statut home
+  let sh="";
+  ["mehdi","raphy"].forEach(who=>{
+    const st=state.statuts[who];
+    const name=who==="mehdi"?"💙 Mehdi":"💗 Raphy";
+    const color=who==="mehdi"?"#4A9EE8":"#E8637A";
+    if(st){
+      const opt=STATUT_OPTIONS.find(o=>o.id===st.id)||{icon:"⚡",color:"#8B90A0"};
+      sh+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:22px">${opt.icon}</span>
+        <div><div style="font-size:13px;font-weight:700;color:${color}">${name}</div>
+        <div style="font-size:11px;color:var(--muted)">${st.label||opt.label}</div></div></div>`;
+    }
+  });
+  document.getElementById("statut-content").innerHTML=sh||"<span style='color:var(--dim);font-size:12px'>Mettez à jour votre statut dans Statut</span>";
+}
+
+function renderHumeurs() {
+  ["mehdi","raphy"].forEach(who=>{
+    const h=state.humeurs[who]||{e:"😊",l:""};
+    document.getElementById(`humeur-${who}`).textContent=h.e;
+    document.getElementById(`humeur-${who}-label`).textContent=h.l||"Comment tu vas ?";
+  });
+}
+
+function renderNextOff() {
+  const today=new Date(); today.setHours(0,0,0,0);
+  let found=null;
+  for(let i=0;i<60;i++){
+    const d=new Date(today); d.setDate(today.getDate()+i);
+    const str=fmtDate(d);
+    const s=state.schedule[str]||{};
+    const mOff=!s.mehdi||s.mehdi.type==="repos"||s.mehdi.type==="conge";
+    const rOff=!s.raphy||s.raphy.type==="repos"||s.raphy.type==="conge";
+    if(mOff&&rOff&&(s.mehdi||s.raphy)){
+      found={days:i,date:d,str};
+      break;
+    }
+  }
+  if(found){
+    document.getElementById("next-off-count").textContent=found.days===0?"Aujourd'hui ! 🎉":`Dans ${found.days} jour${found.days>1?"s":""}`;
+    document.getElementById("next-off-sub").textContent=found.date.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+  } else {
+    document.getElementById("next-off-count").textContent="—";
+    document.getElementById("next-off-sub").textContent="Remplissez votre planning !";
+  }
+}
+
+// ── PLANNING ─────────────────────────────────────────────────────────────────
+function switchPlanTab(tab, btn) {
+  state.currentPlanTab=tab;
+  document.querySelectorAll(".plan-tab").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderPlanning();
+}
+
+function renderPlanning() {
+  const tab=state.currentPlanTab;
+  const el=document.getElementById("planning-content");
+  if(tab==="mois"){ renderMonthView(el); return; }
+  renderWeekView(el, tab);
+}
+
+function getWeekDates() {
+  const today=new Date();
+  const monday=new Date(today);
+  const day=today.getDay();
+  const diff=day===0?-6:1-day;
+  monday.setDate(today.getDate()+diff+(state.weekOffset*7));
+  return Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);return d;});
+}
+
+function renderWeekView(el, tab) {
+  const days=getWeekDates();
+  const todayStr=fmtDate(new Date());
+  const DAYS_FR=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+
+  // Check free days
+  const freeDays=days.filter(d=>{
+    const s=state.schedule[fmtDate(d)]||{};
+    const mO=s.mehdi&&(s.mehdi.type==="repos"||s.mehdi.type==="conge");
+    const rO=s.raphy&&(s.raphy.type==="repos"||s.raphy.type==="conge");
+    return mO&&rO;
+  });
+
+  let html=`<div class="week-nav">
+    <button class="week-nav-btn" onclick="changeWeek(-1)">‹</button>
+    <div>
+      <div class="week-label">${days[0].getDate()} ${MONTHS_SHORT[days[0].getMonth()]} — ${days[6].getDate()} ${MONTHS_SHORT[days[6].getMonth()]}</div>
+      <div class="week-sub">${state.weekOffset===0?"Cette semaine":state.weekOffset>0?`+${state.weekOffset} sem.`:`${state.weekOffset} sem.`}</div>
+    </div>
+    <button class="week-nav-btn" onclick="changeWeek(1)">›</button>
+  </div>`;
+
+  if(freeDays.length>0){
+    html+=`<div class="free-together-banner">🎉 Libres ensemble : ${freeDays.map(d=>DAYS_FR[days.indexOf(d)]).join(", ")}</div>`;
+  }
+
+  html+=`<div class="planning-grid">
+    <div class="plan-day-row" style="margin-bottom:4px">
+      <div></div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:#4A9EE8;padding:4px">💙 Mehdi</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--rose);padding:4px">💗 Raphy</div>
+    </div>`;
+
+  days.forEach((d,i)=>{
+    const str=fmtDate(d);
+    const isToday=str===todayStr;
+    const slots=state.schedule[str]||{};
+    html+=`<div class="plan-day-row">
+      <div class="plan-day-label${isToday?" today":""}">
+        <div class="plan-day-name">${DAYS_FR[i]}</div>
+        <div class="plan-day-num">${d.getDate()}</div>
+      </div>`;
+    ["mehdi","raphy"].forEach(who=>{
+      const slot=slots[who];
+      if(slot){
+        const sh=SHIFT_TYPES.find(s=>s.id===slot.type)||SHIFT_TYPES[0];
+        html+=`<div class="plan-slot has-shift" style="--shift-color:${sh.color}" onclick="openShift('${str}','${who}')">
+          <div class="plan-slot-icon">${sh.icon}</div>
+          <div class="plan-slot-label">${sh.label}</div>
+          <div class="plan-slot-hours">${slot.start?`${slot.start}–${slot.end}`:sh.hours||""}</div>
+        </div>`;
+      } else {
+        html+=`<div class="plan-slot" onclick="openShift('${str}','${who}')">
+          <div class="plan-slot-empty">+</div>
+        </div>`;
+      }
+    });
+    html+=`</div>`;
+  });
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+function renderMonthView(el) {
+  const now=new Date();
+  const year=now.getFullYear(), month=now.getMonth();
+  const first=new Date(year,month,1);
+  const last=new Date(year,month+1,0);
+  const todayStr=fmtDate(now);
+  let startDay=first.getDay(); if(startDay===0) startDay=7;
+  const DAYS=["L","M","M","J","V","S","D"];
+  let html=`<div style="font-size:16px;font-weight:800;text-align:center;margin-bottom:14px">${MONTHS_FR[month]} ${year}</div>
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">`;
+  DAYS.forEach(d=>{ html+=`<div style="text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:4px">${d}</div>`; });
+  for(let i=1;i<startDay;i++) html+=`<div></div>`;
+  for(let d=1;d<=last.getDate();d++){
+    const date=new Date(year,month,d);
+    const str=fmtDate(date);
+    const isToday=str===todayStr;
+    const s=state.schedule[str]||{};
+    const mS=s.mehdi?SHIFT_TYPES.find(t=>t.id===s.mehdi.type):null;
+    const rS=s.raphy?SHIFT_TYPES.find(t=>t.id===s.raphy.type):null;
+    const freeT=mS&&rS&&(s.mehdi.type==="repos"||s.mehdi.type==="conge")&&(s.raphy.type==="repos"||s.raphy.type==="conge");
+    html+=`<div onclick="openShiftDate('${str}')" style="
+      border-radius:10px;padding:4px;cursor:pointer;
+      border:${isToday?"2px solid var(--gold)":"1px solid var(--border)"};
+      background:${freeT?"rgba(58,158,106,.2)":isToday?"var(--gold-soft)":"var(--card)"};
+      min-height:52px;display:flex;flex-direction:column;gap:2px;align-items:center">
+      <div style="font-size:12px;font-weight:700;color:${isToday?"var(--gold)":"var(--text)"}">${d}</div>
+      ${mS?`<div style="width:6px;height:6px;border-radius:50%;background:${mS.color}"></div>`:`<div style="width:6px;height:6px"></div>`}
+      ${rS?`<div style="width:6px;height:6px;border-radius:50%;background:${rS.color}"></div>`:`<div style="width:6px;height:6px"></div>`}
+    </div>`;
+  }
+  html+=`</div><div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">`;
+  SHIFT_TYPES.forEach(s=>{ html+=`<div style="display:flex;align-items:center;gap:4px;font-size:11px"><div style="width:8px;height:8px;border-radius:50%;background:${s.color}"></div><span style="color:var(--muted)">${s.label}</span></div>`; });
+  html+=`<div style="display:flex;align-items:center;gap:4px;font-size:11px"><div style="width:8px;height:8px;border-radius:50%;background:#3A9E6A"></div><span style="color:var(--muted)">Off ensemble</span></div>`;
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+function changeWeek(dir) { state.weekOffset+=dir; renderPlanning(); }
+
+function openShift(date, who) {
+  state.currentShiftDate=date;
+  state.currentShiftWho=who;
+  state.selectedShiftType=null;
+  const name=who==="mehdi"?"💙 Mehdi":"💗 Raphy";
+  const d=new Date(date);
+  document.getElementById("modal-shift-title").textContent=`${name} — ${d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}`;
+  renderShiftOptions();
+  openModal("modal-shift");
+}
+function openShiftDate(date) {
+  // Open for both
+  openShift(date,"mehdi");
+}
+function openAddEvent() { openShift(fmtDate(new Date()),"mehdi"); }
+
+function initShiftModal() { renderShiftOptions(); }
+function renderShiftOptions() {
+  const el=document.getElementById("shift-options");
+  if(!el) return;
+  el.innerHTML=SHIFT_TYPES.map(s=>`
+    <div class="shift-option" style="--s-color:${s.color}" id="so-${s.id}" onclick="selectShift('${s.id}')">
+      <div class="shift-option-icon">${s.icon}</div>
+      <div class="shift-option-label">${s.label}</div>
+      ${!s.hasHours?`<div class="shift-option-hours">${s.hours||""}</div>`:""}
+    </div>`).join("");
+  // Check existing
+  if(state.currentShiftDate&&state.currentShiftWho){
+    const ex=(state.schedule[state.currentShiftDate]||{})[state.currentShiftWho];
+    if(ex){
+      selectShift(ex.type,false);
+      if(ex.start){
+        document.getElementById("shift-start").value=ex.start;
+        document.getElementById("shift-end").value=ex.end||"";
+      }
+    }
+  }
+}
+function selectShift(id, update=true) {
+  state.selectedShiftType=id;
+  document.querySelectorAll(".shift-option").forEach(e=>e.classList.remove("selected"));
+  const el=document.getElementById(`so-${id}`);
+  if(el) el.classList.add("selected");
+  const sh=SHIFT_TYPES.find(s=>s.id===id);
+  const cf=document.getElementById("shift-custom-fields");
+  if(cf) cf.style.display=(sh&&sh.hasHours)?"block":"none";
+}
+function saveShift() {
+  if(!state.selectedShiftType||!state.currentShiftDate||!state.currentShiftWho){ toast("Choisissez un type !"); return; }
+  const sh=SHIFT_TYPES.find(s=>s.id===state.selectedShiftType);
+  const slot={type:state.selectedShiftType};
+  if(sh&&sh.hasHours){
+    slot.start=document.getElementById("shift-start").value;
+    slot.end=document.getElementById("shift-end").value;
+  }
+  if(!state.schedule[state.currentShiftDate]) state.schedule[state.currentShiftDate]={};
+  state.schedule[state.currentShiftDate][state.currentShiftWho]=slot;
+  dbSave("schedule");
+  closeModal("modal-shift");
+  renderPlanning();
+  if(state.currentPage==="home") renderHome();
+  toast("Planning mis à jour ✓");
+}
+
+// ── MOTS DOUX ────────────────────────────────────────────────────────────────
+function initMoods() {
+  const el=document.getElementById("mood-selector");
+  if(!el) return;
+  el.innerHTML=MOODS.map(m=>`<button class="mood-btn${m.e===state.currentMood?" selected":""}" onclick="selectMood('${m.e}')" title="${m.l}">${m.e}</button>`).join("");
+  state.currentMood=MOODS[0].e;
+}
+function selectMood(e) {
+  state.currentMood=e;
+  document.querySelectorAll(".mood-btn").forEach(b=>{
+    b.classList.toggle("selected",b.textContent===e);
+  });
+}
+function setWho(who) {
+  state.currentWho=who;
+  document.getElementById("who-mehdi").className="who-btn"+(who==="mehdi"?" active-mehdi":"");
+  document.getElementById("who-raphy").className="who-btn"+(who==="raphy"?" active-raphy":"");
+}
+function sendMessage() {
+  const input=document.getElementById("chat-input");
+  const text=input.value.trim();
+  if(!text) return;
+  const msg={
+    id:Date.now(),
+    who:state.currentWho,
+    text,
+    mood:state.currentMood||"💬",
+    date:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),
+    dateLabel:new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"short"}),
+    reactions:{}
+  };
+  state.messages.push(msg);
+  dbSave("messages");
+  input.value="";
+  renderMots();
+  checkBadge("msg10",state.messages.length>=10);
+  checkBadge("msg50",state.messages.length>=50);
+  setTimeout(()=>{
+    const cc=document.getElementById("chat-container");
+    if(cc) cc.lastElementChild?.scrollIntoView({behavior:"smooth"});
+  },50);
+  toast("Message envoyé 💌");
+}
+function renderMots() {
+  const el=document.getElementById("chat-container");
+  if(!el) return;
+  if(state.messages.length===0){
+    el.innerHTML=`<div style="text-align:center;color:var(--dim);padding:40px 0"><div style="font-size:48px;margin-bottom:8px">💌</div>Envoyez votre premier mot doux !</div>`;
+    return;
+  }
+  const capsules=state.capsules.filter(c=>{
+    const now=new Date(); const unlock=new Date(c.unlockDate);
+    return unlock<=now;
+  });
+  el.innerHTML=state.messages.map(m=>{
+    const isMe=m.who===state.currentWho;
+    const name=m.who==="mehdi"?"💙 Mehdi":"💗 Raphy";
+    const reacts=Object.entries(m.reactions||{}).filter(([,v])=>v>0).map(([e,v])=>`<button class="reaction-btn" onclick="addReact(${m.id},'${e}')">${e} ${v}</button>`).join("");
+    const reactBtns=["❤️","😍","😂","🥺","🔥"].map(e=>`<button class="reaction-btn" onclick="addReact(${m.id},'${e}')">${e}</button>`).join("");
+    return `<div class="chat-bubble-wrap ${isMe?"me":"other"}">
+      <div class="chat-bubble">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span class="bubble-mood">${m.mood}</span>
+          <span class="bubble-who">${name}</span>
+          <span style="font-size:9px;color:var(--dim)">${m.dateLabel} ${m.date}</span>
+        </div>
+        <div class="bubble-text">${m.text}</div>
+      </div>
+      <div class="bubble-reactions">${reacts||""}${reactBtns}</div>
+    </div>`;
+  }).join("")+
+  (capsules.length?capsules.map(c=>`<div class="capsule-locked" style="background:var(--gold-soft);border:1px solid var(--gold)">
+    <div class="capsule-lock-icon">💌</div>
+    <div style="font-size:14px;font-weight:700;color:var(--gold)">Capsule déverrouillée !</div>
+    <div style="font-size:13px;color:var(--text);margin-top:8px">${c.text}</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:4px">De ${c.who==="mehdi"?"Mehdi":"Raphy"}</div>
+  </div>`).join(""):"");
+}
+function addReact(id,emoji) {
+  const m=state.messages.find(m=>m.id===id);
+  if(!m) return;
+  if(!m.reactions) m.reactions={};
+  m.reactions[emoji]=(m.reactions[emoji]||0)+1;
+  dbSave("messages");
+  renderMots();
+}
+function openCapsule() { openModal("modal-capsule"); }
+function setCapsWho(w) {
+  state.currentCapsWho=w;
+  document.getElementById("caps-mehdi").className="who-btn"+(w==="mehdi"?" active-mehdi":"");
+  document.getElementById("caps-raphy").className="who-btn"+(w==="raphy"?" active-raphy":"");
+}
+function saveCapsule() {
+  const text=document.getElementById("capsule-text").value.trim();
+  const date=document.getElementById("capsule-date").value;
+  if(!text||!date){ toast("Remplis tout !"); return; }
+  state.capsules.push({id:Date.now(),who:state.currentCapsWho,text,unlockDate:date,createdAt:fmtDate(new Date())});
+  dbSave("capsules");
+  closeModal("modal-capsule");
+  document.getElementById("capsule-text").value="";
+  toast("Capsule scellée 🔒 S'ouvrira le "+new Date(date).toLocaleDateString("fr-FR"));
+}
+
+// ── GALERIE ──────────────────────────────────────────────────────────────────
+function initAlbumTabs() {
+  const el=document.getElementById("album-tabs");
+  if(!el) return;
+  el.innerHTML=ALBUMS.map(a=>`<button class="album-tab${a===state.currentAlbum?" active":""}" onclick="setAlbum('${a}',this)">${a}</button>`).join("");
+  const picker=document.getElementById("album-picker");
+  if(picker) picker.innerHTML=ALBUMS.filter(a=>a!=="Tous").map(a=>`<button class="who-btn" id="alb-${a.replace(/\s/g,"_")}" onclick="setPhotoAlbum('${a}',this)">${a}</button>`).join("");
+}
+function setAlbum(a, btn) {
+  state.currentAlbum=a;
+  document.querySelectorAll(".album-tab").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderGalerie();
+}
+function setPhotoAlbum(a) { state.pendingPhotoAlbum=a; }
+function handlePhotoUpload(input) {
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    state.pendingPhotoData=e.target.result;
+    document.getElementById("modal-photo-preview").src=e.target.result;
+    document.getElementById("photo-caption").value="";
+    openModal("modal-photo");
+  };
+  reader.readAsDataURL(file);
+}
+function savePhoto() {
+  if(!state.pendingPhotoData){ toast("Aucune photo !"); return; }
+  const caption=document.getElementById("photo-caption").value.trim();
+  const photo={
+    id:Date.now(),
+    src:state.pendingPhotoData,
+    caption,
+    album:state.pendingPhotoAlbum||"Nous 💑",
+    date:new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"}),
+    dateObj:fmtDate(new Date()),
+    likes:0
+  };
+  state.photos.unshift(photo);
+  dbSave("photos");
+  closeModal("modal-photo");
+  state.pendingPhotoData=null;
+  renderGalerie();
+  checkBadge("photo1",state.photos.length>=1);
+  document.getElementById("photo-input").value="";
+  toast("Photo ajoutée 📸");
+}
+function renderGalerie() {
+  const el=document.getElementById("photo-grid");
+  if(!el) return;
+  const photos=state.currentAlbum==="Tous"?state.photos:state.photos.filter(p=>p.album===state.currentAlbum);
+  if(photos.length===0){
+    el.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--dim);padding:40px 0"><div style="font-size:48px">📷</div>Ajoutez vos premiers souvenirs !</div>`;
+    return;
+  }
+  el.innerHTML=photos.map(p=>`
+    <div class="photo-thumb" onclick="viewPhoto(${p.id})">
+      <img src="${p.src}" alt="${p.caption||""}">
+      <div class="photo-thumb-overlay">
+        <span class="photo-likes">❤️ ${p.likes||0}</span>
+      </div>
+    </div>`).join("");
+}
+function viewPhoto(id) {
+  const p=state.photos.find(p=>p.id===id);
+  if(!p) return;
+  const overlay=document.createElement("div");
+  overlay.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;";
+  overlay.innerHTML=`
+    <button onclick="this.parentElement.remove()" style="position:absolute;top:20px;right:20px;background:none;border:none;color:white;font-size:28px;cursor:pointer">✕</button>
+    <img src="${p.src}" style="max-width:100%;max-height:70vh;border-radius:12px;object-fit:contain">
+    ${p.caption?`<div style="color:white;margin-top:12px;font-size:14px;text-align:center">${p.caption}</div>`:""}
+    <div style="color:var(--muted);font-size:11px;margin-top:4px">${p.date} · ${p.album}</div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button onclick="likePhoto(${id})" style="background:var(--rose-soft);border:1px solid var(--rose);border-radius:14px;padding:10px 20px;color:var(--rose);font-weight:700;cursor:pointer">❤️ ${p.likes||0}</button>
+      <button onclick="deletePhoto(${id});this.closest('div[style]').remove()" style="background:none;border:1px solid var(--dim);border-radius:14px;padding:10px 20px;color:var(--muted);cursor:pointer">Supprimer</button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+function likePhoto(id) {
+  const p=state.photos.find(p=>p.id===id);
+  if(p) { p.likes=(p.likes||0)+1; dbSave("photos"); }
+}
+function deletePhoto(id) {
+  state.photos=state.photos.filter(p=>p.id!==id);
+  dbSave("photos");
+  renderGalerie();
+  toast("Photo supprimée");
+}
+
+// ── OBJECTIFS ────────────────────────────────────────────────────────────────
+function initGoalModal() {
+  const el=document.getElementById("goal-cats");
+  if(!el) return;
+  el.innerHTML=GOAL_CATS.map(c=>`<button id="gc-${c.id}" onclick="selectGoalCat('${c.id}')" style="
+    background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:10px 4px;
+    text-align:center;cursor:pointer;transition:all .2s">
+    <div style="font-size:22px">${c.icon}</div>
+    <div style="font-size:10px;font-weight:700;color:var(--muted);margin-top:3px">${c.label}</div>
+  </button>`).join("");
+  selectGoalCat("voyage");
+}
+function selectGoalCat(id) {
+  state.selectedGoalCat=id;
+  const cat=GOAL_CATS.find(c=>c.id===id);
+  document.querySelectorAll("[id^='gc-']").forEach(b=>{
+    const cid=b.id.replace("gc-","");
+    const c=GOAL_CATS.find(c=>c.id===cid);
+    b.style.borderColor=cid===id?c.color:"var(--border)";
+    b.style.background=cid===id?c.color+"22":"var(--surface)";
+    b.querySelector("div:last-child").style.color=cid===id?c.color:"var(--muted)";
+  });
+}
+function openAddGoal() { openModal("modal-goal"); }
+function saveGoal() {
+  const title=document.getElementById("goal-title").value.trim();
+  if(!title){ toast("Donne un titre !"); return; }
+  const goal={
+    id:Date.now(),
+    title,
+    desc:document.getElementById("goal-desc").value.trim(),
+    deadline:document.getElementById("goal-deadline").value.trim(),
+    category:state.selectedGoalCat,
+    progress:0,
+    done:false,
+    createdAt:fmtDate(new Date())
+  };
+  state.goals.push(goal);
+  dbSave("goals");
+  closeModal("modal-goal");
+  ["goal-title","goal-desc","goal-deadline"].forEach(id=>document.getElementById(id).value="");
+  renderObjectifs();
+  checkBadge("goal1",true);
+  toast("Objectif créé 🎯");
+}
+function renderObjectifs() {
+  const el=document.getElementById("goals-list");
+  if(!el) return;
+  if(state.goals.length===0){
+    el.innerHTML=`<div style="text-align:center;color:var(--dim);padding:40px 0"><div style="font-size:48px">🎯</div>Posez vos premiers objectifs !</div>`;
+    return;
+  }
+  const active=state.goals.filter(g=>!g.done);
+  const done=state.goals.filter(g=>g.done);
+  let html="";
+  if(active.length) html+=`<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">En cours (${active.length})</div>`;
+  [...active,...done].forEach(g=>{
+    const cat=GOAL_CATS.find(c=>c.id===g.category)||GOAL_CATS[0];
+    html+=`<div class="goal-card" style="${g.done?"opacity:.65;border-color:"+cat.color+"44":""}">
+      <div class="goal-header">
+        <div>
+          <span style="background:${cat.color}22;color:${cat.color};font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">${cat.icon} ${cat.label}</span>
+          <div class="goal-title" style="margin-top:6px">${g.title}${g.done?" ✅":""}</div>
+          ${g.desc?`<div style="font-size:12px;color:var(--muted);margin-top:3px">${g.desc}</div>`:""}
+          ${g.deadline?`<div style="font-size:11px;color:var(--gold);margin-top:4px">📅 ${g.deadline}</div>`:""}
+        </div>
+        <button onclick="deleteGoal(${g.id})" style="background:none;border:none;color:var(--dim);font-size:16px;cursor:pointer;padding:4px">🗑️</button>
+      </div>
+      <div class="goal-progress-bar"><div class="goal-progress-fill" style="width:${g.progress}%"></div></div>
+      <div class="goal-progress-row">
+        <span style="font-size:11px;color:var(--muted)">${g.done?"Accompli ! 🎉":"Progression"}</span>
+        <span class="goal-pct">${g.progress}%</span>
+      </div>
+      <input type="range" min="0" max="100" value="${g.progress}" oninput="updateGoal(${g.id},+this.value)">
+    </div>`;
+    if(done.length&&g===active[active.length-1]) html+=`<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:12px 0 8px">Accomplis (${done.length})</div>`;
+  });
+  el.innerHTML=html;
+}
+function updateGoal(id,val) {
+  const g=state.goals.find(g=>g.id===id);
+  if(!g) return;
+  g.progress=val;
+  g.done=val===100;
+  if(g.done) celebrate();
+  dbSave("goals");
+  renderObjectifs();
+}
+function deleteGoal(id) {
+  state.goals=state.goals.filter(g=>g.id!==id);
+  dbSave("goals");
+  renderObjectifs();
+  toast("Objectif supprimé");
+}
+
+// ── DÉFIS ────────────────────────────────────────────────────────────────────
+function loadDefi() {
+  const idx=Math.floor(Math.random()*DEFI_LIST.length);
+  state.currentDefi=DEFI_LIST[idx];
+  renderDefis();
+}
+function renderDefis() {
+  // Level
+  const pts=state.points||0;
+  const levels=[
+    {name:"💫 Bronze",min:0,max:100},
+    {name:"⚡ Argent",min:100,max:300},
+    {name:"🔥 Or",min:300,max:600},
+    {name:"👑 Légendaires",min:600,max:1000},
+  ];
+  const lv=levels.findLast(l=>pts>=l.min)||levels[0];
+  const pct=Math.min(100,((pts-lv.min)/(lv.max-lv.min))*100);
+  const lb=document.getElementById("level-banner");
+  if(lb) lb.innerHTML=`<div class="level-name">${lv.name}</div>
+    <div class="level-pts">${pts} points · Objectif ${lv.max} pts</div>
+    <div class="level-bar"><div class="level-bar-fill" style="width:${pct}%"></div></div>`;
+
+  // Current defi
+  const d=state.currentDefi;
+  const dc=document.getElementById("defi-content");
+  if(d&&dc){
+    const done=state.defiHistory.includes(d.title);
+    dc.innerHTML=`<div class="defi-card">
+      <div class="defi-header">
+        <div class="defi-icon">${d.icon}</div>
+        <div>
+          <div class="defi-title">${d.title}</div>
+          <div class="defi-desc">${d.desc}</div>
+          <div class="defi-pts">+${d.pts} points</div>
+        </div>
+      </div>
+      ${done
+        ?`<div style="color:#3A9E6A;font-weight:700;font-size:13px">✅ Défi accompli !</div>`
+        :`<button class="btn btn-rose" onclick="completeDefi()">Défi accompli ! 🎉</button>`}
+    </div>`;
+  }
+}
+function completeDefi() {
+  const d=state.currentDefi;
+  if(!d) return;
+  state.points=(state.points||0)+d.pts;
+  state.defiHistory=[...new Set([...state.defiHistory,d.title])];
+  dbSave("points");
+  dbSave("defiHistory");
+  celebrate();
+  renderDefis();
+  checkBadge("d1",true);
+  checkBadge("d10",state.defiHistory.length>=10);
+  checkBadge("d50",state.defiHistory.length>=50);
+  toast(`+${d.pts} points 🎉`);
+}
+function renderBadges() {
+  const el=document.getElementById("badge-grid");
+  if(!el) return;
+  const daysT=Math.floor((new Date()-COUPLE_DATE)/86400000);
+  checkBadge("days30",daysT>=30);
+  checkBadge("days100",daysT>=100);
+  el.innerHTML=BADGES_DEF.map(b=>`
+    <div class="badge-item${state.badges[b.id]?"":" locked"}">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.label}</div>
+    </div>`).join("");
+}
+function checkBadge(id, cond) {
+  if(cond&&!state.badges[id]){
+    state.badges[id]=true;
+    dbSave("badges");
+    renderBadges();
+    toast(`🏆 Badge débloqué : ${BADGES_DEF.find(b=>b.id===id)?.label||id}`);
+  }
+}
+
+// ── NOTES ────────────────────────────────────────────────────────────────────
+function initNoteModal() {
+  const el=document.getElementById("note-type-btns");
+  if(!el) return;
+  el.innerHTML=NOTE_TYPES.map(t=>`<button id="nt-${t.id}" onclick="selectNoteType('${t.id}')" style="
+    padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);
+    font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s">
+    ${t.icon} ${t.label}</button>`).join("");
+  selectNoteType("libre");
+}
+function initNoteFilterTabs() {
+  const el=document.getElementById("note-filter-tabs");
+  if(!el) return;
+  el.innerHTML=[{id:"tous",icon:"📋",label:"Toutes"},...NOTE_TYPES].map(t=>`
+    <button class="album-tab${t.id==="tous"?" active":""}" onclick="filterNotes('${t.id}',this)">
+      ${t.icon||""} ${t.label}
+    </button>`).join("");
+  state.noteFilter="tous";
+}
+function filterNotes(type, btn) {
+  state.noteFilter=type;
+  document.querySelectorAll("#note-filter-tabs .album-tab").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderNotes();
+}
+function selectNoteType(id) {
+  state.selectedNoteType=id;
+  document.querySelectorAll("[id^='nt-']").forEach(b=>{
+    const bid=b.id.replace("nt-","");
+    const t=NOTE_TYPES.find(t=>t.id===bid);
+    b.style.borderColor=bid===id?t.color:"var(--border)";
+    b.style.color=bid===id?t.color:"var(--muted)";
+    b.style.background=bid===id?t.color+"22":"transparent";
+  });
+}
+function openAddNote() { state.currentNoteEdit=null; openModal("modal-note"); }
+function saveNote() {
+  const title=document.getElementById("note-title").value.trim();
+  const body=document.getElementById("note-body").value.trim();
+  if(!title&&!body){ toast("Note vide !"); return; }
+  const note={
+    id:state.currentNoteEdit||Date.now(),
+    title,body,
+    type:state.selectedNoteType,
+    date:new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"short"}),
+    items:body.split("\n").filter(Boolean).map(t=>({t,done:false}))
+  };
+  if(state.currentNoteEdit){
+    const idx=state.notes.findIndex(n=>n.id===state.currentNoteEdit);
+    if(idx>=0) state.notes[idx]=note;
+  } else {
+    state.notes.unshift(note);
+  }
+  dbSave("notes");
+  closeModal("modal-note");
+  document.getElementById("note-title").value="";
+  document.getElementById("note-body").value="";
+  renderNotes();
+  toast("Note créée ✓");
+}
+function renderNotes() {
+  const el=document.getElementById("notes-list");
+  if(!el) return;
+  const filtered=state.noteFilter==="tous"?state.notes:state.notes.filter(n=>n.type===state.noteFilter);
+  if(filtered.length===0){
+    el.innerHTML=`<div style="text-align:center;color:var(--dim);padding:40px 0"><div style="font-size:48px">📝</div>Aucune note !</div>`;
+    return;
+  }
+  el.innerHTML=filtered.map(n=>{
+    const t=NOTE_TYPES.find(t=>t.id===n.type)||NOTE_TYPES[0];
+    if(n.type==="courses"||n.type==="liste"){
+      const items=(n.items||[{t:n.body,done:false}]);
+      return `<div class="note-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="background:${t.color}22;color:${t.color};font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">${t.icon} ${t.label}</span>
+          <button onclick="deleteNote(${n.id})" style="background:none;border:none;color:var(--dim);cursor:pointer">🗑️</button>
+        </div>
+        ${n.title?`<div class="note-card-title">${n.title}</div>`:""}
+        ${items.map((item,i)=>`
+          <div class="checklist-item">
+            <div class="check-box${item.done?" checked":""}" onclick="toggleCheck(${n.id},${i})">${item.done?"✓":""}</div>
+            <div class="check-text${item.done?" done":""}">${item.t}</div>
+          </div>`).join("")}
+      </div>`;
+    }
+    return `<div class="note-card" onclick="editNote(${n.id})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <span style="background:${t.color}22;color:${t.color};font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">${t.icon} ${t.label}</span>
+        <button onclick="event.stopPropagation();deleteNote(${n.id})" style="background:none;border:none;color:var(--dim);cursor:pointer">🗑️</button>
+      </div>
+      ${n.title?`<div class="note-card-title" style="margin-top:6px">${n.title}</div>`:""}
+      ${n.body?`<div class="note-card-preview">${n.body.slice(0,100)}${n.body.length>100?"...":""}</div>`:""}
+      <div class="note-card-meta"><span class="note-card-date">${n.date}</span></div>
+    </div>`;
+  }).join("");
+}
+function toggleCheck(noteId,itemIdx) {
+  const n=state.notes.find(n=>n.id===noteId);
+  if(!n||!n.items) return;
+  n.items[itemIdx].done=!n.items[itemIdx].done;
+  dbSave("notes");
+  renderNotes();
+}
+function deleteNote(id) {
+  state.notes=state.notes.filter(n=>n.id!==id);
+  dbSave("notes");
+  renderNotes();
+  toast("Note supprimée");
+}
+function editNote(id) {
+  const n=state.notes.find(n=>n.id===id);
+  if(!n) return;
+  state.currentNoteEdit=id;
+  document.getElementById("note-title").value=n.title||"";
+  document.getElementById("note-body").value=n.body||"";
+  selectNoteType(n.type||"libre");
+  openModal("modal-note");
+}
+
+// ── IA ───────────────────────────────────────────────────────────────────────
+const AI_SUGGESTIONS_LIST=[
+  "💡 Idée de soirée romantique pour ce soir",
+  "🎁 Idée de cadeau pour Raphy",
+  "🏖️ Destination voyage pour cet été ?",
+  "❓ Donne-nous une question pour mieux se connaître",
+  "🍽️ Recette romantique à cuisiner ensemble",
+  "🗣️ Aide-nous à mieux communiquer sur un sujet",
+];
+function initAISuggestions() {
+  const el=document.getElementById("ai-suggestions-list");
+  if(!el) return;
+  el.innerHTML=AI_SUGGESTIONS_LIST.map(s=>`<button class="ai-suggestion-btn" onclick="sendAIMsg('${s}')">${s}</button>`).join("");
+}
+function renderIA() {
+  const el=document.getElementById("ai-chat");
+  if(!el) return;
+  // Keep existing
+}
+async function sendAI() {
+  const input=document.getElementById("ai-input");
+  sendAIMsg(input.value.trim());
+  input.value="";
+}
+async function sendAIMsg(text) {
+  if(!text) return;
+  const key=state.geminiKey||ls("geminiKey");
+  const chat=document.getElementById("ai-chat");
+  const sugg=document.getElementById("ai-suggestions-list");
+  if(sugg) sugg.style.display="none";
+
+  chat.innerHTML+=`<div class="ai-msg user">${text}</div>`;
+  chat.innerHTML+=`<div class="ai-msg assistant" id="ai-loading"><span class="loading-spin">✨</span> En train de réfléchir...</div>`;
+  chat.lastElementChild?.scrollIntoView({behavior:"smooth"});
+
+  if(!key){ document.getElementById("ai-loading").textContent="Configure ta clé Gemini dans Réglages ⚙️"; return; }
+
+  try {
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-14:generateContent?key=${key}`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        system_instruction:{parts:[{text:"Tu es l'assistant IA personnel du couple Mehdi & Raphy. Tu es chaleureux, créatif, bienveillant et un peu espiègle. Tu les aides au quotidien : idées de sorties, projets, communication, surprises, recettes, voyages. Réponds en français, de façon concise et avec des emojis avec parcimonie."}]},
+        contents:[{parts:[{text}]}]
+      })
+    });
+    const data=await res.json();
+    const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||"Désolé, je n'ai pas pu répondre.";
+    const el=document.getElementById("ai-loading");
+    if(el){ el.removeAttribute("id"); el.innerHTML=`<div class="ai-tag">✨ Assistant Couple</div>${reply.replace(/\n/g,"<br>")}` }
+  } catch(e) {
+    const el=document.getElementById("ai-loading");
+    if(el) el.textContent="Erreur de connexion 😕";
+  }
+  chat.lastElementChild?.scrollIntoView({behavior:"smooth"});
+}
+
+// ── ROUE ─────────────────────────────────────────────────────────────────────
+function renderRoue() {
+  setTimeout(drawWheel, 50);
+  renderWheelActivities();
+}
+function drawWheel() {
+  const canvas=document.getElementById("wheel");
+  if(!canvas) return;
+  const ctx=canvas.getContext("2d");
+  const cx=130,cy=130,r=120;
+  const items=state.wheelActivities;
+  const n=items.length;
+  const colors=["#C9A84C22","#E8637A22","#4A9EE822","#8B6FD422","#3A9E6A22","#FF7A4522"];
+  const borderColors=["#C9A84C","#E8637A","#4A9EE8","#8B6FD4","#3A9E6A","#FF7A45"];
+  ctx.clearRect(0,0,260,260);
+  items.forEach((item,i)=>{
+    const start=(i/n)*Math.PI*2+state.wheelAngle;
+    const end=((i+1)/n)*Math.PI*2+state.wheelAngle;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,start,end);
+    ctx.closePath();
+    ctx.fillStyle=colors[i%colors.length];
+    ctx.fill();
+    ctx.strokeStyle=borderColors[i%borderColors.length];
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+    // Text
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(start+(end-start)/2);
+    ctx.textAlign="right";
+    ctx.fillStyle="#F0EDE8";
+    ctx.font="bold 10px -apple-system,sans-serif";
+    const label=item.length>12?item.slice(0,11)+"…":item;
+    ctx.fillText(label,r-6,4);
+    ctx.restore();
+  });
+  // Center
+  ctx.beginPath();
+  ctx.arc(cx,cy,20,0,Math.PI*2);
+  ctx.fillStyle="#111318";
+  ctx.fill();
+  ctx.strokeStyle="#C9A84C";
+  ctx.lineWidth=2;
+  ctx.stroke();
+  ctx.fillStyle="#C9A84C";
+  ctx.font="bold 14px sans-serif";
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  ctx.fillText("💑",cx,cy);
+}
+function spinWheel() {
+  if(state.wheelAnimating) return;
+  state.wheelAnimating=true;
+  document.getElementById("wheel-result").style.display="none";
+  document.getElementById("wheel-btn").disabled=true;
+  const totalRot=(Math.random()*Math.PI*4)+Math.PI*8;
+  const dur=3500;
+  const start=Date.now();
+  const startAngle=state.wheelAngle;
+  function step(){
+    const elapsed=Date.now()-start;
+    const t=Math.min(1,elapsed/dur);
+    const ease=1-Math.pow(1-t,4);
+    state.wheelAngle=startAngle+totalRot*ease;
+    drawWheel();
+    if(t<1){ requestAnimationFrame(step); }
+    else {
+      state.wheelAnimating=false;
+      document.getElementById("wheel-btn").disabled=false;
+      const items=state.wheelActivities;
+      const n=items.length;
+      const norm=((state.wheelAngle%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
+      const pointer=Math.PI*1.5;
+      const anglePerItem=Math.PI*2/n;
+      const idx=Math.floor(((pointer-norm+Math.PI*2)%(Math.PI*2))/anglePerItem)%n;
+      const result=items[(n-1-idx+n)%n];
+      const el=document.getElementById("wheel-result");
+      el.textContent=result;
+      el.style.display="block";
+      toast(`🎲 ${result} !`);
+    }
+  }
+  requestAnimationFrame(step);
+}
+function renderWheelActivities() {
+  const el=document.getElementById("wheel-activities-list");
+  if(!el) return;
+  el.innerHTML=state.wheelActivities.map((a,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px">${a}</span>
+      <button onclick="removeActivity(${i})" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px">✕</button>
+    </div>`).join("");
+}
+function addActivity() {
+  const input=document.getElementById("new-activity-input");
+  const val=input.value.trim();
+  if(!val) return;
+  state.wheelActivities.push(val);
+  dbSave("wheelActivities");
+  input.value="";
+  renderRoue();
+}
+function removeActivity(i) {
+  state.wheelActivities.splice(i,1);
+  dbSave("wheelActivities");
+  renderRoue();
+}
+
+// ── QUESTION ─────────────────────────────────────────────────────────────────
+function loadQuestion() {
+  const idx=Math.floor(Math.random()*QUESTIONS.length);
+  state.currentQuestion={text:QUESTIONS[idx],date:fmtDate(new Date()),answers:{}};
+  document.getElementById("question-text").textContent=state.currentQuestion.text;
+  document.getElementById("ans-mehdi").value="";
+  document.getElementById("ans-raphy").value="";
+}
+function saveAnswers() {
+  const q=state.currentQuestion;
+  if(!q) return;
+  q.answers={mehdi:document.getElementById("ans-mehdi").value.trim(),raphy:document.getElementById("ans-raphy").value.trim()};
+  state.questions.unshift(q);
+  dbSave("questions");
+  renderQuestion();
+  checkBadge("quiz10",state.questions.length>=10);
+  toast("Réponses sauvegardées ✓");
+}
+function renderQuestion() {
+  const el=document.getElementById("past-questions");
+  if(!el) return;
+  el.innerHTML=state.questions.slice(0,5).map(q=>`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px">${q.date}</div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px">${q.text}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><div style="font-size:10px;font-weight:700;color:#4A9EE8;margin-bottom:3px">💙 Mehdi</div>
+          <div style="font-size:12px;color:var(--muted)">${q.answers?.mehdi||"—"}</div></div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--rose);margin-bottom:3px">💗 Raphy</div>
+          <div style="font-size:12px;color:var(--muted)">${q.answers?.raphy||"—"}</div></div>
+      </div>
+    </div>`).join("");
+}
+
+// ── GRATITUDE ────────────────────────────────────────────────────────────────
+function setGratWho(w) {
+  state.currentGratWho=w;
+  document.getElementById("grat-who-mehdi").className="who-btn"+(w==="mehdi"?" active-mehdi":"");
+  document.getElementById("grat-who-raphy").className="who-btn"+(w==="raphy"?" active-raphy":"");
+}
+function saveGratitude() {
+  const text=document.getElementById("gratitude-input").value.trim();
+  if(!text) return;
+  state.gratitudes.unshift({id:Date.now(),who:state.currentGratWho,text,date:new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"})});
+  dbSave("gratitudes");
+  document.getElementById("gratitude-input").value="";
+  renderGratitude();
+  checkBadge("grat7",state.gratitudes.length>=7);
+  toast("Gratitude partagée 🌸");
+}
+function renderGratitude() {
+  const el=document.getElementById("gratitude-list");
+  if(!el) return;
+  el.innerHTML=state.gratitudes.map(g=>`
+    <div class="gratitude-card">
+      <div class="gratitude-who">${g.who==="mehdi"?"💙 Mehdi":"💗 Raphy"}</div>
+      <div class="gratitude-text">"${g.text}"</div>
+      <div class="gratitude-date">${g.date}</div>
+    </div>`).join("");
+}
+
+// ── STATUT ───────────────────────────────────────────────────────────────────
+function initStatutOptions() {
+  const el=document.getElementById("statut-options");
+  if(!el) return;
+  el.innerHTML=STATUT_OPTIONS.map(s=>`
+    <button id="so2-${s.id}" onclick="selectStatut('${s.id}')" style="
+      background:var(--surface);border:1.5px solid var(--border);border-radius:12px;
+      padding:12px 6px;text-align:center;cursor:pointer;transition:all .2s">
+      <div style="font-size:22px">${s.icon}</div>
+      <div style="font-size:10px;font-weight:700;color:var(--muted);margin-top:3px">${s.label}</div>
+    </button>`).join("");
+  state.selectedStatutId=null;
+}
+function selectStatut(id) {
+  state.selectedStatutId=id;
+  const opt=STATUT_OPTIONS.find(s=>s.id===id);
+  document.querySelectorAll("[id^='so2-']").forEach(b=>{
+    const bid=b.id.replace("so2-","");
+    const o=STATUT_OPTIONS.find(s=>s.id===bid);
+    b.style.borderColor=bid===id?o.color:"var(--border)";
+    b.style.background=bid===id?o.color+"22":"var(--surface)";
+  });
+}
+function saveStatut() {
+  if(!state.selectedStatutId&&!document.getElementById("statut-custom").value.trim()){ toast("Choisis un statut !"); return; }
+  const opt=STATUT_OPTIONS.find(s=>s.id===state.selectedStatutId)||{icon:"⚡",label:"Custom"};
+  const custom=document.getElementById("statut-custom").value.trim();
+  state.statuts[state.currentWho||"mehdi"]={id:state.selectedStatutId||"custom",icon:opt.icon,label:custom||opt.label};
+  dbSave("statuts");
+  renderStatut();
+  if(state.currentPage==="home") renderHome();
+  toast("Statut mis à jour ⚡");
+}
+function renderStatut() {
+  const el=document.getElementById("statut-cards");
+  if(!el) return;
+  el.innerHTML=["mehdi","raphy"].map(who=>{
+    const st=state.statuts[who];
+    const color=who==="mehdi"?"#4A9EE8":"#E8637A";
+    return `<div class="statut-card card" style="border-left:4px solid ${color}">
+      <div class="statut-avatar" style="background:${color}22">${st?st.icon:"❓"}</div>
+      <div>
+        <div class="statut-name" style="color:${color}">${who==="mehdi"?"💙 Mehdi":"💗 Raphy"}</div>
+        <div class="statut-text">${st?st.label:"Aucun statut"}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ── HISTOIRE ─────────────────────────────────────────────────────────────────
+function openAddMoment() { document.getElementById("moment-date").value=fmtDate(new Date()); openModal("modal-moment"); }
+function saveMoment() {
+  const title=document.getElementById("moment-title").value.trim();
+  if(!title){ toast("Donne un titre !"); return; }
+  state.moments.unshift({id:Date.now(),date:document.getElementById("moment-date").value,title,desc:document.getElementById("moment-desc").value.trim()});
+  dbSave("moments");
+  closeModal("modal-moment");
+  renderHistoire();
+  toast("Moment ajouté à votre histoire ✨");
+}
+function renderHistoire() {
+  const el=document.getElementById("timeline");
+  if(!el) return;
+  const all=[
+    {date:fmtDate(COUPLE_DATE),title:"💑 Notre premier anniversaire ensemble",desc:"Le début de notre belle histoire ❤️"},
+    ...state.moments
+  ].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(all.length===0){ el.innerHTML=`<div style="text-align:center;color:var(--dim);padding:40px">Ajoutez votre premier souvenir !</div>`; return; }
+  el.innerHTML=all.map(m=>`
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-date">${m.date?new Date(m.date).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}):""}</div>
+      <div class="timeline-title">${m.title}</div>
+      ${m.desc?`<div class="timeline-desc">${m.desc}</div>`:""}
+    </div>`).join("");
+}
+
+// ── DATES IMPORTANTES ────────────────────────────────────────────────────────
+const DATE_TYPES=[
+  {id:"anniv",  icon:"🎂",label:"Anniversaire",color:"#E8637A"},
+  {id:"rdv",    icon:"🏥",label:"Rendez-vous", color:"#4A9EE8"},
+  {id:"event",  icon:"🎉",label:"Événement",   color:"#C9A84C"},
+  {id:"couple", icon:"💑",label:"Couple",      color:"#8B6FD4"},
+  {id:"autre",  icon:"📌",label:"Autre",       color:"#8B90A0"},
+];
+function initDateTypeGrid() {
+  const el=document.getElementById("date-type-grid");
+  if(!el) return;
+  el.innerHTML=DATE_TYPES.map(t=>`
+    <button id="dt-${t.id}" onclick="selectDateType('${t.id}')" style="
+      background:var(--surface);border:2px solid var(--border);border-radius:12px;
+      padding:10px 4px;text-align:center;cursor:pointer;transition:all .2s">
+      <div style="font-size:22px">${t.icon}</div>
+      <div style="font-size:9px;font-weight:700;color:var(--muted);margin-top:2px">${t.label}</div>
+    </button>`).join("");
+  state.selectedDateType="anniv";
+  selectDateType("anniv");
+}
+function selectDateType(id) {
+  state.selectedDateType=id;
+  const t=DATE_TYPES.find(t=>t.id===id);
+  document.querySelectorAll("[id^='dt-']").forEach(b=>{
+    const bid=b.id.replace("dt-","");
+    const bt=DATE_TYPES.find(t=>t.id===bid);
+    b.style.borderColor=bid===id?bt.color:"var(--border)";
+    b.style.background=bid===id?bt.color+"22":"var(--surface)";
+  });
+}
+function openAddDate() { document.getElementById("date-date").value=fmtDate(new Date()); openModal("modal-date"); }
+function saveDate() {
+  const label=document.getElementById("date-label").value.trim();
+  const date=document.getElementById("date-date").value;
+  if(!label||!date){ toast("Remplis tout !"); return; }
+  state.importantDates.push({id:Date.now(),label,date,type:state.selectedDateType});
+  state.importantDates.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  dbSave("importantDates");
+  closeModal("modal-date");
+  renderDates();
+  toast("Date ajoutée 🎂");
+}
+function renderDates() {
+  const el=document.getElementById("dates-list");
+  if(!el) return;
+  const all=[
+    {id:"anniv-m",label:"🎂 Anniversaire Mehdi",date:`${new Date().getFullYear()}-02-11`,type:"anniv"},
+    {id:"anniv-r",label:"🎂 Anniversaire Raphy",date:`${new Date().getFullYear()}-06-11`,type:"anniv"},
+    {id:"couple-anniv",label:"💑 Votre anniversaire",date:`${new Date().getFullYear()}-05-11`,type:"couple"},
+    ...state.importantDates
+  ];
+  const today=new Date(); today.setHours(0,0,0,0);
+  el.innerHTML=all.map(d=>{
+    const dt=new Date(d.date); dt.setHours(0,0,0,0);
+    const daysLeft=Math.ceil((dt-today)/86400000);
+    const t=DATE_TYPES.find(t=>t.id===d.type)||DATE_TYPES[4];
+    const isToday=daysLeft===0, isPast=daysLeft<0;
+    return `<div style="background:${isToday?"rgba(201,168,76,.15)":"var(--card)"};border:1px solid ${isToday?"var(--gold)":"var(--border)"};border-radius:14px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+      <div style="width:44px;height:44px;border-radius:50%;background:${t.color}22;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${t.icon}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700">${d.label}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${new Date(d.date).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})}</div>
+      </div>
+      <div style="text-align:right">
+        ${isToday?`<div style="color:var(--gold);font-weight:800;font-size:13px">Aujourd'hui ! 🎉</div>`:isPast?`<div style="color:var(--dim);font-size:11px">Passé</div>`:`<div style="color:${t.color};font-weight:800;font-size:16px">${daysLeft}j</div><div style="color:var(--muted);font-size:9px">restants</div>`}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ── QUIZ ─────────────────────────────────────────────────────────────────────
+const QUIZ_QUESTIONS=[
+  {q:"Quelle est ma couleur préférée ?",who:"mehdi",answers:["Bleu","Rouge","Vert","Noir"],correct:0},
+  {q:"Mon plat préféré ?",who:"raphy",answers:["Pizza","Sushi","Pâtes","Burger"],correct:1},
+  {q:"Mon film préféré ?",who:"mehdi",answers:["Action","Comédie","Romance","Horreur"],correct:1},
+  {q:"Ce que je préfère faire le week-end ?",who:"raphy",answers:["Sortir","Cinéma","Rester à la maison","Sport"],correct:2},
+  {q:"Mon rêve de voyage ?",who:"mehdi",answers:["Japon","Italie","USA","Maldives"],correct:3},
+];
+let quizIdx=0, quizScore=0;
+function renderQuiz() {
+  const el=document.getElementById("quiz-content");
+  if(!el) return;
+  if(quizIdx>=QUIZ_QUESTIONS.length){
+    el.innerHTML=`<div style="text-align:center;padding:40px 0">
+      <div style="font-size:48px;margin-bottom:12px">🏆</div>
+      <div style="font-size:24px;font-weight:900;color:var(--gold)">${quizScore}/${QUIZ_QUESTIONS.length}</div>
+      <div style="color:var(--muted);margin-top:6px">Tu me connais ${Math.round(quizScore/QUIZ_QUESTIONS.length*100)}% !</div>
+      <button class="btn" style="margin-top:20px" onclick="resetQuiz()">Rejouer 🔄</button>
+    </div>`;
+    return;
+  }
+  const q=QUIZ_QUESTIONS[quizIdx];
+  const name=q.who==="mehdi"?"💙 Mehdi":"💗 Raphy";
+  el.innerHTML=`<div style="text-align:center;margin-bottom:16px">
+    <div style="color:var(--muted);font-size:12px">Question ${quizIdx+1}/${QUIZ_QUESTIONS.length}</div>
+    <div style="background:var(--gold-soft);border:1px solid var(--gold);border-radius:12px;padding:6px 16px;display:inline-block;margin-top:6px;font-size:12px;color:var(--gold);font-weight:700">À propos de ${name}</div>
+    <div style="font-size:16px;font-weight:700;margin-top:12px;line-height:1.5">${q.q}</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    ${q.answers.map((a,i)=>`<button onclick="answerQuiz(${i})" style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:14px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;text-align:left;transition:all .2s">
+      <span style="color:var(--gold);margin-right:8px">${String.fromCharCode(65+i)}.</span>${a}
+    </button>`).join("")}
+  </div>`;
+}
+function answerQuiz(idx) {
+  const q=QUIZ_QUESTIONS[quizIdx];
+  const correct=idx===q.correct;
+  if(correct) quizScore++;
+  quizIdx++;
+  if(correct) celebrate();
+  renderQuiz();
+}
+function resetQuiz() { quizIdx=0; quizScore=0; renderQuiz(); }
+
+// ── JOURNAL ───────────────────────────────────────────────────────────────────
+function setJourWho(w) {
+  state.currentJourWho=w;
+  document.getElementById("jour-who-mehdi").className="who-btn"+(w==="mehdi"?" active-mehdi":"");
+  document.getElementById("jour-who-raphy").className="who-btn"+(w==="raphy"?" active-raphy":"");
+}
+function saveJournal() {
+  const text=document.getElementById("journal-input").value.trim();
+  if(!text) return;
+  state.journalEntries.unshift({id:Date.now(),who:state.currentJourWho,text,date:new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"})});
+  dbSave("journalEntries");
+  document.getElementById("journal-input").value="";
+  renderJournal();
+  toast("Entrée de journal ajoutée 📓");
+}
+async function generateJournalSummary() {
+  const key=state.geminiKey||ls("geminiKey");
+  if(!key){ toast("Configure ta clé Gemini dans Réglages"); return; }
+  if(state.journalEntries.length===0){ toast("Écrivez d'abord quelques entrées !"); return; }
+  const entries=state.journalEntries.slice(0,10).map(e=>`${e.date} (${e.who}): ${e.text}`).join("\n");
+  const el=document.getElementById("journal-entries");
+  el.insertAdjacentHTML("afterbegin",`<div id="journal-summary-loading" class="card" style="border-color:var(--gold);text-align:center;padding:20px"><span class="loading-spin">✨</span> Génération du résumé...</div>`);
+  try {
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-14:generateContent?key=${key}`,{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contents:[{parts:[{text:`Voici les dernières entrées de journal du couple Mehdi & Raphy:\n${entries}\n\nRédige un beau résumé poétique et touchant de leur période, en 3-4 phrases, comme si tu racontais leur histoire. En français.`}]}]})
+    });
+    const data=await res.json();
+    const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||"";
+    document.getElementById("journal-summary-loading").innerHTML=`
+      <div style="color:var(--gold);font-size:11px;font-weight:700;margin-bottom:8px">✨ Résumé IA de votre période</div>
+      <div style="font-size:13px;line-height:1.7;font-style:italic;color:var(--text)">${reply}</div>`;
+  } catch { document.getElementById("journal-summary-loading").remove(); toast("Erreur IA 😕"); }
+}
+function renderJournal() {
+  const el=document.getElementById("journal-entries");
+  if(!el) return;
+  el.innerHTML=state.journalEntries.map(e=>{
+    const color=e.who==="mehdi"?"#4A9EE8":"#E8637A";
+    const name=e.who==="mehdi"?"💙 Mehdi":"💗 Raphy";
+    return `<div style="background:var(--card);border:1px solid var(--border);border-left:3px solid ${color};border-radius:12px;padding:14px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:11px;font-weight:700;color:${color}">${name}</span>
+        <span style="font-size:10px;color:var(--muted)">${e.date}</span>
+      </div>
+      <div style="font-size:13px;line-height:1.6;color:var(--text)">${e.text}</div>
+    </div>`;
+  }).join("");
+}
+
+// ── CADEAUX ──────────────────────────────────────────────────────────────────
+function setGiftWho(w) {
+  state.currentGiftWho=w;
+  document.getElementById("gift-who-mehdi").className="who-btn"+(w==="mehdi"?" active-mehdi":"");
+  document.getElementById("gift-who-raphy").className="who-btn"+(w==="raphy"?" active-raphy":"");
+}
+function addGift() {
+  const text=document.getElementById("gift-input").value.trim();
+  if(!text) return;
+  const price=document.getElementById("gift-price").value.trim();
+  state.gifts.push({id:Date.now(),who:state.currentGiftWho,text,price,date:new Date().toLocaleDateString("fr-FR")});
+  dbSave("gifts");
+  document.getElementById("gift-input").value="";
+  document.getElementById("gift-price").value="";
+  renderCadeaux();
+  toast("Idée cadeau ajoutée 🎁");
+}
+function renderCadeaux() {
+  const el=document.getElementById("gifts-list");
+  if(!el) return;
+  ["mehdi","raphy"].forEach(who=>{
+    const gifts=state.gifts.filter(g=>g.who!==who); // Show the OTHER person's gifts
+    const color=who==="mehdi"?"#E8637A":"#4A9EE8"; // Raphy sees Mehdi's, vice versa
+    const name=who==="mehdi"?"💗 Idées de Raphy (pour Mehdi)":"💙 Idées de Mehdi (pour Raphy)";
+  });
+  // Show all (in a real app, you'd hide by user)
+  el.innerHTML=`<div style="margin-bottom:8px">
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Toutes les idées</div>
+    ${state.gifts.map(g=>`
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:${g.who==="mehdi"?"#4A9EE8":"var(--rose)"};margin-bottom:3px">${g.who==="mehdi"?"💙 Mehdi":"💗 Raphy"} souhaite :</div>
+          <div style="font-size:13px;font-weight:700">${g.text}</div>
+          ${g.price?`<div style="font-size:11px;color:var(--gold);margin-top:2px">💰 ${g.price}</div>`:""}
+        </div>
+        <button onclick="deleteGift(${g.id})" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:16px">🗑️</button>
+      </div>`).join("")||`<div style="text-align:center;color:var(--dim);padding:20px">Aucune idée pour l'instant</div>`}
+  </div>`;
+}
+function deleteGift(id) {
+  state.gifts=state.gifts.filter(g=>g.id!==id);
+  dbSave("gifts");
+  renderCadeaux();
+}
+
+// ── HUMEUR ───────────────────────────────────────────────────────────────────
+function openHumeur(who) {
+  state.currentHumeurFor=who;
+  state.selectedHumeur=state.humeurs[who]||MOODS[0];
+  document.getElementById("modal-humeur-title").textContent=`Mon humeur — ${who==="mehdi"?"💙 Mehdi":"💗 Raphy"}`;
+  const el=document.getElementById("humeur-picker");
+  el.innerHTML=MOODS.map(m=>`
+    <button onclick="pickHumeur('${m.e}')" style="
+      background:${state.selectedHumeur?.e===m.e?"var(--gold-soft)":"transparent"};
+      border:${state.selectedHumeur?.e===m.e?"2px solid var(--gold)":"2px solid transparent"};
+      border-radius:12px;padding:8px;cursor:pointer;transition:all .15s;
+      display:flex;flex-direction:column;align-items:center;gap:3px">
+      <span style="font-size:28px">${m.e}</span>
+      <span style="font-size:9px;color:var(--muted);font-weight:600">${m.l}</span>
+    </button>`).join("");
+  openModal("modal-humeur");
+}
+function pickHumeur(e) {
+  const m=MOODS.find(m=>m.e===e);
+  state.selectedHumeur=m;
+  document.querySelectorAll("#humeur-picker button").forEach(b=>{
+    const be=b.querySelector("span").textContent;
+    b.style.background=be===e?"var(--gold-soft)":"transparent";
+    b.style.borderColor=be===e?"var(--gold)":"transparent";
+  });
+}
+function saveHumeur() {
+  if(!state.selectedHumeur) return;
+  state.humeurs[state.currentHumeurFor]=state.selectedHumeur;
+  dbSave("humeurs");
+  renderHumeurs();
+  closeModal("modal-humeur");
+  toast(`Humeur mise à jour ${state.selectedHumeur.e}`);
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────────────────────
+function saveGeminiKey() {
+  const key=document.getElementById("gemini-key-input").value.trim();
+  state.geminiKey=key;
+  ls("geminiKey",key);
+  toast("Clé API sauvegardée 🔑");
+}
+
+// ── CELEBRATION ───────────────────────────────────────────────────────────────
+function celebrate() {
+  const overlay=document.getElementById("celebration");
+  overlay.style.display="block";
+  overlay.innerHTML="";
+  const colors=["#C9A84C","#E8637A","#4A9EE8","#8B6FD4","#3A9E6A","#F0EDE8"];
+  for(let i=0;i<50;i++){
+    const p=document.createElement("div");
+    p.className="confetti-piece";
+    p.style.cssText=`--x:${Math.random()*100}%;--dur:${1+Math.random()*2}s;--delay:${Math.random()*.5}s;--c:${colors[Math.floor(Math.random()*colors.length)]};--rot:${Math.random()*360}deg;--br:${Math.random()>.5?"50%":"2px"}`;
+    overlay.appendChild(p);
+  }
+  setTimeout(()=>{ overlay.style.display="none"; overlay.innerHTML=""; },3000);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function fmtDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+const MONTHS_FR=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+const MONTHS_SHORT=["Jan","Fév","Mars","Avr","Mai","Juin","Juil","Août","Sep","Oct","Nov","Déc"];
+
+// ── BOOT ─────────────────────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", ()=>{
+  initPIN();
+  document.addEventListener("firebaseReady",()=>{
+    const el=document.getElementById("firebase-status");
+    if(el) el.textContent="✅ Firebase connecté";
+  });
+});
+</script>
+</body>
+</html>
