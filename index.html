@@ -425,10 +425,10 @@ document.dispatchEvent(new Event("firebaseReady"));
         <div style="color:var(--muted);font-size:10px;margin-top:4px" id="last-mot-from"></div>
       </div>
       <div class="quick-actions">
-        <div class="quick-btn" onclick="goTo('mots')"><span class="quick-btn-icon">💌</span>Mot doux</div>
+        <div class="quick-btn" onclick="goTo('mots')"><span class="quick-btn-icon">💌</span>Mots doux</div>
         <div class="quick-btn" onclick="goTo('planning')"><span class="quick-btn-icon">📅</span>Planning</div>
-        <div class="quick-btn" onclick="goTo('notes')"><span class="quick-btn-icon">📝</span>Notes</div>
         <div class="quick-btn" onclick="goTo('ia')"><span class="quick-btn-icon">✨</span>Mahmoud</div>
+        <div class="quick-btn" onclick="openJeux()"><span class="quick-btn-icon">🎮</span>Nos Jeux</div>
       </div>
       <div class="bonne-nuit-btn" onclick="sendBonneNuit()">
         <span style="font-size:22px">🌙</span>
@@ -749,6 +749,7 @@ document.dispatchEvent(new Event("firebaseReady"));
     <button class="nav-btn" onclick="goTo('quiz',this)"><span class="nav-icon">🧠</span><span class="nav-label">Quiz</span></button>
     <button class="nav-btn" onclick="goTo('journal',this)"><span class="nav-icon">📓</span><span class="nav-label">Journal</span></button>
     <button class="nav-btn" onclick="goTo('cadeaux',this)"><span class="nav-icon">🎁</span><span class="nav-label">Cadeaux</span></button>
+    <button class="nav-btn" onclick="openJeux()" id="nav-jeux"><span class="nav-icon">🎮</span><span class="nav-label">Jeux</span></button>
     <button class="nav-btn" onclick="goTo('settings',this)"><span class="nav-icon">⚙️</span><span class="nav-label">Réglages</span></button>
   </nav>
 </div><!-- /app-screen -->
@@ -2180,6 +2181,13 @@ function renderMotsIAHistory(){
 }
 
 // ═══════════════════════════ INIT IA PAGE (avec infos Mahmoud) ═══════════════════════════
+// ═══════════════════════════ JEUX ═══════════════════════════
+function openJeux(){
+  // Passer le profil à jeux.html via sessionStorage
+  sessionStorage.setItem("nous_profile", S.profile||"raphy");
+  window.location.href = "jeux.html";
+}
+
 // ═══════════════════════════ MODAL CLOSE ═══════════════════════════
 document.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
