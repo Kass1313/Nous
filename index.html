@@ -343,7 +343,7 @@ document.dispatchEvent(new Event("firebaseReady"));
 <body>
 
 <!-- INTRO SCREEN -->
-<div id="intro-screen" class="screen hidden">
+<div id="intro-screen" class="screen">
   <div class="intro-lock">🔐</div>
   <div class="intro-warning">⚠️ Accès restreint</div>
   <div class="intro-title">Cet espace n'appartient qu'à deux personnes — et tout le monde ne mérite pas d'y entrer.</div>
@@ -2738,10 +2738,12 @@ document.addEventListener("DOMContentLoaded",()=>{
   document.getElementById("moment-date-input").value=todayStr();
   document.getElementById("date-date-input").value=todayStr();
   initPIN();
-  // Montrer intro si jamais vue, sinon PIN directement
-  if(!lsGet("intro_seen")){
-    document.getElementById("intro-screen").classList.remove("hidden");
+  // Si intro déjà vue → cacher intro et montrer PIN directement
+  if(lsGet("intro_seen")){
+    document.getElementById("intro-screen").classList.add("hidden");
+    document.getElementById("pin-screen").classList.remove("hidden");
   }
+  // Sinon l'intro est déjà visible par défaut (pas de flash noir)
   document.addEventListener("firebaseReady",()=>{const el=document.getElementById("firebase-status");if(el)el.innerHTML='<span style="color:#3A9E6A">✅ Firebase connecté</span>'});
   // Demander permission notifs push
   setTimeout(requestPushPermission, 3000);
