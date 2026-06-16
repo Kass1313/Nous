@@ -1583,7 +1583,10 @@ function renderMots(){
       <div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap">${reacts}${addBtns}</div>
     </div>`;
   }).join("");
-  el.innerHTML+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${suggs.map(s=>`<button class="react-btn" onclick="document.getElementById('chat-input').value='${s.replace(/'/g,"\\'")}'">${s}</button>`).join("")}</div>`;
+  const chatSuggDiv=document.createElement("div");
+  chatSuggDiv.style.cssText="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px";
+  suggs.forEach(s=>{const b=document.createElement("button");b.className="react-btn";b.textContent=s;b.onclick=()=>{const inp=document.getElementById("chat-input");if(inp)inp.value=s};chatSuggDiv.appendChild(b)});
+  el.appendChild(chatSuggDiv);
 }
 function setCapsWho(w){S.currentCapsWho=w;document.getElementById("caps-r").className="who-btn"+(w==="raphy"?" active-r":"");document.getElementById("caps-m").className="who-btn"+(w==="mehdi"?" active-m":"")}
 function saveCapsule(){
@@ -1889,7 +1892,8 @@ function initIASuggestions(){
     "🎁 Idée cadeau originale pour Raphy",
     "😂 Chambre-moi gentiment comme Mahmoud sait le faire",
   ];
-  el.innerHTML=suggs.map(s=>`<button class="ia-sugg-btn" onclick="sendIAMsg('${s.replace(/'/g,"\\'")}',true)">${s}</button>`).join("");
+  el.innerHTML="";
+  suggs.forEach(s=>{const b=document.createElement("button");b.className="ia-sugg-btn";b.textContent=s;b.onclick=()=>sendIAMsg(s,true);el.appendChild(b);});
 }
 
 function renderIAHistory(){
@@ -2269,7 +2273,14 @@ function initHumeurPicker(){
 }
 function initHumeurSuggestions(){
   const el=document.getElementById("humeur-suggestions");if(!el)return;
-  el.innerHTML=HUMEUR_SUGGESTIONS.map(s=>`<button onclick="document.getElementById('humeur-phrase-input').value='${s.replace(/'/g,"\\'")}'" style="padding:4px 10px;border-radius:20px;border:1px solid var(--border);font-size:11px;color:var(--muted);cursor:pointer;background:var(--surface);transition:all .2s">${s}</button>`).join("");
+  el.innerHTML="";
+  HUMEUR_SUGGESTIONS.forEach(s=>{
+    const b=document.createElement("button");
+    b.textContent=s;
+    b.style.cssText="padding:4px 10px;border-radius:20px;border:1px solid var(--border);font-size:11px;color:var(--muted);cursor:pointer;background:var(--surface);transition:all .2s";
+    b.onclick=()=>{const inp=document.getElementById("humeur-phrase-input");if(inp)inp.value=s};
+    el.appendChild(b);
+  });
 }
 function openHumeur(who){
   S.currentHumeurFor=who;S.selectedHumeur=S.humeurs[who]?.e||MOODS[0].e;
@@ -2677,8 +2688,7 @@ function showWeeklySummary(){
   document.body.appendChild(modal);
   genWeeklySummary().then(text=>{
     const el=document.getElementById("weekly-summary-text");
-    if(el)el.innerHTML=text.replace(/
-/g,"<br>");
+    if(el)el.innerHTML=text.split("\n").join("<br>");
   });
 }
 
@@ -2693,7 +2703,7 @@ function processMahmoudCommand(text){
   let info = text;
   triggers.forEach(t=>{
     const idx = lower.indexOf(t);
-    if(idx>=0) info = text.slice(idx+t.length).trim().replace(/^[,:]\s*/,"");
+    if(idx>=0) info = text.slice(idx+t.length).trim().replace(/^[,: ]+/,"");
   });
 
   if(!info || info.length < 3) return false;
@@ -2733,6 +2743,12 @@ function sendPushNotif(title, body){
 }
 
 // ═══════════════════════════ MODAL CLOSE ═══════════════════════════
+function showPIN(){
+  lsSet("intro_seen", true);
+  document.getElementById("intro-screen").classList.add("hidden");
+  document.getElementById("pin-screen").classList.remove("hidden");
+}
+
 document.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
   document.getElementById("moment-date-input").value=todayStr();
@@ -2748,12 +2764,6 @@ document.addEventListener("DOMContentLoaded",()=>{
   // Demander permission notifs push
   setTimeout(requestPushPermission, 3000);
 });
-
-function showPIN(){
-  lsSet("intro_seen", true);
-  document.getElementById("intro-screen").classList.add("hidden");
-  document.getElementById("pin-screen").classList.remove("hidden");
-}
 </script>
 </body>
 </html>
