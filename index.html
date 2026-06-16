@@ -1854,7 +1854,7 @@ Génère UN message d'accueil court pour Mehdi :
   }
 
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-14:generateContent?key=${key}`,{
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         contents:[{role:"user",parts:[{text:prompt}]}],
@@ -1864,7 +1864,7 @@ Génère UN message d'accueil court pour Mehdi :
     const data = await res.json();
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Salut toi ! Content de te voir 😊";
     const el = document.getElementById(loadId);
-    if(el){ el.style.opacity="1"; el.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${reply.replace(/\n/g,"<br>")}`; }
+    if(el){ el.style.opacity="1"; el.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${reply.split("\n").join("<br>")}`; }
     // Afficher suggestions après le message d'accueil
     if(suggs){ suggs.style.display="flex"; initIASuggestions(); }
   } catch(e){
@@ -1904,7 +1904,7 @@ function renderIAHistory(){
       const color=m.who==="raphy"?"var(--rose)":"var(--blue)";const name=m.who==="raphy"?"💗 Raphy":"💙 Mehdi";
       return`<div class="ia-msg user"><div class="ia-who-tag" style="color:${color}">${name}</div>${m.content}</div>`;
     }
-    return`<div class="ia-msg bot"><div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${m.content.replace(/\n/g,"<br>")}</div>`;
+    return`<div class="ia-msg bot"><div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${m.content.split("\n").join("<br>")}</div>`;
   }).join("");
   setTimeout(()=>chat.lastElementChild?.scrollIntoView({behavior:"smooth"}),50);
 }
@@ -2025,7 +2025,7 @@ async function sendIAMsg(text,isSugg=false){
   try{
     // Build history for Gemini (only role:user and role:model, skip metadata)
     const history=S.iaHistory.slice(-14,-1).map(m=>({role:m.role==="user"?"user":"model",parts:[{text:m.content}]}));
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-14:generateContent?key=${key}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         system_instruction:{parts:[{text:buildIAContext()}]},
@@ -2034,14 +2034,21 @@ async function sendIAMsg(text,isSugg=false){
       })
     });
     const data=await res.json();
+    if(data.error){
+      console.error("Gemini API error:", data.error);
+      const el=document.getElementById(loadId);
+      if(el)el.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>Petit souci technique (${data.error.message||data.error.status}) 😅 Réessaie !`;
+      return;
+    }
     const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||"Oups, j'ai eu un bug 😅 Réessaie !";
     const botMsg={role:"model",content:reply,ts:Date.now()};
     S.iaHistory.push(botMsg);dbSave("iaHistory");
     const el=document.getElementById(loadId);
-    if(el)el.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${reply.replace(/\n/g,"<br>")}`;
+    if(el)el.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${reply.split("\n").join("<br>")}`;
   }catch(e){
+    console.error("Gemini fetch error:", e);
     const el=document.getElementById(loadId);
-    if(el)el.textContent="Erreur de connexion 😕 Vérifie ta clé Gemini dans Réglages.";
+    if(el)el.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>Erreur réseau 😕 (${e.message}) — vérifie ta connexion et réessaie !`;
   }
   chat.lastElementChild?.scrollIntoView({behavior:"smooth"});
 }
@@ -2238,7 +2245,7 @@ async function genJournalSummary(){
   el.insertAdjacentHTML("afterbegin",`<div id="jsum" class="card" style="border-color:var(--gold-border);text-align:center"><div class="spin">✨</div> Génération en cours...</div>`);
   const entries=S.journalEntries.slice(0,10).map(e=>`${e.date} (${e.who}): ${e.text}`).join("\n");
   try{
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-14:generateContent?key=${key}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({contents:[{parts:[{text:`Voici les entrées de journal du couple Raphy & Mehdi :\n${entries}\n\nRédige un résumé poétique et touchant de cette période en 3-4 phrases, comme si tu racontais leur histoire d'amour. Termine par une phrase d'encouragement. En français.`}]}]})
     });
@@ -2393,7 +2400,7 @@ function renderMotsIAHistory(){
       const color=m.who==="raphy"?"var(--rose)":"var(--blue)";const name=m.who==="raphy"?"💗 Raphy":"💙 Mehdi";
       return`<div class="ia-msg user" style="max-width:90%;align-self:flex-end;margin-bottom:8px"><div class="ia-who-tag" style="color:${color}">${name}</div>${m.content}</div>`;
     }
-    return`<div class="ia-msg bot" style="max-width:90%;margin-bottom:8px"><div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${m.content.replace(/\n/g,"<br>")}</div>`;
+    return`<div class="ia-msg bot" style="max-width:90%;margin-bottom:8px"><div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${m.content.split("\n").join("<br>")}</div>`;
   }).join("");
 }
 
@@ -2619,7 +2626,7 @@ Génère UN message de félicitations (2-3 phrases MAX) :
 - MAX 1 emoji, EN FRANÇAIS`;
 
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-14:generateContent?key=${key}`,{
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:200,temperature:1.0}})
     });
@@ -2662,7 +2669,7 @@ async function genWeeklySummary(){
 Génère un résumé de 4-5 phrases : drôle, taquin, avec des stats concrètes, une taquinerie sur leurs habitudes (Raphy toujours en retard, Mehdi le chambreur), et termine par quelque chose d'encourageant et mignon pour la semaine prochaine. EN FRANÇAIS, MAX 3 emojis.`;
 
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-14:generateContent?key=${key}`,{
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:300,temperature:0.9}})
     });
