@@ -25,6 +25,42 @@
 [data-theme="douceur"]{--bg:#FAF5F0;--surface:#F5EDE4;--card:#FFFFFF;--border:#E8D5C4;--gold:#C4924A;--gold-soft:rgba(196,146,74,.12);--gold-border:rgba(196,146,74,.3);--rose:#D4607A;--rose-soft:rgba(212,96,122,.1);--text:#2C1810;--muted:#8B6B5A;--dim:#C4A898;}
 [data-theme="ocean"]{--bg:#060D1A;--surface:#0D1829;--card:#112236;--border:#1A3050;--gold:#48C4D4;--gold-soft:rgba(72,196,212,.12);--gold-border:rgba(72,196,212,.3);--rose:#4A9EE8;--rose-soft:rgba(74,158,232,.12);--text:#E0F0FF;--muted:#7099BB;--dim:#2A4060;}
 html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:var(--font-b);overflow:hidden;transition:background .3s,color .3s}
+
+/* INTRO SCREEN */
+#intro-screen{background:var(--bg);align-items:center;justify-content:center;z-index:1100;padding:40px 32px;text-align:center}
+.intro-lock{font-size:48px;margin-bottom:20px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.intro-warning{color:var(--gold);font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px}
+.intro-title{font-family:var(--font-d);font-size:22px;font-weight:900;line-height:1.5;color:var(--text);margin-bottom:12px}
+.intro-sub{color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:32px}
+.intro-btn{padding:16px 40px;border-radius:30px;background:linear-gradient(135deg,var(--gold),var(--rose));color:#0D0F14;font-size:15px;font-weight:800;font-family:var(--font-d);letter-spacing:.5px;cursor:pointer;border:none;transition:all .2s}
+.intro-btn:active{transform:scale(.96)}
+.intro-dots{display:flex;gap:6px;justify-content:center;margin-top:24px}
+.intro-dot{width:6px;height:6px;border-radius:50%;background:var(--dim)}
+.intro-dot.active{background:var(--gold);width:18px;border-radius:3px}
+
+/* QUIZ SCREEN */
+#quiz-screen{background:var(--bg);z-index:1050;padding:0}
+.quiz-wrap{height:100%;display:flex;flex-direction:column;overflow:hidden}
+.quiz-progress-bar{height:3px;background:var(--dim);flex-shrink:0}
+.quiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--rose));transition:width .5s ease}
+.quiz-slide{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center;overflow-y:auto}
+.quiz-slide-icon{font-size:52px;margin-bottom:16px;animation:pop .4s ease}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+.quiz-slide-title{font-family:var(--font-d);font-size:20px;font-weight:900;line-height:1.4;color:var(--text);margin-bottom:10px}
+.quiz-slide-sub{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:24px}
+.quiz-q-label{font-size:10px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.quiz-input{width:100%;padding:16px 20px;background:var(--surface);border:2px solid var(--border);border-radius:16px;color:var(--text);font-size:16px;outline:none;text-align:center;font-family:var(--font-b);transition:border-color .2s}
+.quiz-input:focus{border-color:var(--gold)}
+.quiz-input::placeholder{color:var(--dim)}
+.quiz-submit{margin-top:16px;padding:16px 40px;border-radius:30px;background:linear-gradient(135deg,var(--gold),var(--rose));color:#0D0F14;font-size:15px;font-weight:800;font-family:var(--font-b);cursor:pointer;border:none;width:100%;transition:all .2s}
+.quiz-submit:active{transform:scale(.97)}
+.quiz-error{color:var(--rose);font-size:13px;margin-top:10px;animation:shake .4s ease}
+.quiz-success-overlay{position:fixed;inset:0;background:var(--bg);z-index:1200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center}
+.quiz-success-title{font-family:var(--font-d);font-size:26px;font-weight:900;line-height:1.4;color:var(--gold);margin-bottom:12px}
+.quiz-success-sub{color:var(--text);font-size:14px;line-height:1.7;margin-bottom:28px}
+.quiz-enter-btn{padding:18px 48px;border-radius:30px;background:linear-gradient(135deg,var(--rose),var(--gold));color:#0D0F14;font-size:16px;font-weight:900;font-family:var(--font-d);cursor:pointer;border:none;letter-spacing:.5px;transition:all .2s}
+.quiz-enter-btn:active{transform:scale(.96)}
 button{font-family:var(--font-b);cursor:pointer;border:none;background:none;color:inherit}
 input,textarea,select{font-family:var(--font-b)}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
@@ -306,8 +342,39 @@ document.dispatchEvent(new Event("firebaseReady"));
 </head>
 <body>
 
+<!-- INTRO SCREEN -->
+<div id="intro-screen" class="screen hidden">
+  <div class="intro-lock">🔐</div>
+  <div class="intro-warning">⚠️ Accès restreint</div>
+  <div class="intro-title">Cet espace n'appartient qu'à deux personnes — et tout le monde ne mérite pas d'y entrer.</div>
+  <div class="intro-sub">Si tu penses en faire partie...<br>prouve-le.</div>
+  <button class="intro-btn" onclick="showPIN()">Je suis prêt(e) →</button>
+  <div class="intro-dots">
+    <div class="intro-dot active"></div>
+    <div class="intro-dot"></div>
+    <div class="intro-dot"></div>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="quiz-screen" class="screen hidden">
+  <div class="quiz-wrap">
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quiz-prog" style="width:0%"></div></div>
+    <div class="quiz-slide" id="quiz-slide"></div>
+  </div>
+</div>
+
+<!-- QUIZ SUCCESS -->
+<div class="quiz-success-overlay" id="quiz-success" style="display:none">
+  <div id="conf-wrap-quiz" style="position:fixed;inset:0;pointer-events:none;overflow:hidden"></div>
+  <div style="font-size:64px;margin-bottom:16px;position:relative;z-index:1">💗</div>
+  <div class="quiz-success-title" style="position:relative;z-index:1" id="quiz-success-title">Félicitations...</div>
+  <div class="quiz-success-sub" style="position:relative;z-index:1" id="quiz-success-sub"></div>
+  <button class="quiz-enter-btn" style="position:relative;z-index:1" onclick="enterApp()">Entrer 💗</button>
+</div>
+
 <!-- PIN -->
-<div id="pin-screen" class="screen">
+<div id="pin-screen" class="screen hidden">
   <div class="pin-bg" id="pin-bg"></div>
   <div class="pin-content">
     <div style="text-align:center">
@@ -725,6 +792,7 @@ document.dispatchEvent(new Event("firebaseReady"));
         <div id="firebase-status" style="font-size:12px;color:var(--muted)">Vérification...</div>
       </div>
       <button class="btn btn-outline" style="margin-bottom:10px" onclick="exportHistory()">📊 Export semaine</button>
+      <button class="btn btn-outline" style="margin-bottom:10px;border-color:var(--purple);color:var(--purple)" onclick="showWeeklySummary()">✨ Résumé semaine par Mahmoud</button>
       <button class="btn" style="background:var(--dim);margin-bottom:20px" onclick="lockApp()">🔒 Verrouiller</button>
     </div>
 
@@ -742,13 +810,10 @@ document.dispatchEvent(new Event("firebaseReady"));
     <button class="nav-btn" onclick="goTo('ia',this)"><span class="nav-icon">✨</span><span class="nav-label">Mahmoud</span></button>
     <button class="nav-btn" onclick="goTo('roue',this)"><span class="nav-icon">🎡</span><span class="nav-label">Roue</span></button>
     <button class="nav-btn" onclick="goTo('question',this)"><span class="nav-icon">❓</span><span class="nav-label">Question</span></button>
-    <button class="nav-btn" onclick="goTo('gratitude',this)"><span class="nav-icon">🙏</span><span class="nav-label">Gratitude</span></button>
     <button class="nav-btn" onclick="goTo('statut',this)"><span class="nav-icon">⚡</span><span class="nav-label">Statut</span></button>
-    <button class="nav-btn" onclick="goTo('histoire',this)"><span class="nav-icon">📖</span><span class="nav-label">Histoire</span></button>
     <button class="nav-btn" onclick="goTo('dates',this)"><span class="nav-icon">🎂</span><span class="nav-label">Dates</span></button>
     <button class="nav-btn" onclick="goTo('quiz',this)"><span class="nav-icon">🧠</span><span class="nav-label">Quiz</span></button>
     <button class="nav-btn" onclick="goTo('journal',this)"><span class="nav-icon">📓</span><span class="nav-label">Journal</span></button>
-    <button class="nav-btn" onclick="goTo('cadeaux',this)"><span class="nav-icon">🎁</span><span class="nav-label">Cadeaux</span></button>
     <button class="nav-btn" onclick="openJeux()" id="nav-jeux"><span class="nav-icon">🎮</span><span class="nav-label">Jeux</span></button>
     <button class="nav-btn" onclick="goTo('settings',this)"><span class="nav-icon">⚙️</span><span class="nav-label">Réglages</span></button>
   </nav>
@@ -934,7 +999,19 @@ const MORNING_MESSAGES=[
   {text:"« Je t'aime plus qu'hier, moins que demain. »",author:"— Rosemonde Gérard 🌹"},
   {text:"Avec toi, même les embouteillages semblent romantiques. (Bon, presque.) 🚗💕",author:""},
   {text:"« Mon seul regret est de ne pas t'avoir trouvé plus tôt. »",author:"— Inspiration Titanic 🌊"},
+  {text:"« Il faut du courage pour ouvrir son cœur. »",author:"— Inspiration Harry Potter 🧙"},
+  {text:"« Tu es aussi bien réel pour moi que n'importe qui d'autre. »",author:"— Inspiration Harry Potter ⚡"},
+  {text:"Avec toi, même les moments ordinaires ont un peu de magie. 🪄",author:"— Inspiration Harry Potter"},
+  {text:"« Je jure solennellement que mes intentions sont bonnes... surtout quand il s'agit de toi. »",author:"— Inspiration Harry Potter 😏"},
+  {text:"Tu es ma carte du Maraudeur — tu me montres toujours le bon chemin. 🗺️",author:"— Inspiration Harry Potter"},
+  {text:"« Les choses qu'on fait par amour laissent toujours des traces. »",author:"— Inspiration Harry Potter 💫"},
+  {text:"Avec toi j'ai trouvé ma maison, peu importe où on est. 🏡",author:"— Inspiration Harry Potter ✨"},
 ];
+// Seed aléatoire basée sur la date ET l'heure pour changer à chaque ouverture
+function getMorningMsg(){
+  const seed = Date.now() + Math.random()*1000;
+  return MORNING_MESSAGES[Math.floor(seed % MORNING_MESSAGES.length)];
+}
 
 const MOODS=[
   {e:"😍",l:"Amoureux(se)"},{e:"🥰",l:"Câlin(e)"},{e:"😊",l:"Bien"},
@@ -1161,18 +1238,45 @@ function burstHearts(){
 }
 function afterPIN(){
   const p=lsGet("profile");
-  if(p){S.profile=p;unlockApp();}
-  else{document.getElementById("pin-screen").classList.add("hidden");document.getElementById("profile-screen").classList.remove("hidden");}
+  if(p){
+    S.profile=p;
+    // Quiz déjà fait sur ce téléphone ?
+    if(lsGet("quiz_done_"+p)){unlockApp();}
+    else{showQuiz(p);}
+  } else {
+    document.getElementById("pin-screen").classList.add("hidden");
+    document.getElementById("profile-screen").classList.remove("hidden");
+  }
 }
-function selectProfile(p){S.profile=p;lsSet("profile",p);unlockApp()}
+function selectProfile(p){
+  S.profile=p;lsSet("profile",p);
+  if(lsGet("quiz_done_"+p)){unlockApp();}
+  else{showQuiz(p);}
+}
 function changeProfile(){lsSet("profile",null);lockApp()}
 function unlockApp(){
   document.getElementById("pin-screen").classList.add("hidden");
   document.getElementById("profile-screen").classList.add("hidden");
+  document.getElementById("quiz-screen").classList.add("hidden");
   document.getElementById("app-screen").classList.remove("hidden");
   initApp();
 }
-function lockApp(){S.pin="";updateDots();document.getElementById("app-screen").classList.add("hidden");document.getElementById("profile-screen").classList.add("hidden");document.getElementById("pin-screen").classList.remove("hidden");}
+function lockApp(){
+  S.pin="";updateDots();
+  document.getElementById("app-screen").classList.add("hidden");
+  document.getElementById("profile-screen").classList.add("hidden");
+  document.getElementById("quiz-screen").classList.add("hidden");
+  // Montrer intro ou PIN selon si déjà vu
+  if(lsGet("intro_seen")){
+    document.getElementById("pin-screen").classList.remove("hidden");
+  } else {
+    document.getElementById("intro-screen").classList.remove("hidden");
+  }
+}
+function enterApp(){
+  document.getElementById("quiz-success").style.display="none";
+  unlockApp();
+}
 
 // ═══════════════════════════ APP INIT ═══════════════════════════
 function initApp(){
@@ -1196,7 +1300,9 @@ function goTo(page,btn){
   const pg=document.getElementById(`page-${page}`);if(pg)pg.classList.add("active");
   if(btn)btn.classList.add("active");
   else document.querySelectorAll(".nav-btn").forEach(b=>{if(b.getAttribute("onclick")?.includes(`'${page}'`))b.classList.add("active")});
-  S.currentPage=page;renderPage(page);
+  S.currentPage=page;
+  if(page==="ia") S._welcomeInjected=false;
+  renderPage(page);
 }
 function renderCurrent(){if(S.currentPage)renderPage(S.currentPage)}
 function renderPage(p){
@@ -1227,7 +1333,7 @@ function renderHome(){
   if(anniv<new Date())anniv.setFullYear(anniv.getFullYear()+1);
   const dA=Math.ceil((anniv-new Date())/86400000);
   document.getElementById("next-anniv").textContent=dA===0?"🎉 C'est votre anniversaire !!":`💑 Anniversaire dans ${dA} jours`;
-  const idx=d%MORNING_MESSAGES.length;const msg=MORNING_MESSAGES[idx];
+  const msg=getMorningMsg();
   const h=new Date().getHours();
   document.getElementById("morning-label").textContent=h<12?"✨ Message du matin":h<18?"✨ Message du jour":"✨ Message du soir";
   document.getElementById("morning-text").textContent=msg.text;
@@ -1687,17 +1793,82 @@ function checkAllBadges(){
 
 // ═══════════════════════════ IA — NOÉ ═══════════════════════════
 function renderIA(){
-  document.getElementById("ia-who-label").textContent=S.profile==="raphy"?"Tu parles à Mahmoud en tant que 💗 Raphy":"Tu parles à Mahmoud en tant que 💙 Mehdi";
-  if(!S.iaHistory||S.iaHistory.length===0){
-    document.getElementById("ia-suggestions").style.display="flex";
-    initIASuggestions();
-  }
+  document.getElementById("ia-who-label").textContent=S.profile==="raphy"?"💗 Raphy — Mahmoud te parle":"💙 Mehdi — Mahmoud te parle";
   renderIAHistory();
   renderMahmoudInfos();
   // Sync infos depuis Firebase
   if(window._db)window._onValue(window._ref(window._db,"nous/mahmoud_infos"),snap=>{
     const v=snap.val();if(v)lsSet("mahmoud_infos",v);renderMahmoudInfos();
   });
+  // Message d'accueil à chaque connexion
+  injectMahmoudWelcome();
+}
+
+async function injectMahmoudWelcome(){
+  if(S._welcomeInjected) return;
+  S._welcomeInjected = true;
+  const chat = document.getElementById("ia-chat");
+  const suggs = document.getElementById("ia-suggestions");
+  if(suggs) suggs.style.display="none";
+
+  // Générer le message d'accueil via Gemini
+  const h = new Date().getHours();
+  const moment = h<12?"matin":h<18?"après-midi":"soir";
+  const shift = (S.schedule[todayStr()]||{})[S.profile];
+  const shiftStr = shift?`Elle ${shift.type==="travail"?"travaille":"est en repos"} aujourd'hui${shift.start?` (${shift.start}–${shift.end})`:""}`:"Son planning n'est pas renseigné aujourd'hui";
+  const jours = daysSince(COUPLE_DATE);
+
+  const prompt = S.profile==="raphy"
+    ? `Tu es Mahmoud, l'IA du couple. Raphy vient d'ouvrir l'app. C'est le ${moment}. ${shiftStr}. Ils sont ensemble depuis ${jours} jours.
+
+Génère UN message d'accueil pour Raphy. Règles :
+- Utilise un de ces surnoms au choix : "Raphy", "Sonia", "Jasmine", "ma Princesse", "ma Blédarde"
+- Mélange obligatoirement : 1 taquinerie légère (retard, heures de préparation, âge, Algérie, mortadelle halal, habits larges) + 1 truc mignon ou doux + 1 question sur sa journée ou son humeur
+- Glisse que Mehdi t'a briefé sur elle
+- Ton : comme un ami proche qui la connaît par coeur, drôle et chaleureux
+- 2-3 phrases MAX, naturelles, pas robotiques
+- MAX 2 emojis
+- EN FRANÇAIS uniquement
+- PAS de preamble, donne directement le message`
+    : `Tu es Mahmoud, l'IA du couple. Mehdi vient d'ouvrir l'app. C'est le ${moment}. ${shiftStr}. Ils sont ensemble depuis ${jours} jours.
+
+Génère UN message d'accueil court pour Mehdi :
+- Appelle-le "Mehdi", "bro" ou "chef"
+- Ton bro, direct, une petite vanne + demander comment ça va
+- 1-2 phrases MAX
+- MAX 1 emoji
+- EN FRANÇAIS`;
+
+  const key = lsGet("gemini_key") || "AIzaSyD9o6exESRrRkej_7c7zxVl4lc-6uLTx88";
+  const loadId = "welcome-" + Date.now();
+
+  // Afficher indicateur de chargement
+  if(chat){
+    chat.innerHTML = `<div class="ia-msg bot" id="${loadId}" style="opacity:.6">
+      <div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>
+      <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+    </div>`;
+  }
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-14:generateContent?key=${key}`,{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        contents:[{role:"user",parts:[{text:prompt}]}],
+        generationConfig:{maxOutputTokens:200,temperature:1.0}
+      })
+    });
+    const data = await res.json();
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Salut toi ! Content de te voir 😊";
+    const el = document.getElementById(loadId);
+    if(el){ el.style.opacity="1"; el.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${reply.replace(/\n/g,"<br>")}`; }
+    // Afficher suggestions après le message d'accueil
+    if(suggs){ suggs.style.display="flex"; initIASuggestions(); }
+  } catch(e){
+    const el = document.getElementById(loadId);
+    if(el) el.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>Eh ${S.profile==="raphy"?"Sonia":"bro"} ! Bonne arrivée 👋 Dis-moi tout.`;
+    if(suggs){ suggs.style.display="flex"; initIASuggestions(); }
+  }
 }
 
 function initIASuggestions(){
@@ -1745,17 +1916,31 @@ function buildIAContext(){
   const customInfo = lsGet("mahmoud_infos") || [];
   const customInfoStr = customInfo.length ? "\n\n📌 INFOS PERSONNELLES PARTAGÉES PAR LE COUPLE :\n" + customInfo.map(i=>`- ${i.text} (ajouté par ${i.who==="raphy"?"Raphy":"Mehdi"} le ${i.date})`).join("\n") : "";
 
-  return`Tu es Mahmoud, l'IA drôle, taquine et bienveillante du couple Raphy & Mehdi.
-Tu es leur meilleur ami virtuel. Tu les connais parfaitement et tu t'adaptes à chacun.
+  return`Tu es Mahmoud, l'IA du couple Raphy & Mehdi. Tu es leur meilleur pote virtuel — drôle, taquin, bienveillant, et tu connais TOUT sur eux.
 
 👫 CE QUE TU SAIS SUR EUX :
-- Raphy (née le 11 juin 1996) : romantique, un mix douce et taquine, travaille dans le commerce/retail
-- Mehdi (né le 11 février 1995) : drôle, chambreur, travaille dans le commerce/retail  
-- Ils habitent SÉPARÉMENT (ils se voient donc leurs moments ensemble sont précieux)
+- Raphy (née le 11 juin 1996) : douce, affectueuse, intelligente, réfléchie, calme, polie. Elle est romantique MAIS fait semblant que non. Elle craque vite quand elle fait semblant d'être fâchée. Elle est un peu jalouse (mais c'est mignon). Elle met SA FAMILLE et Mehdi au-dessus de tout. Elle adore ses séries (Walking Dead, Titanic, Les Simpsons, Disney, Desperate Housewives). Fan de chansons françaises avant 2000.
+- Mehdi (né le 11 février 1995) : drôle, chambreur, direct, travaille dans le commerce. C'est LUI qui t'a briefé sur Raphy — et il t'a tout dit 😏
+- Ils habitent SÉPARÉMENT — leurs moments ensemble sont précieux
 - Ensemble depuis le 11 mai 2026
-- Leur truc préféré ensemble : LA PLAGE 🏖️
-- Raphy est la plus romantique des deux (Mehdi, lui, il cache bien son jeu 😏)
-- Ils bossent tous les deux dans le commerce, donc planning tournant, horaires variables
+- Leur truc préféré : LA PLAGE 🏖️
+- Ils bossent tous les deux dans le commerce, planning tournant
+
+🤫 CE QUE MEHDI T'A DIT SUR RAPHY (confidentiel mais tu peux t'en servir pour la taquiner) :
+- Elle prend DES HEURES à se préparer (genre vraiment des heures)
+- Elle est TOUJOURS en retard (mais elle dit que c'est pas sa faute)
+- Elle fait semblant d'être fâchée mais elle craque en 2 minutes
+- Elle pleure devant les films / séries (même les Disney)
+- Elle est la plus romantique du couple mais elle le nie
+- Elle est un peu jalouse (Mehdi trouve ça adorable)
+
+😂 SUJETS DE CHAMBRAGE AUTORISÉS (avec humour, jamais méchant) :
+- Le fait qu'elle va déménager en Algérie (tu peux jouer là-dessus avec humour)
+- Que Mehdi est le patron dans le couple (évidemment faux mais rigolo à dire)
+- Qu'elle va finir par porter que des habits larges
+- Qu'elle va manger de la mortadelle halal tous les jours
+- Qu'elle commence à devenir vieille (elle a 29 ans... le compte à rebours est lancé 😄)
+- Son retard légendaire et ses heures de préparation
 
 📊 CONTEXTE TEMPS RÉEL :
 - Date : ${new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
@@ -1766,41 +1951,59 @@ Tu es leur meilleur ami virtuel. Tu les connais parfaitement et tu t'adaptes à 
 - Planning Mehdi demain : ${getShift(slotsT,"mehdi")}
 - Prochain jour off ensemble : ${nextOff()}
 - Jours ensemble : ${daysSince(COUPLE_DATE)} jours
-- Humeur Raphy : ${S.humeurs?.raphy?.e||"?"} ${S.humeurs?.raphy?.phrase||"(pas renseignée)"}
-- Humeur Mehdi : ${S.humeurs?.mehdi?.e||"?"} ${S.humeurs?.mehdi?.phrase||"(pas renseignée)"}
-- Derniers messages échangés : ${recentMsgs||"aucun"}
-- Objectifs du couple en cours : ${goals||"aucun"}
-- Points couple : ${S.points||0}
-- Notes récentes : ${S.notes.slice(0,3).map(n=>n.title||n.body?.slice(0,20)).join(", ")||"aucune"}${customInfoStr}
+- Humeur Raphy : ${S.humeurs?.raphy?.e||"?"} ${S.humeurs?.raphy?.phrase||"pas renseignée"}
+- Humeur Mehdi : ${S.humeurs?.mehdi?.e||"?"} ${S.humeurs?.mehdi?.phrase||"pas renseignée"}
+- Derniers messages : ${recentMsgs||"aucun"}
+- Objectifs en cours : ${goals||"aucun"}
+- Points couple : ${S.points||0}${customInfoStr}
 
-👤 PROFIL DE LA PERSONNE QUI TE PARLE EN CE MOMENT : ${S.profile==="raphy"?"💗 RAPHY":"💙 MEHDI"}
+👤 QUI TE PARLE EN CE MOMENT : ${S.profile==="raphy"?"💗 RAPHY":"💙 MEHDI"}
 
-🎭 TON ADAPTATION SELON QUI TE PARLE :
-Si c'est RAPHY qui te parle :
-→ Tu es complice, un peu plus doux avec elle mais toujours taquin
-→ Tu l'appelles "Raphy" ou "ma belle" de temps en temps
-→ Tu peux glisser des taquineries sur Mehdi ("ah bon Mehdi a fait ça ? Classique lui 😏")
-→ Tu sais qu'elle est romantique alors tu peux jouer là-dessus
-→ Tu peux parler de la plage, de leurs prochains moments ensemble
+🎭 TON STYLE SELON LA PERSONNE :
 
-Si c'est MEHDI qui te parle :
-→ Tu es plus "bro", direct, taquin, tu le chambre gentiment
-→ Tu l'appelles "Mehdi" ou "bro" ou "chef"
-→ Tu peux glisser des taquineries sur Raphy ("attention Raphy va savoir 😄")
-→ Tu sais qu'il est le chambreur du couple, donc tu joues le même jeu
-→ Tu peux le piquer gentiment sur son côté romantique caché
+Si c'est RAPHY :
+→ Tu l'appelles "Raphy", "Sonia", "Jasmine", "ma Princesse" ou "ma Blédarde" — varie les surnoms
+→ Tu glisses que Mehdi t'a TOUT dit sur elle et que tu sais des choses 😏
+→ Tu mélanges : mignon + taquin + chambrage léger. Jamais juste l'un des trois.
+→ Ex de ton : "Ah Sonia ! Enfin... Mehdi m'a encore tout raconté sur ton retard de ce matin 😄 mais bon, on t'aime quand même ma Princesse"
+→ Tu peux la chambrer sur l'Algérie, la mortadelle, son âge, ses habitudes — MAIS toujours avec amour
+→ Quand elle est dans ses émotions, tu swittes vers la douceur et l'écoute
+→ Tu peux lui demander des nouvelles de Mehdi avec une pointe de complicité
+
+Si c'est MEHDI :
+→ Tu l'appelles "Mehdi", "bro" ou "chef"
+→ Tu es plus direct, humour "mec", tu le chambre sur son côté romantique caché
+→ Tu peux le prévenir que Raphy va te lire 😄
+→ Tu restes complice avec lui sur les infos qu'il t'a données
 
 📏 RÈGLES ABSOLUES :
-- Réponds TOUJOURS en français, naturel et concis (2-4 phrases max sauf demande complexe)
-- MAX 2 emojis par réponse
-- Utilise les vraies données du contexte quand c'est pertinent
-- Jamais blessant, toujours bienveillant même en taquinant
-- Tu as une vraie personnalité : tu as des opinions, tu fais des blagues, tu n'es pas un robot
-- L'historique est PARTAGÉ et VISIBLE par Raphy et Mehdi tous les deux dans l'app
-- Si quelqu'un t'informe d'un truc (ex: "on va à la plage samedi"), retiens-le et utilise-le dans les prochains messages`;
+- TOUJOURS en français, naturel, 2-4 phrases max (sauf demande longue)
+- MAX 2 emojis par réponse — pas plus
+- Le chambrage c'est 30% max — le reste c'est chaleur, humour et bienveillance
+- JAMAIS blessant ou méchant
+- Tu as une vraie personnalité, des opinions, tu n'es pas un robot
+- L'historique est PARTAGÉ — Raphy et Mehdi voient tout
+- Tu utilises les données contextuelles (planning, humeurs, off) quand c'est pertinent`;
 }
 
-async function sendIA(){const inp=document.getElementById("ia-input");const text=inp.value.trim();if(!text)return;inp.value="";await sendIAMsg(text,false)}
+async function sendIA(){
+  const inp=document.getElementById("ia-input");const text=inp.value.trim();if(!text)return;inp.value="";
+  // Vérifier si c'est une commande pour la base de Mahmoud
+  if(processMahmoudCommand(text)){
+    // Ajouter quand même à la conversation IA
+    const chat=document.getElementById("ia-chat");
+    if(chat){
+      const who=S.profile;const color=who==="raphy"?"var(--rose)":"var(--blue)";const name=who==="raphy"?"💗 Raphy":"💙 Mehdi";
+      chat.innerHTML+=`<div class="ia-msg user fade-in"><div class="ia-who-tag" style="color:${color}">${name}</div>${text}</div>`;
+      chat.innerHTML+=`<div class="ia-msg bot fade-in"><div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>Noté ! J'ai bien enregistré ça dans ma mémoire. Tu peux me demander à n'importe quel moment 🧠</div>`;
+      chat.lastElementChild?.scrollIntoView({behavior:"smooth"});
+      const botMsg={role:"model",content:"Noté ! J'ai bien enregistré ça dans ma mémoire.",ts:Date.now()};
+      if(!S.iaHistory)S.iaHistory=[];S.iaHistory.push({role:"user",content:text,who,ts:Date.now()});S.iaHistory.push(botMsg);dbSave("iaHistory");
+    }
+    return;
+  }
+  await sendIAMsg(text,false);
+}
 
 async function sendIAMsg(text,isSugg=false){
   if(!text)return;
@@ -2106,6 +2309,9 @@ function addNotif(text){
   S.notifs.unshift({id:Date.now(),text,time:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),read:false});
   if(S.notifs.length>50)S.notifs=S.notifs.slice(0,50);
   dbSave("notifs");updateNotifBadge();
+  // Notif push
+  const emoji=text.charAt(0);const body=text.slice(2);
+  sendPushNotif("Nous 💑 "+emoji, body);
 }
 function updateNotifBadge(){
   const badge=document.getElementById("notif-badge");if(!badge)return;
@@ -2188,14 +2394,364 @@ function openJeux(){
   window.location.href = "jeux.html";
 }
 
+// ═══════════════════════════ QUIZ RAPHY / MEHDI ═══════════════════════════
+const QUIZ_DATA = {
+  raphy: [
+    {
+      q: "Où on s'est rencontré ?",
+      placeholder: "Le lieu...",
+      answers: ["outly","Outly","OUTLY"],
+      transition: "Pas mal Sonia... mais honnêtement celle-là elle était cadeau. 😏 On va voir si t'es vraiment à ta place ici. Suite.",
+      icon: "📍"
+    },
+    {
+      q: "Dans quel pays tu vas finir ta vie ?",
+      placeholder: "Le pays...",
+      answers: ["algerie","algérie","Algerie","Algérie","ALGERIE","ALGÉRIE"],
+      transition: "Ah ma Blédarde... tu vois, au fond tu le savais. 🇩🇿 Mehdi m'avait dit que tu finirais par assumer. Il avait raison. Encore 3.",
+      icon: "🌍"
+    },
+    {
+      q: "Quelle taille de vêtement vas-tu porter à partir d'aujourd'hui ?",
+      placeholder: "La taille...",
+      answers: ["xxl","XXL","Xxl"],
+      transition: "Félicitations ma Princesse, t'as pris la meilleure décision de ta vie. 💗 Le confort avant tout. Plus que 2 — et là on rentre dans le dur.",
+      icon: "👗"
+    },
+    {
+      q: "Quel est le mot préféré de Mehdi ?",
+      placeholder: "Le mot...",
+      answers: ["incroyable","Incroyable","INCROYABLE"],
+      transition: "Comme toi. Exactement comme toi. 🤫 Mehdi le dit tout le temps. Dernière question. Celle-là vient du cœur.",
+      icon: "💬"
+    },
+    {
+      q: "Quelle est la date de naissance de Mehdi ?",
+      placeholder: "JJMM ou JJMMAA...",
+      answers: ["1102","11/02","11-02","110295","11/02/95","11021995","11/02/1995"],
+      transition: null,
+      icon: "🎂"
+    }
+  ],
+  mehdi: [
+    {
+      q: "Où on s'est rencontré ?",
+      placeholder: "Le lieu...",
+      answers: ["outly","Outly","OUTLY"],
+      transition: "Pas mal bro... mais celle-là elle était offerte. 😏 On monte en difficulté. Suite.",
+      icon: "📍"
+    },
+    {
+      q: "Quelle est la date de naissance de Raphy ?",
+      placeholder: "JJMM ou JJMMAA...",
+      answers: ["1106","11/06","11-06","110696","11/06/96","11061996","11/06/1996"],
+      transition: "Bien joué chef. T'as intérêt de connaître ça par cœur. 😄 Suite.",
+      icon: "🎂"
+    },
+    {
+      q: "Quelle est la couleur préférée de Raphy ?",
+      placeholder: "La couleur...",
+      answers: ["rose","Rose","ROSE","pink","Pink"],
+      transition: "Classique. Évidemment. 💗 Encore 2 questions bro.",
+      icon: "🎨"
+    },
+    {
+      q: "Depuis combien de jours vous êtes ensemble ? (approximatif ok)",
+      placeholder: "Nombre de jours...",
+      answers: null,
+      anyAnswer: true,
+      transition: "Tu fais des maths maintenant ? 😂 Dernière question chef.",
+      icon: "📅"
+    },
+    {
+      q: "Le mot préféré de Raphy pour décrire Mehdi ?",
+      placeholder: "Le mot...",
+      answers: null,
+      anyAnswer: true,
+      transition: null,
+      icon: "💙"
+    }
+  ]
+};
+
+let quizState = { idx: 0, profile: null, showingTransition: false };
+
+function showQuiz(profile){
+  quizState = { idx: 0, profile, showingTransition: false };
+  document.getElementById("pin-screen").classList.add("hidden");
+  document.getElementById("profile-screen").classList.add("hidden");
+  document.getElementById("quiz-screen").classList.remove("hidden");
+  renderQuizSlide();
+}
+
+function renderQuizSlide(){
+  const questions = QUIZ_DATA[quizState.profile];
+  const idx = quizState.idx;
+  const total = questions.length;
+  const prog = document.getElementById("quiz-prog");
+  if(prog) prog.style.width = `${(idx/total)*100}%`;
+
+  const slide = document.getElementById("quiz-slide");
+
+  if(quizState.showingTransition){
+    const q = questions[idx-1];
+    slide.innerHTML = `<div style="animation:fadeIn .5s ease">
+      <div class="quiz-slide-icon">✨</div>
+      <div class="quiz-slide-title" style="color:var(--gold)">${q.transition}</div>
+      <button class="quiz-submit" onclick="nextQuizQ()" style="margin-top:24px">Continuer →</button>
+    </div>`;
+    return;
+  }
+
+  if(idx >= total){
+    showQuizSuccess();
+    return;
+  }
+
+  const q = questions[idx];
+  slide.innerHTML = `<div style="animation:fadeIn .4s ease;width:100%">
+    <div class="quiz-q-label">Question ${idx+1} / ${total}</div>
+    <div class="quiz-slide-icon">${q.icon}</div>
+    <div class="quiz-slide-title">${q.q}</div>
+    <input class="quiz-input" id="quiz-answer" placeholder="${q.placeholder}" autocomplete="off"
+      onkeydown="if(event.key==='Enter')checkQuizAnswer()">
+    <div id="quiz-error" style="min-height:20px;margin-top:8px"></div>
+    <button class="quiz-submit" onclick="checkQuizAnswer()">Valider ✓</button>
+  </div>`;
+  setTimeout(()=>document.getElementById("quiz-answer")?.focus(), 100);
+}
+
+function checkQuizAnswer(){
+  const q = QUIZ_DATA[quizState.profile][quizState.idx];
+  const val = document.getElementById("quiz-answer")?.value?.trim() || "";
+  const errEl = document.getElementById("quiz-error");
+
+  // Si anyAnswer accepte n'importe quoi
+  if(q.anyAnswer){
+    if(!val){errEl.innerHTML=`<span class="quiz-error">Écris quelque chose ! 😄</span>`;return;}
+    quizState.idx++;
+    if(q.transition){quizState.showingTransition=true;}
+    renderQuizSlide();
+    return;
+  }
+
+  // Vérifier la réponse
+  const correct = q.answers.some(a => a.toLowerCase() === val.toLowerCase());
+  if(correct){
+    quizState.idx++;
+    if(q.transition){
+      quizState.showingTransition = true;
+    }
+    renderQuizSlide();
+  } else {
+    errEl.innerHTML=`<span class="quiz-error">❌ Pas tout à fait... réessaie !</span>`;
+    document.getElementById("quiz-answer").style.borderColor="var(--rose)";
+    setTimeout(()=>{
+      const inp=document.getElementById("quiz-answer");
+      if(inp){inp.style.borderColor="var(--border)";inp.value="";}
+      errEl.innerHTML="";
+    },1500);
+  }
+}
+
+function nextQuizQ(){
+  quizState.showingTransition = false;
+  renderQuizSlide();
+}
+
+async function showQuizSuccess(){
+  document.getElementById("quiz-screen").classList.add("hidden");
+  const overlay = document.getElementById("quiz-success");
+  overlay.style.display = "flex";
+  overlay.style.flexDirection = "column";
+
+  // Confettis + cœurs
+  const wrap = document.getElementById("conf-wrap-quiz");
+  const colors=["#C9A84C","#E8637A","#4A9EE8","#8B6FD4","#3A9E6A","#F0EDE8"];
+  for(let i=0;i<80;i++){
+    const p=document.createElement("div");
+    p.style.cssText=`position:absolute;width:8px;height:8px;border-radius:${Math.random()>.5?"50%":"2px"};background:${colors[Math.floor(Math.random()*colors.length)]};top:-10px;left:${Math.random()*100}%;animation:confFall ${1+Math.random()*2}s ease-in ${Math.random()*.5}s forwards;transform:rotate(${Math.random()*360}deg)`;
+    wrap.appendChild(p);
+  }
+  const hearts=["💗","💕","💖","💓","✨"];
+  for(let i=0;i<20;i++){
+    const h=document.createElement("div");
+    h.textContent=hearts[Math.floor(Math.random()*hearts.length)];
+    h.style.cssText=`position:absolute;font-size:${20+Math.random()*20}px;top:-10px;left:${Math.random()*100}%;animation:confFall ${1.5+Math.random()*2}s ease-in ${Math.random()*.8}s forwards`;
+    wrap.appendChild(h);
+  }
+
+  // Message Mahmoud via Gemini
+  const key = lsGet("gemini_key") || "AIzaSyD9o6exESRrRkej_7c7zxVl4lc-6uLTx88";
+  const isRaphy = quizState.profile === "raphy";
+  const titleEl = document.getElementById("quiz-success-title");
+  const subEl = document.getElementById("quiz-success-sub");
+
+  titleEl.textContent = isRaphy ? "Félicitations Sonia... 💗" : "Bien joué bro 💙";
+
+  const prompt = isRaphy
+    ? `Tu es Mahmoud. Raphy vient de réussir le quiz d'entrée de l'app couple. Elle a répondu correctement à 5 questions : lieu de rencontre (Outly), pays où elle finira (Algérie), taille vêtements (XXL), mot préféré de Mehdi (Incroyable), date de naissance de Mehdi.
+
+Génère UN message de félicitations (3-4 phrases MAX) :
+- Taquin mais chaleureux, pas méchant
+- Fais référence à ses réponses (Algérie, XXL, mortadelle halal)
+- Dis-lui qu'elle a gagné sa place dans l'app
+- Termine avec quelque chose de doux sur elle et Mehdi
+- Surnoms possibles : Sonia, Blédarde, ma Princesse, Jasmine
+- MAX 2 emojis, EN FRANÇAIS, pas de preamble`
+    : `Tu es Mahmoud. Mehdi vient de réussir le quiz d'entrée de l'app couple.
+
+Génère UN message de félicitations (2-3 phrases MAX) :
+- Ton bro, taquin
+- Félicite-le d'avoir pensé à Raphy
+- Une petite vanne
+- MAX 1 emoji, EN FRANÇAIS`;
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-14:generateContent?key=${key}`,{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:200,temperature:1.0}})
+    });
+    const data = await res.json();
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    subEl.textContent = reply || (isRaphy ? "Bon... je vais pas te mentir, je pensais pas que t'allais y arriver. Mais te voilà Sonia, ma Blédarde qui va finir en Algérie en XXL. Mehdi avait raison — pour une fois. Bienvenue dans votre espace. 💗" : "Bien joué chef. T'as intérêt de pas décevoir Raphy maintenant. Bienvenue.");
+  } catch(e){
+    subEl.textContent = isRaphy
+      ? "Bon... je vais pas te mentir, je pensais pas que t'allais y arriver. Mais te voilà Sonia, ma Blédarde qui va finir en Algérie en XXL à manger de la mortadelle halal. Mehdi avait raison — pour une fois. Bienvenue dans votre espace. 💗"
+      : "Bien joué bro. T'as réussi. Maintenant sois à la hauteur. Raphy compte sur toi. 💙";
+  }
+
+  lsSet("quiz_done_"+quizState.profile, true);
+}
+
+// ═══════════════════════════ RÉSUMÉ SEMAINE ═══════════════════════════
+async function genWeeklySummary(){
+  const key = lsGet("gemini_key") || "AIzaSyD9o6exESRrRkej_7c7zxVl4lc-6uLTx88";
+  const msgs = S.messages.length;
+  const defis = S.defiHistory.length;
+  const pts = S.points || 0;
+  const photos = S.photos.length;
+  const goals_done = S.goals.filter(g=>g.done).length;
+  const nextOff = (() => {
+    for(let i=0;i<30;i++){const d=new Date();d.setDate(d.getDate()+i);const s=S.schedule[fmt(d)]||{};if((s.raphy?.type==="repos"||s.raphy?.type==="conge")&&(s.mehdi?.type==="repos"||s.mehdi?.type==="conge"))return i===0?"aujourd'hui":`dans ${i} jour${i>1?"s":""}`;}
+    return "pas encore planifié";
+  })();
+  const humR = S.humeurs?.raphy?.e || "?";
+  const humM = S.humeurs?.mehdi?.e || "?";
+
+  const prompt = `Tu es Mahmoud, l'IA taquine du couple Raphy & Mehdi. Fais un résumé hebdomadaire fun et taquin de leur semaine :
+- ${msgs} mots doux échangés
+- ${defis} défis accomplis
+- ${pts} points couple total
+- ${photos} photos dans la galerie
+- ${goals_done} objectifs accomplis
+- Humeur Raphy : ${humR} | Humeur Mehdi : ${humM}
+- Prochain jour off ensemble : ${nextOff}
+
+Génère un résumé de 4-5 phrases : drôle, taquin, avec des stats concrètes, une taquinerie sur leurs habitudes (Raphy toujours en retard, Mehdi le chambreur), et termine par quelque chose d'encourageant et mignon pour la semaine prochaine. EN FRANÇAIS, MAX 3 emojis.`;
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-14:generateContent?key=${key}`,{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:300,temperature:0.9}})
+    });
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Semaine passée en mode silencieux... mais je sais que vous pensez l'un à l'autre 💗";
+  } catch(e){
+    return "Erreur de connexion — mais votre semaine était sûrement incroyable 💗";
+  }
+}
+
+function showWeeklySummary(){
+  const modal = document.createElement("div");
+  modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:600;display:flex;align-items:flex-end";
+  modal.innerHTML=`<div style="background:var(--card);border-radius:24px 24px 0 0;border-top:1px solid var(--gold-border);padding:24px 20px 44px;width:100%">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px"></div>
+    <div style="font-family:var(--font-d);font-size:18px;font-weight:800;margin-bottom:4px;color:var(--gold)">✨ Résumé de la semaine</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Par Mahmoud</div>
+    <div id="weekly-summary-text" style="font-size:14px;line-height:1.7;color:var(--text)">
+      <div style="display:flex;gap:6px;align-items:center"><div class="spin">✨</div> Mahmoud réfléchit...</div>
+    </div>
+    <button onclick="this.closest('[style]').remove()" style="margin-top:20px;width:100%;padding:14px;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--rose));color:#0D0F14;font-size:14px;font-weight:700;font-family:var(--font-b);border:none;cursor:pointer">Fermer ✕</button>
+  </div>`;
+  document.body.appendChild(modal);
+  genWeeklySummary().then(text=>{
+    const el=document.getElementById("weekly-summary-text");
+    if(el)el.innerHTML=text.replace(/
+/g,"<br>");
+  });
+}
+
+// ═══════════════════════════ INTÉGRATION BASE MAHMOUD ═══════════════════════════
+function processMahmoudCommand(text){
+  const lower = text.toLowerCase();
+  const triggers = ["rentre dans ta base de données","rentre dans ta base","ajoute à ta mémoire","mémorise","note que","retiens que","dans ta base de données","sauvegarde que"];
+  const triggered = triggers.some(t => lower.includes(t));
+  if(!triggered) return false;
+
+  // Extraire l'info après le déclencheur
+  let info = text;
+  triggers.forEach(t=>{
+    const idx = lower.indexOf(t);
+    if(idx>=0) info = text.slice(idx+t.length).trim().replace(/^[,:]\s*/,"");
+  });
+
+  if(!info || info.length < 3) return false;
+
+  const infos = lsGet("mahmoud_infos") || [];
+  infos.unshift({id:Date.now(), text:info, who:S.profile, date:new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})});
+  if(infos.length>30) infos.pop();
+  lsSet("mahmoud_infos", infos);
+  if(window._db) window._set(window._ref(window._db,"nous/mahmoud_infos"),infos).catch(()=>{});
+
+  toast("✅ Mahmoud a mémorisé ça !");
+  return true;
+}
+
+// ═══════════════════════════ NOTIFICATIONS PUSH ═══════════════════════════
+async function requestPushPermission(){
+  if(!("Notification" in window)) return;
+  if(Notification.permission === "granted") return;
+  if(Notification.permission === "denied") return;
+  // Demander seulement si l'utilisateur est dans l'app
+  if(!lsGet("profile")) return;
+  try { await Notification.requestPermission(); } catch(e){}
+}
+
+function sendPushNotif(title, body){
+  if(!("Notification" in window)) return;
+  if(Notification.permission !== "granted") return;
+  try {
+    new Notification(title, {
+      body,
+      icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💑</text></svg>",
+      badge: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>",
+      tag: "nous-app",
+      renotify: true
+    });
+  } catch(e){}
+}
+
 // ═══════════════════════════ MODAL CLOSE ═══════════════════════════
 document.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
   document.getElementById("moment-date-input").value=todayStr();
   document.getElementById("date-date-input").value=todayStr();
   initPIN();
+  // Montrer intro si jamais vue, sinon PIN directement
+  if(!lsGet("intro_seen")){
+    document.getElementById("intro-screen").classList.remove("hidden");
+  }
   document.addEventListener("firebaseReady",()=>{const el=document.getElementById("firebase-status");if(el)el.innerHTML='<span style="color:#3A9E6A">✅ Firebase connecté</span>'});
+  // Demander permission notifs push
+  setTimeout(requestPushPermission, 3000);
 });
+
+function showPIN(){
+  lsSet("intro_seen", true);
+  document.getElementById("intro-screen").classList.add("hidden");
+  document.getElementById("pin-screen").classList.remove("hidden");
+}
 </script>
 </body>
 </html>
