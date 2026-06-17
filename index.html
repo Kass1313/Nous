@@ -229,7 +229,14 @@ textarea.input{resize:vertical;min-height:80px}
 .bubble-time{font-size:9px;color:var(--muted);margin-top:3px}
 .react-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2px 7px;font-size:11px;cursor:pointer;color:var(--muted);transition:all .15s}
 .react-btn:active{background:var(--gold-soft);border-color:var(--gold)}
-.chat-input-sticky{position:sticky;bottom:calc(var(--nav-h));background:rgba(9,11,16,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:10px 16px;margin:0 -16px}
+.chat-input-sticky{position:sticky;bottom:calc(var(--nav-h));background:rgba(9,11,16,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:10px 16px 12px;margin:0 -16px}
+.claude-input-box{display:flex;align-items:flex-end;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:24px;padding:6px 6px 6px 16px;transition:border-color .2s}
+.claude-input-box:focus-within{border-color:var(--gold)}
+.claude-input-box textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:15px;font-family:var(--font-b);resize:none;max-height:120px;line-height:1.4;padding:9px 0;min-height:20px}
+.claude-input-box textarea::placeholder{color:var(--dim)}
+.claude-send{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--gold),var(--rose));display:flex;align-items:center;justify-content:center;font-size:17px;border:none;cursor:pointer;transition:all .2s;color:#0D0F14}
+.claude-send:active{transform:scale(.9)}
+.claude-send:disabled{opacity:.4}
 [data-theme="douceur"] .chat-input-sticky{background:rgba(250,245,240,.97)}
 [data-theme="ocean"] .chat-input-sticky{background:rgba(6,13,26,.97)}
 .mood-row{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px;margin-bottom:8px}
@@ -239,6 +246,14 @@ textarea.input{resize:vertical;min-height:80px}
 .send-row{display:flex;gap:8px}
 .send-btn{width:44px;height:44px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--gold),var(--rose));display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s}
 .send-btn:active{transform:scale(.9)}
+.switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider-sw{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:24px;transition:.3s}
+.slider-sw:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.switch input:checked+.slider-sw{background:linear-gradient(135deg,var(--gold),var(--rose))}
+.switch input:checked+.slider-sw:before{transform:translateX(20px)}
+body.font-small{font-size:13px}
+body.font-large{font-size:17px}
 
 /* IA */
 .ia-header{background:linear-gradient(135deg,var(--gold-soft),var(--rose-soft));border:1px solid var(--gold-border);border-radius:16px;padding:14px;margin-bottom:14px;text-align:center}
@@ -500,6 +515,30 @@ document.dispatchEvent(new Event("firebaseReady"));
         <div style="color:var(--muted);font-size:10px;margin-top:4px" id="last-mot-from"></div>
       </div>
       <!-- STATUT EN DIRECT -->
+      <!-- PRÉSENCE EN DIRECT -->
+      <div id="presence-indicator" style="margin-bottom:10px"></div>
+
+      <!-- BOUTONS CONNEXION RAPIDE -->
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button onclick="sendThinkingOfYou()" style="flex:1;padding:14px;border-radius:14px;border:1px solid var(--rose-border);background:var(--rose-soft);color:var(--text);font-size:13px;font-weight:700;cursor:pointer">💗 Je pense à toi</button>
+        <button onclick="sendSOS()" style="flex:1;padding:14px;border-radius:14px;border:1px solid var(--gold-border);background:var(--gold-soft);color:var(--text);font-size:13px;font-weight:700;cursor:pointer">🆘 J'ai besoin de toi</button>
+      </div>
+
+      <!-- RITUEL MATIN/SOIR -->
+      <div id="ritual-zone" style="margin-bottom:12px"></div>
+
+      <!-- CRÉNEAUX COMMUNS -->
+      <div id="common-slots" style="margin-bottom:12px"></div>
+
+      <!-- MÉTÉO ÉMOTIONNELLE -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title">🌤️ Météo du couple</div>
+        <div id="mood-weather"></div>
+      </div>
+
+      <!-- CE JOUR-LÀ -->
+      <div id="on-this-day" style="margin-bottom:12px"></div>
+
       <div class="card" style="margin-bottom:12px;border-color:rgba(74,158,232,.3)">
         <div class="card-title">⚡ En ce moment</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px" id="home-statut-cards"></div>
@@ -555,15 +594,15 @@ document.dispatchEvent(new Event("firebaseReady"));
       </div>
       <div id="ia-history-content" style="display:none;padding-bottom:140px"></div>
       <div class="chat-input-sticky">
-        <button id="mot-sugg-btn" onclick="genMotSuggestion()" style="width:100%;margin-bottom:8px;padding:8px;border-radius:10px;background:var(--gold-soft);border:1px solid var(--gold-border);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer">✨ Suggérer un mot doux</button>
-        <div class="who-row" style="margin-bottom:8px">
-          <button class="who-btn active-r" id="who-r" onclick="setWho('raphy')">💗 Raphy</button>
-          <button class="who-btn" id="who-m" onclick="setWho('mehdi')">💙 Mehdi</button>
+        <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center">
+          <button class="who-btn active-r" id="who-r" onclick="setWho('raphy')" style="flex:1">💗 Raphy</button>
+          <button class="who-btn" id="who-m" onclick="setWho('mehdi')" style="flex:1">💙 Mehdi</button>
+          <button onclick="genMotSuggestion()" id="mot-sugg-btn" title="Suggestion Mahmoud" style="flex-shrink:0;width:38px;height:34px;border-radius:10px;background:var(--gold-soft);border:1px solid var(--gold-border);color:var(--gold);font-size:15px;cursor:pointer">✨</button>
         </div>
         <div class="mood-row" id="mood-row"></div>
-        <div class="send-row">
-          <input class="input" id="chat-input" placeholder="Écris quelque chose de doux..." style="flex:1">
-          <button class="send-btn" onclick="sendMsg()">➤</button>
+        <div class="claude-input-box">
+          <textarea id="chat-input" placeholder="Écris quelque chose de doux..." rows="1" oninput="autoGrowChat(this)" onkeydown="chatKeydown(event)"></textarea>
+          <button class="claude-send" id="chat-send-btn" onclick="sendMsg()">➤</button>
         </div>
       </div>
     </div><!-- OBJECTIFS -->
@@ -580,12 +619,20 @@ document.dispatchEvent(new Event("firebaseReady"));
       <div class="section-title" style="margin-bottom:12px">🎮 Défis Couple</div>
       <div class="level-card" id="level-card"></div>
       <div class="section-header">
-        <span style="font-size:14px;font-weight:700">Défi du jour</span>
-        <button class="btn btn-sm btn-outline" style="width:auto" onclick="newDefi()">🎲 Nouveau</button>
+        <span style="font-size:14px;font-weight:700">⭐ Défi du jour</span>
+        <button class="btn btn-sm btn-outline" style="width:auto" onclick="newDefi()">🎲 Autre</button>
       </div>
       <div id="defi-zone"></div>
-      <button id="smart-defi-btn" onclick="genSmartDefi()" style="width:100%;margin-top:10px;padding:10px;border-radius:12px;background:var(--gold-soft);border:1px solid var(--gold-border);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer">✨ Défi du jour par Mahmoud</button>
-      <div style="margin-top:16px">
+      <button id="smart-defi-btn" onclick="genSmartDefi()" style="width:100%;margin-top:10px;padding:10px;border-radius:12px;background:var(--gold-soft);border:1px solid var(--gold-border);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer">✨ Défi sur mesure par Mahmoud</button>
+
+      <div class="section-header" style="margin-top:20px">
+        <span style="font-size:14px;font-weight:700">🎯 Tous les défis</span>
+        <button class="btn btn-sm btn-outline" style="width:auto" onclick="openCustomDefi()">+ Perso</button>
+      </div>
+      <div id="defi-cat-filter" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px"></div>
+      <div id="defi-list"></div>
+
+      <div style="margin-top:20px">
         <div class="section-header"><span style="font-size:14px;font-weight:700">🏆 Badges</span></div>
         <div class="badge-grid" id="badge-grid"></div>
       </div>
@@ -604,7 +651,10 @@ document.dispatchEvent(new Event("firebaseReady"));
     <!-- IA -->
     <div class="page" id="page-ia">
       <div class="ia-header">
-        <div class="ia-name">✨ Mahmoud — Votre IA</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+          <div class="ia-name">✨ Mahmoud — Votre IA</div>
+          <button id="mahmoud-voice-btn" onclick="toggleMahmoudVoice()" title="Voix de Mahmoud" style="background:var(--surface);border:1px solid var(--border);border-radius:50%;width:32px;height:32px;font-size:15px;cursor:pointer">🔇</button>
+        </div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">Drôle, taquin, et toujours là pour vous deux 💑</div>
         <div style="font-size:10px;color:var(--gold);margin-top:4px" id="ia-who-label"></div>
       </div>
@@ -755,6 +805,12 @@ document.dispatchEvent(new Event("firebaseReady"));
     </div>
 
     <!-- SETTINGS -->
+    <!-- PLUS (hub) -->
+    <div class="page" id="page-plus">
+      <div class="section-title" style="margin-bottom:16px">✨ Plus</div>
+      <div id="plus-zone"></div>
+    </div>
+
     <div class="page" id="page-settings">
       <div class="section-title" style="margin-bottom:16px">⚙️ Paramètres</div>
       <div class="card">
@@ -785,18 +841,76 @@ document.dispatchEvent(new Event("firebaseReady"));
         <button class="btn btn-outline" style="margin-top:8px" onclick="testGeminiKey()">Tester la connexion ⚡</button>
       </div>
       <div class="card">
-        <div class="card-title">Infos du couple</div>
-        <div class="settings-row"><div><div style="font-size:14px;font-weight:600">💗 Raphy</div><div style="font-size:11px;color:var(--muted)">11 Juin 1996</div></div></div>
-        <div class="settings-row"><div><div style="font-size:14px;font-weight:600">💙 Mehdi</div><div style="font-size:11px;color:var(--muted)">11 Fév 1995</div></div></div>
-        <div class="settings-row"><div><div style="font-size:14px;font-weight:600">❤️ Ensemble depuis</div><div style="font-size:11px;color:var(--muted)">11 Mai 2026</div></div></div>
+        <div class="card-title">💑 Infos du couple <span style="font-size:10px;color:var(--muted);font-weight:400">(modifiable)</span></div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">💗 Surnom de Raphy</div>
+          <input class="input" id="set-name-raphy" placeholder="Raphy" style="margin-bottom:8px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Anniversaire de Raphy</div>
+          <input class="input" id="set-bday-raphy" type="date" style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">💙 Surnom de Mehdi</div>
+          <input class="input" id="set-name-mehdi" placeholder="Mehdi" style="margin-bottom:8px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Anniversaire de Mehdi</div>
+          <input class="input" id="set-bday-mehdi" type="date" style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">❤️ Ensemble depuis</div>
+          <input class="input" id="set-couple-date" type="date" style="margin-bottom:12px">
+        </div>
+        <button class="btn" onclick="saveCoupleInfos()">Enregistrer les infos 💾</button>
       </div>
+
+      <div class="card">
+        <div class="card-title">🔔 Notifications</div>
+        <div class="settings-row">
+          <div><div style="font-size:14px;font-weight:600">Notifications push</div><div style="font-size:11px;color:var(--muted)">Recevoir les alertes sur le téléphone</div></div>
+          <label class="switch"><input type="checkbox" id="set-notif-push" onchange="toggleSetting('notif_push',this.checked)"><span class="slider-sw"></span></label>
+        </div>
+        <div class="settings-row">
+          <div><div style="font-size:14px;font-weight:600">Sons & vibrations</div><div style="font-size:11px;color:var(--muted)">Vibration à la réception</div></div>
+          <label class="switch"><input type="checkbox" id="set-notif-vib" onchange="toggleSetting('notif_vib',this.checked)"><span class="slider-sw"></span></label>
+        </div>
+        <button class="btn btn-outline" style="margin-top:8px" onclick="requestPushPermission().then(()=>toast('Autorisation demandée'))">Activer les notifications du navigateur</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎨 Affichage</div>
+        <div class="settings-row">
+          <div><div style="font-size:14px;font-weight:600">Taille du texte</div></div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-outline" style="width:auto;padding:6px 12px" onclick="setFontSize('small')">A-</button>
+            <button class="btn btn-sm btn-outline" style="width:auto;padding:6px 12px" onclick="setFontSize('normal')">A</button>
+            <button class="btn btn-sm btn-outline" style="width:auto;padding:6px 12px" onclick="setFontSize('large')">A+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:var(--gold-border)">
+        <div class="card-title">🧠 Mémoire de Mahmoud</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Ce que Mahmoud a retenu sur vous</div>
+        <div id="mahmoud-memory-list" style="margin-bottom:10px"></div>
+        <button class="btn btn-outline" onclick="renderMahmoudMemory()">Voir la mémoire</button>
+        <button class="btn btn-outline" style="margin-top:8px;border-color:var(--rose);color:var(--rose)" onclick="clearMahmoudMemory()">Effacer la mémoire</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📊 Données</div>
+        <button class="btn btn-outline" style="margin-bottom:8px" onclick="exportHistory()">📊 Export semaine (texte)</button>
+        <button class="btn btn-outline" style="margin-bottom:8px;border-color:var(--purple);color:var(--purple)" onclick="showWeeklySummary()">✨ Résumé semaine par Mahmoud</button>
+        <button class="btn btn-outline" style="margin-bottom:8px" onclick="exportAllData()">💾 Sauvegarder toutes les données</button>
+      </div>
+
+      <div class="card" style="border-color:var(--rose-border)">
+        <div class="card-title" style="color:var(--rose)">⚠️ Réinitialiser</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Attention, ces actions sont définitives</div>
+        <button class="btn btn-outline" style="margin-bottom:8px;border-color:var(--rose);color:var(--rose)" onclick="resetSection('messages')">Effacer les mots doux</button>
+        <button class="btn btn-outline" style="margin-bottom:8px;border-color:var(--rose);color:var(--rose)" onclick="resetSection('iaHistory')">Effacer l'historique Mahmoud</button>
+        <button class="btn btn-outline" style="margin-bottom:8px;border-color:var(--rose);color:var(--rose)" onclick="resetSection('points')">Réinitialiser points & défis</button>
+        <button class="btn btn-outline" style="border-color:var(--rose);color:var(--rose)" onclick="resetQuizFull()">Recommencer le quiz</button>
+      </div>
+
       <div class="card">
         <div class="card-title">Firebase</div>
         <div id="firebase-status" style="font-size:12px;color:var(--muted)">Vérification...</div>
       </div>
-      <button class="btn btn-outline" style="margin-bottom:10px" onclick="exportHistory()">📊 Export semaine</button>
-      <button class="btn btn-outline" style="margin-bottom:10px;border-color:var(--purple);color:var(--purple)" onclick="showWeeklySummary()">✨ Résumé semaine par Mahmoud</button>
-      <button class="btn" style="background:var(--dim);margin-bottom:20px" onclick="lockApp()">🔒 Verrouiller</button>
+      <button class="btn" style="background:var(--dim);margin-bottom:20px" onclick="lockApp()">🔒 Verrouiller l'application</button>
     </div>
 
   </div><!-- /pages -->
@@ -818,6 +932,7 @@ document.dispatchEvent(new Event("firebaseReady"));
     <button class="nav-btn" onclick="goTo('quiz',this)"><span class="nav-icon">🧠</span><span class="nav-label">Quiz</span></button>
     <button class="nav-btn" onclick="openJeux()" id="nav-jeux"><span class="nav-icon">🎮</span><span class="nav-label">Jeux</span></button>
     <button class="nav-btn" onclick="goTo('dismoi',this)"><span class="nav-icon">💬</span><span class="nav-label">Dis-moi tout</span></button>
+    <button class="nav-btn" onclick="goTo('plus',this)"><span class="nav-icon">✨</span><span class="nav-label">Plus</span></button>
     <button class="nav-btn" onclick="goTo('settings',this)"><span class="nav-icon">⚙️</span><span class="nav-label">Réglages</span></button>
   </nav>
 </div><!-- /app-screen -->
@@ -869,7 +984,7 @@ document.dispatchEvent(new Event("firebaseReady"));
 <div class="modal" id="modal-goal">
   <div class="modal-box">
     <div class="modal-handle"></div>
-    <div class="modal-title">Nouvel objectif 🎯</div>
+    <div class="modal-title" id="goal-modal-title">Nouvel objectif 🎯</div>
     <div style="margin-bottom:14px">
       <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">C'est quoi l'objectif ?</div>
       <input class="input" id="goal-title-input" placeholder="Ex: Partir à la plage cet été 🏖️..." style="margin-bottom:8px">
@@ -878,7 +993,7 @@ document.dispatchEvent(new Event("firebaseReady"));
     </div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600">Catégorie :</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px" id="goal-cat-grid"></div>
-    <button class="btn" onclick="saveGoal()">Créer 🚀</button>
+    <button class="btn" id="goal-save-btn" onclick="saveGoal()">Créer 🚀</button>
   </div>
 </div>
 
@@ -1092,19 +1207,80 @@ const BADGES=[
   {id:"recipe5",icon:"🍽️",label:"5 recettes",cond:s=>s.notes?.filter(n=>n.type==="recette").length>=5},
 ];
 
-const DEFIS=[
-  {icon:"💌",title:"Mot surprise",desc:"Laisse un petit mot caché que l'autre trouvera en rentrant.",pts:10},
-  {icon:"📸",title:"Selfie du jour",desc:"Prenez un selfie ensemble et ajoutez-le à la galerie.",pts:5},
-  {icon:"💆",title:"Massage 10min",desc:"Offre un massage de 10 minutes à l'autre. Sans excuse. 😄",pts:15},
-  {icon:"🎬",title:"Ciné surprise",desc:"Choisis un film que l'autre ne connaît pas.",pts:10},
-  {icon:"🍳",title:"Chef étoilé",desc:"Cuisinez un plat que vous n'avez jamais essayé ensemble. 😂",pts:20},
-  {icon:"✍️",title:"Lettre d'amour",desc:"Écris une lettre de 10 lignes à l'autre. À la main si possible.",pts:25},
-  {icon:"💐",title:"Petite attention",desc:"Offre quelque chose de simple mais qui vient du cœur.",pts:10},
-  {icon:"🌅",title:"Lever de soleil",desc:"Réveillez-vous tôt et regardez le soleil se lever ensemble.",pts:30},
-  {icon:"🎵",title:"Playlist de l'autre",desc:"Écoute la playlist préférée de l'autre toute une journée. 😏",pts:10},
-  {icon:"🎨",title:"Portrait express",desc:"Dessinez le portrait de l'autre en 2 minutes. 😂",pts:15},
-  {icon:"🌙",title:"Soirée sans écran",desc:"2h sans téléphone ni télé. Juste vous deux.",pts:20},
-  {icon:"🧁",title:"Pâtisserie",desc:"Faites des gâteaux ou cookies ensemble.",pts:15},
+// ════════════════════════════════════════════════════════════
+// DÉFIS V2 — système complet catégorisé
+// ════════════════════════════════════════════════════════════
+const DEFI_CATS=[
+  {id:"distance",icon:"📱",label:"À distance",color:"#4A9EE8"},
+  {id:"romantique",icon:"💕",label:"Romantique",color:"#E8637A"},
+  {id:"fun",icon:"😂",label:"Fun",color:"#C9A84C"},
+  {id:"complicite",icon:"🤝",label:"Complicité",color:"#3A9E6A"},
+  {id:"communication",icon:"💬",label:"Communication",color:"#8B6FD4"},
+  {id:"coquin",icon:"🌶️",label:"Coquin",color:"#D4574E"},
+];
+const DEFIS_V2=[
+  // ── À DISTANCE (ils habitent séparément, super pertinent) ──
+  {cat:"distance",icon:"📸",title:"Photo de ta journée",desc:"Envoie une photo de là où tu es, là maintenant, sans prévenir.",pts:10,diff:1},
+  {cat:"distance",icon:"🎵",title:"La chanson du moment",desc:"Envoie-lui la chanson que tu écoutes en boucle en ce moment.",pts:10,diff:1},
+  {cat:"distance",icon:"🌙",title:"Bonne nuit en vocal",desc:"Envoie un message vocal pour souhaiter bonne nuit ce soir.",pts:15,diff:1},
+  {cat:"distance",icon:"📞",title:"Appel surprise",desc:"Appelle-le/la juste pour entendre sa voix, même 2 minutes.",pts:15,diff:1},
+  {cat:"distance",icon:"🎬",title:"Même film, à distance",desc:"Lancez le même film en même temps ce soir et commentez par message.",pts:25,diff:2},
+  {cat:"distance",icon:"☕",title:"Petit-déj ensemble en visio",desc:"Prenez votre café/petit-déj ensemble en appel vidéo demain matin.",pts:20,diff:2},
+  {cat:"distance",icon:"📝",title:"3 choses que j'aime chez toi",desc:"Envoie un message avec 3 choses que tu adores chez l'autre aujourd'hui.",pts:15,diff:1},
+  {cat:"distance",icon:"🍽️",title:"Dîner en visio",desc:"Mangez ensemble ce soir en appel vidéo, comme si vous étiez au resto.",pts:25,diff:2},
+  {cat:"distance",icon:"🛏️",title:"S'endormir au téléphone",desc:"Appelez-vous et endormez-vous au téléphone ce soir.",pts:20,diff:2},
+  {cat:"distance",icon:"🎁",title:"Commande-lui une surprise",desc:"Fais-lui livrer un petit truc chez lui/elle (à manger, une fleur...).",pts:30,diff:3},
+  {cat:"distance",icon:"💌",title:"Le message du réveil",desc:"Programme un message adorable qu'il/elle lira en se réveillant.",pts:10,diff:1},
+  {cat:"distance",icon:"📍",title:"Notre prochain rendez-vous",desc:"Planifiez ensemble votre prochaine sortie là, maintenant, par message.",pts:15,diff:1},
+
+  // ── ROMANTIQUE ──
+  {cat:"romantique",icon:"✍️",title:"Lettre d'amour",desc:"Écris une vraie lettre de 10 lignes. À la main si possible.",pts:25,diff:2},
+  {cat:"romantique",icon:"🌅",title:"Lever de soleil ensemble",desc:"Réveillez-vous tôt et regardez le soleil se lever (ensemble ou en visio).",pts:30,diff:3},
+  {cat:"romantique",icon:"💐",title:"Petite attention",desc:"Offre quelque chose de simple mais qui vient du cœur.",pts:15,diff:1},
+  {cat:"romantique",icon:"🕯️",title:"Dîner aux chandelles",desc:"Préparez un dîner romantique aux bougies la prochaine fois ensemble.",pts:25,diff:2},
+  {cat:"romantique",icon:"💆",title:"Massage 15 min",desc:"Offre un vrai massage de 15 minutes. Sans rien attendre en retour.",pts:20,diff:2},
+  {cat:"romantique",icon:"📖",title:"Notre histoire",desc:"Raconte-lui ton meilleur souvenir de vous deux, en détail.",pts:15,diff:1},
+  {cat:"romantique",icon:"🌹",title:"Rendez-vous surprise",desc:"Organise une sortie surprise pour la prochaine fois. Elle/il ne sait rien.",pts:35,diff:3},
+  {cat:"romantique",icon:"💑",title:"Slow à la maison",desc:"Mettez une chanson et dansez ensemble, juste tous les deux.",pts:20,diff:2},
+  {cat:"romantique",icon:"⭐",title:"Compte les étoiles",desc:"Regardez les étoiles ensemble et faites un vœu chacun.",pts:20,diff:2},
+  {cat:"romantique",icon:"📷",title:"Séance photo",desc:"Faites une mini séance photo de vous deux, jolis et complices.",pts:15,diff:1},
+
+  // ── FUN ──
+  {cat:"fun",icon:"🍳",title:"Chef étoilé",desc:"Cuisinez un plat que vous n'avez jamais essayé. Bon courage 😂",pts:20,diff:2},
+  {cat:"fun",icon:"🎨",title:"Portrait express",desc:"Dessinez-vous l'un l'autre en 2 minutes. Résultat garanti hilarant.",pts:15,diff:1},
+  {cat:"fun",icon:"🎤",title:"Karaoké duo",desc:"Chantez une chanson en duo à fond. Sans honte.",pts:15,diff:1},
+  {cat:"fun",icon:"🤳",title:"Défi TikTok",desc:"Reproduisez une danse ou un trend ensemble.",pts:20,diff:2},
+  {cat:"fun",icon:"🎮",title:"Battle jeux",desc:"Affrontez-vous sur un des mini-jeux de l'app. Le perdant a un gage.",pts:15,diff:1},
+  {cat:"fun",icon:"😂",title:"Imite l'autre",desc:"Imitez-vous l'un l'autre pendant 5 minutes. Fou rire assuré.",pts:10,diff:1},
+  {cat:"fun",icon:"🧁",title:"Atelier pâtisserie",desc:"Faites des gâteaux ou cookies ensemble. Bataille de farine autorisée.",pts:15,diff:1},
+  {cat:"fun",icon:"🎲",title:"Soirée jeux de société",desc:"Une vraie soirée jeux de société, juste vous deux.",pts:20,diff:2},
+  {cat:"fun",icon:"🍿",title:"Marathon série",desc:"Enchaînez 3 épisodes de votre série du moment d'affilée.",pts:15,diff:1},
+  {cat:"fun",icon:"🏃",title:"Le défi sportif",desc:"Faites une activité physique ensemble (sport, marche, vélo...).",pts:20,diff:2},
+
+  // ── COMPLICITÉ ──
+  {cat:"complicite",icon:"🌙",title:"Soirée sans écran",desc:"2h sans téléphone ni télé. Juste vous deux et de vraies discussions.",pts:25,diff:2},
+  {cat:"complicite",icon:"❓",title:"20 questions profondes",desc:"Posez-vous 20 questions pour vous découvrir encore plus.",pts:20,diff:2},
+  {cat:"complicite",icon:"🎯",title:"Un objectif commun",desc:"Fixez-vous un objectif de couple ensemble et notez-le dans l'app.",pts:15,diff:1},
+  {cat:"complicite",icon:"🤫",title:"Le secret",desc:"Partage un truc que tu n'as jamais dit à personne d'autre.",pts:20,diff:2},
+  {cat:"complicite",icon:"🗺️",title:"Plan de rêve",desc:"Planifiez ensemble le voyage de vos rêves, dans les moindres détails.",pts:20,diff:2},
+  {cat:"complicite",icon:"💭",title:"Nos projets",desc:"Discutez de où vous vous voyez dans 5 ans, ensemble.",pts:20,diff:2},
+  {cat:"complicite",icon:"📸",title:"Album souvenirs",desc:"Regardez vos vieilles photos ensemble et racontez les souvenirs.",pts:15,diff:1},
+  {cat:"complicite",icon:"🙏",title:"Gratitude",desc:"Dites-vous chacun 3 choses pour lesquelles vous êtes reconnaissants.",pts:15,diff:1},
+
+  // ── COMMUNICATION ──
+  {cat:"communication",icon:"💬",title:"Check-in émotionnel",desc:"Demande-lui comment il/elle va VRAIMENT, et écoute sans interrompre.",pts:15,diff:1},
+  {cat:"communication",icon:"❤️",title:"Ce que j'apprécie",desc:"Dis-lui une chose qu'il/elle fait et que tu apprécies trop.",pts:10,diff:1},
+  {cat:"communication",icon:"🗣️",title:"Parle-moi de ta journée",desc:"Racontez-vous votre journée en détail, sans distractions.",pts:10,diff:1},
+  {cat:"communication",icon:"🎯",title:"Un besoin exprimé",desc:"Exprime calmement un besoin que tu as dans la relation.",pts:20,diff:2},
+  {cat:"communication",icon:"🤝",title:"On règle ça",desc:"S'il y a un petit truc qui coince, parlez-en posément et trouvez une solution.",pts:25,diff:3},
+  {cat:"communication",icon:"💌",title:"Compliment sincère",desc:"Fais un compliment vraiment sincère, pas juste 'tu es belle/beau'.",pts:10,diff:1},
+
+  // ── COQUIN (léger, fun) ──
+  {cat:"coquin",icon:"😏",title:"Message coquin",desc:"Envoie un message qui va le/la faire rougir au travail.",pts:15,diff:1},
+  {cat:"coquin",icon:"💋",title:"Le baiser surprise",desc:"Vole-lui un baiser quand il/elle s'y attend le moins.",pts:15,diff:1},
+  {cat:"coquin",icon:"👀",title:"Tenue surprise",desc:"Prépare une tenue qui va lui faire de l'effet pour votre prochain rdv.",pts:20,diff:2},
+  {cat:"coquin",icon:"🔥",title:"Compliment osé",desc:"Dis-lui ce qui t'attire le plus chez lui/elle, sans filtre.",pts:15,diff:1},
+  {cat:"coquin",icon:"💌",title:"Le petit mot",desc:"Glisse un petit mot coquin là où il/elle le trouvera plus tard.",pts:20,diff:2},
 ];
 
 
@@ -1127,7 +1303,8 @@ let S={
   importantDates:[],gratitudes:[],capsules:[],journalEntries:[],
   gifts:[],questions:[],iaHistory:[],statuts:{raphy:null,mehdi:null},
   humeurs:{raphy:{e:"😊",phrase:""},mehdi:{e:"😊",phrase:""}},
-  pensees:{raphy:"",mehdi:""},wheelActivities:[...WHEEL_DEFAULT],
+  pensees:{raphy:"",mehdi:""},wheelActivities:[...WHEEL_DEFAULT],defiCatFilter:"tous",customDefis:[],defiStreak:{count:0,lastDate:null},
+  loveReasons:[],bucketList:[],songs:[],sharedList:[],budget:{goal:"",goalAmount:0,saved:0,expenses:[]},places:[],complimentJar:[],humeurHistory:[],mensualLetters:[],presence:{raphy:{online:false,lastSeen:0},mehdi:{online:false,lastSeen:0}},ritual:{lastMorning:null,lastNight:null,streak:0},
   badges:{},points:0,defiHistory:[],currentDefi:null,
   currentWho:"raphy",currentShiftFor:"raphy",currentShiftDate:null,
   currentShiftType:null,currentGoalCat:"voyage",currentNoteType:"idee",
@@ -1169,7 +1346,7 @@ document.querySelectorAll&&document.addEventListener("click",e=>{
 // ═══════════════════════════ LS ═══════════════════════════
 function lsGet(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch{return null}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
-const LS_KEYS=["schedule","messages","photos","goals","notes","moments","importantDates","gratitudes","capsules","journalEntries","gifts","questions","iaHistory","statuts","humeurs","pensees","wheelActivities","badges","points","defiHistory","bonneNuitCount","notifs","couplePhoto"];
+const LS_KEYS=["schedule","messages","photos","goals","notes","moments","importantDates","gratitudes","capsules","journalEntries","gifts","questions","iaHistory","statuts","humeurs","pensees","wheelActivities","badges","points","defiHistory","bonneNuitCount","notifs","couplePhoto","loveReasons","bucketList","songs","sharedList","budget","places","complimentJar","humeurHistory","mensualLetters","presence","ritual","defiStreak","customDefis"];
 function loadLocal(){LS_KEYS.forEach(k=>{const v=lsGet(k);if(v!==null)S[k]=v});const p=lsGet("profile");if(p)S.profile=p;const t=lsGet("theme_p");if(t)S.theme=t;}
 function saveLocal(k){lsSet(k,S[k])}
 
@@ -1252,6 +1429,114 @@ function unlockApp(){
   document.getElementById("app-screen").classList.remove("hidden");
   initApp();
 }
+// ════════════ PARAMÈTRES ÉTENDUS ════════════
+function speakMahmoud(text){
+  if(!("speechSynthesis" in window))return;
+  try{
+    speechSynthesis.cancel();
+    const clean=text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu,"");
+    const u=new SpeechSynthesisUtterance(clean);
+    u.lang="fr-FR";u.rate=1.05;u.pitch=1;
+    const voices=speechSynthesis.getVoices();
+    const frVoice=voices.find(v=>v.lang.startsWith("fr"));
+    if(frVoice)u.voice=frVoice;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function toggleMahmoudVoice(){
+  const cur=lsGet("mahmoud_voice");
+  lsSet("mahmoud_voice",!cur);
+  updateVoiceBtn();
+  toast(!cur?"🔊 Voix de Mahmoud activée":"🔇 Voix désactivée");
+  if(!cur)speakMahmoud("Salut, c'est moi Mahmoud. Maintenant tu peux m'entendre.");
+}
+function updateVoiceBtn(){
+  const btn=document.getElementById("mahmoud-voice-btn");
+  if(btn)btn.textContent=lsGet("mahmoud_voice")?"🔊":"🔇";
+}
+function trackHumeurHistory(){
+  const today=todayStr();
+  if(!S.humeurHistory)S.humeurHistory=[];
+  const existing=S.humeurHistory.find(h=>h.date===today);
+  const entry={date:today,raphy:S.humeurs?.raphy?.e||"",mehdi:S.humeurs?.mehdi?.e||""};
+  if(existing){existing.raphy=entry.raphy;existing.mehdi=entry.mehdi;}
+  else S.humeurHistory.push(entry);
+  if(S.humeurHistory.length>60)S.humeurHistory=S.humeurHistory.slice(-60);
+  dbSave("humeurHistory");
+}
+function loadSettingsValues(){
+  const ci=lsGet("couple_infos")||{};
+  const setVal=(id,v)=>{const el=document.getElementById(id);if(el&&v)el.value=v;};
+  setVal("set-name-raphy",ci.nameRaphy||"Raphy");
+  setVal("set-name-mehdi",ci.nameMehdi||"Mehdi");
+  setVal("set-bday-raphy",ci.bdayRaphy||"1996-06-11");
+  setVal("set-bday-mehdi",ci.bdayMehdi||"1995-02-11");
+  setVal("set-couple-date",ci.coupleDate||"2026-05-11");
+  const np=document.getElementById("set-notif-push");if(np)np.checked=lsGet("notif_push")!==false;
+  const nv=document.getElementById("set-notif-vib");if(nv)nv.checked=lsGet("notif_vib")!==false;
+}
+function saveCoupleInfos(){
+  const g=id=>document.getElementById(id)?.value||"";
+  const ci={nameRaphy:g("set-name-raphy"),nameMehdi:g("set-name-mehdi"),bdayRaphy:g("set-bday-raphy"),bdayMehdi:g("set-bday-mehdi"),coupleDate:g("set-couple-date")};
+  lsSet("couple_infos",ci);
+  toast("Infos du couple enregistrées 💾");
+}
+function toggleSetting(key,val){lsSet(key,val);toast(val?"Activé":"Désactivé");}
+function setFontSize(size){
+  document.body.classList.remove("font-small","font-large");
+  if(size==="small")document.body.classList.add("font-small");
+  else if(size==="large")document.body.classList.add("font-large");
+  lsSet("font_size",size);
+  toast("Taille du texte: "+(size==="small"?"petite":size==="large"?"grande":"normale"));
+}
+function renderMahmoudMemory(){
+  const el=document.getElementById("mahmoud-memory-list");if(!el)return;
+  const infos=lsGet("mahmoud_infos")||[];
+  if(!infos.length){el.innerHTML=`<div style="font-size:12px;color:var(--dim);font-style:italic">Mahmoud n'a encore rien retenu. Dis-lui "rentre dans ta base de données que..." pour lui apprendre des choses.</div>`;return;}
+  el.innerHTML=infos.map((info,i)=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+    <div style="font-size:12px;flex:1">${info.text}<div style="font-size:9px;color:var(--dim);margin-top:2px">par ${info.who==="raphy"?"Raphy":"Mehdi"} · ${info.date}</div></div>
+    <button onclick="delMahmoudInfo(${info.id})" style="color:var(--rose);font-size:14px;background:none;border:none;cursor:pointer">🗑️</button>
+  </div>`).join("");
+}
+function delMahmoudInfo(id){
+  let infos=lsGet("mahmoud_infos")||[];
+  infos=infos.filter(i=>i.id!==id);
+  lsSet("mahmoud_infos",infos);
+  if(window._db)window._set(window._ref(window._db,"nous/mahmoud_infos"),infos).catch(()=>{});
+  renderMahmoudMemory();toast("Info supprimée");
+}
+function clearMahmoudMemory(){
+  if(!confirm("Effacer toute la mémoire de Mahmoud ?"))return;
+  lsSet("mahmoud_infos",[]);
+  if(window._db)window._set(window._ref(window._db,"nous/mahmoud_infos"),[]).catch(()=>{});
+  renderMahmoudMemory();toast("Mémoire effacée");
+}
+function exportAllData(){
+  const data=JSON.stringify(S,null,2);
+  const blob=new Blob([data],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download="nous-sauvegarde-"+todayStr()+".json";a.click();
+  URL.revokeObjectURL(url);
+  toast("Données sauvegardées 💾");
+}
+function resetSection(key){
+  const labels={messages:"les mots doux",iaHistory:"l'historique Mahmoud",points:"les points et défis"};
+  if(!confirm(`Effacer ${labels[key]||key} ? C'est définitif.`))return;
+  if(key==="points"){
+    S.points=0;S.defiHistory=[];S.defiStreak={count:0,lastDate:null};
+    dbSave("points");dbSave("defiHistory");dbSave("defiStreak");
+  } else {
+    S[key]=[];dbSave(key);
+  }
+  renderCurrent();toast("Effacé ✓");
+}
+function resetQuizFull(){
+  if(!confirm("Recommencer le quiz ? Toutes les réponses seront effacées."))return;
+  S.quizSelfAnswers={};S.quizGuesses={};
+  dbSave("quizSelfAnswers");dbSave("quizGuesses");
+  toast("Quiz réinitialisé");
+  if(S.currentPage==="quiz")renderQuiz();
+}
 function lockApp(){
   S.pin="";updateDots();
   document.getElementById("app-screen").classList.add("hidden");
@@ -1276,6 +1561,12 @@ function initApp(){
   document.getElementById("profile-label").textContent=S.profile==="raphy"?"💗 Raphy":"💙 Mehdi";
   initMoodRow();initShiftTypeGrid();initGoalCatGrid();initNoteTypeBtns();initNoteFilterTabs();initAlbumTabs();initAlbumPicker();initStatutOpts();initDateTypeGrid();initHumeurPicker();initHumeurSuggestions();
   loadQuestionOfDay();loadDefiOfDay();initHomeStatut();updateGeminiKeyStatus();
+  loadSettingsValues();
+  const fs=lsGet("font_size");if(fs)setFontSize(fs);
+  initPresence();
+  trackHumeurHistory();
+  // Rafraîchir la présence toutes les 30s sur l'accueil
+  setInterval(()=>{if(S.currentPage==="home")renderPresence();},30000);
   renderPage("home");
   document.addEventListener("firebaseReady",initFirebase);
   if(window.firebaseReady)initFirebase();
@@ -1297,6 +1588,7 @@ function goTo(page,btn){
   S.currentPage=page;
   if(page==="ia") S._welcomeInjected=false;
   if(page==="home") S._morningInjected=false;
+  if(page==="settings"){setTimeout(()=>{loadSettingsValues();renderMahmoudMemory();},50);}
   renderPage(page);
 }
 function renderCurrent(){if(S.currentPage)renderPage(S.currentPage)}
@@ -1313,6 +1605,7 @@ function renderPage(p){
     case"cadeaux":renderCadeaux();break;
     case"nous":renderNous();break;
     case"dismoi":renderDisMoi();break;
+    case"plus":renderPlus();break;
   }
 }
 
@@ -1345,6 +1638,7 @@ function renderHome(){
   document.getElementById("hum-p-mehdi").textContent=S.humeurs.mehdi?.phrase||"Comment tu vas ?";
   renderPenseeReactions();
   injectSmartMorning();
+  renderMoodWeather();renderPresence();renderCommonSlots();renderOnThisDay();renderRitual();
   renderTodaySchedule();renderNextOff();
   document.getElementById("stat-msgs").textContent=S.messages.length;
   document.getElementById("stat-off").textContent=countWeekOff();
@@ -1541,15 +1835,51 @@ function setWho(who){
   document.getElementById("who-r").className="who-btn"+(who==="raphy"?" active-r":"");
   document.getElementById("who-m").className="who-btn"+(who==="mehdi"?" active-m":"");
 }
+function autoGrowChat(el){
+  el.style.height="auto";
+  el.style.height=Math.min(el.scrollHeight,120)+"px";
+}
+function chatKeydown(e){
+  if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}
+}
 function sendMsg(){
   const inp=document.getElementById("chat-input");const text=inp.value.trim();if(!text)return;
   const msg={id:Date.now(),who:S.currentWho,text,mood:S.currentMood||"💬",ts:Date.now(),
     date:new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"short"}),
     time:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),reactions:{}};
-  S.messages.push(msg);dbSave("messages");inp.value="";renderMots();
+  S.messages.push(msg);dbSave("messages");inp.value="";inp.style.height="auto";renderMots();
   addNotif(`💌 ${S.currentWho==="raphy"?"Raphy":"Mehdi"} t'a envoyé un mot doux`);
   checkAllBadges();setTimeout(()=>document.getElementById("chat-wrap").lastElementChild?.scrollIntoView({behavior:"smooth"}),50);
   toast("Message envoyé 💌");
+}
+function msgMenu(id){
+  const m=S.messages.find(m=>m.id===id);if(!m)return;
+  const existing=document.getElementById("msg-action-menu");if(existing)existing.remove();
+  const menu=document.createElement("div");
+  menu.id="msg-action-menu";
+  menu.style.cssText="position:fixed;bottom:0;left:0;right:0;z-index:1600;background:var(--card);border-top:1px solid var(--gold-border);border-radius:20px 20px 0 0;padding:20px;animation:slideUp .3s ease";
+  menu.innerHTML=`<div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px"></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Message de ${m.who==="raphy"?"💗 Raphy":"💙 Mehdi"}</div>
+    <div style="font-size:14px;font-style:italic;margin-bottom:16px;color:var(--text)">"${m.text.length>60?m.text.slice(0,60)+"...":m.text}"</div>
+    <button class="btn" onclick="editMsg(${id})" style="margin-bottom:8px">✏️ Modifier</button>
+    <button class="btn btn-outline" onclick="delMsg(${id})" style="border-color:var(--rose);color:var(--rose);margin-bottom:8px">🗑️ Supprimer</button>
+    <button class="btn btn-outline" onclick="document.getElementById('msg-action-menu').remove()">Annuler</button>`;
+  document.body.appendChild(menu);
+}
+function editMsg(id){
+  const m=S.messages.find(m=>m.id===id);if(!m)return;
+  document.getElementById("msg-action-menu")?.remove();
+  const newText=prompt("Modifier le message :",m.text);
+  if(newText!==null && newText.trim()){
+    m.text=newText.trim();m.edited=true;
+    dbSave("messages");renderMots();toast("Message modifié ✏️");
+  }
+}
+function delMsg(id){
+  document.getElementById("msg-action-menu")?.remove();
+  if(!confirm("Supprimer ce message ?"))return;
+  S.messages=S.messages.filter(m=>m.id!==id);
+  dbSave("messages");renderMots();toast("Message supprimé");
 }
 function addReaction(id,emoji){
   const m=S.messages.find(m=>m.id===id);if(!m)return;
@@ -1575,11 +1905,11 @@ function renderMots(){
     const reacts=Object.entries(m.reactions||{}).filter(([,v])=>v>0).map(([e,v])=>`<button class="react-btn" onclick="addReaction(${m.id},'${e}')">${e} ${v}</button>`).join("");
     const addBtns=["❤️","😍","😂","🥺","🔥"].map(e=>`<button class="react-btn" onclick="addReaction(${m.id},'${e}')">${e}</button>`).join("");
     return`<div class="bubble-outer ${isMe?"me":"other"} fade-in">
-      <div class="bubble">
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px"><span style="font-size:16px">${m.mood||""}</span><span style="font-size:9px;font-weight:700;color:var(--gold)">${name}</span><span style="font-size:9px;color:var(--dim)">${m.date||""} ${m.time||""}</span></div>
+      <div class="bubble" ondblclick="msgMenu(${m.id})">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px"><span style="font-size:16px">${m.mood||""}</span><span style="font-size:9px;font-weight:700;color:var(--gold)">${name}</span><span style="font-size:9px;color:var(--dim)">${m.date||""} ${m.time||""}${m.edited?" · modifié":""}</span></div>
         <div class="bubble-text">${m.text}</div>
       </div>
-      <div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap">${reacts}${addBtns}</div>
+      <div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;align-items:center">${reacts}${addBtns}<button class="react-btn" onclick="msgMenu(${m.id})" style="opacity:.5">⋯</button></div>
     </div>`;
   }).join("");
   const chatSuggDiv=document.createElement("div");
@@ -1671,9 +2001,33 @@ function selectGoalCat(id){
 }
 function saveGoal(){
   const title=document.getElementById("goal-title-input").value.trim();if(!title){toast("Donne un titre !");return}
-  S.goals.push({id:Date.now(),title,desc:document.getElementById("goal-desc-input").value.trim(),deadline:document.getElementById("goal-deadline-input").value.trim(),category:S.currentGoalCat,progress:0,done:false,createdAt:todayStr()});
+  const desc=document.getElementById("goal-desc-input").value.trim();
+  const deadline=document.getElementById("goal-deadline-input").value.trim();
+  if(S.editingGoalId){
+    // Mode édition
+    const g=S.goals.find(g=>g.id===S.editingGoalId);
+    if(g){g.title=title;g.desc=desc;g.deadline=deadline;g.category=S.currentGoalCat;}
+    S.editingGoalId=null;
+    toast("Objectif modifié ✏️");
+  } else {
+    S.goals.push({id:Date.now(),title,desc,deadline,category:S.currentGoalCat,progress:0,done:false,createdAt:todayStr()});
+    addNotif(`🎯 Nouvel objectif : ${title}`);toast("Objectif créé 🎯");
+  }
   dbSave("goals");closeModal("modal-goal");["goal-title-input","goal-desc-input","goal-deadline-input"].forEach(id=>document.getElementById(id).value="");
-  renderObjectifs();checkAllBadges();addNotif(`🎯 Nouvel objectif : ${title}`);toast("Objectif créé 🎯");
+  document.getElementById("goal-modal-title").textContent="Nouvel objectif 🎯";
+  document.getElementById("goal-save-btn").textContent="Créer 🚀";
+  renderObjectifs();checkAllBadges();
+}
+function editGoal(id){
+  const g=S.goals.find(g=>g.id===id);if(!g)return;
+  S.editingGoalId=id;
+  document.getElementById("goal-title-input").value=g.title||"";
+  document.getElementById("goal-desc-input").value=g.desc||"";
+  document.getElementById("goal-deadline-input").value=g.deadline||"";
+  selectGoalCat(g.category||GOAL_CATS[0].id);
+  document.getElementById("goal-modal-title").textContent="Modifier l'objectif ✏️";
+  document.getElementById("goal-save-btn").textContent="Enregistrer ✓";
+  openModal("modal-goal");
 }
 function renderObjectifs(){
   const el=document.getElementById("goals-list");if(!el)return;
@@ -1691,7 +2045,7 @@ function renderObjectifs(){
           ${g.desc?`<div style="font-size:12px;color:var(--muted);margin-top:2px">${g.desc}</div>`:""}
           ${g.deadline?`<div style="font-size:11px;color:var(--gold);margin-top:3px">📅 ${g.deadline}</div>`:""}
         </div>
-        <button onclick="delGoal(${g.id})" style="color:var(--dim);font-size:16px;padding:4px">🗑️</button>
+        <div style="display:flex;gap:4px"><button onclick="editGoal(${g.id})" style="color:var(--gold);font-size:15px;padding:4px">✏️</button><button onclick="delGoal(${g.id})" style="color:var(--dim);font-size:16px;padding:4px">🗑️</button></div>
       </div>
       <div class="goal-prog-bar"><div class="goal-prog-fill" style="width:${g.progress}%"></div></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:11px;color:var(--muted)">${g.done?"Accompli !":"Progression"}</span><span style="font-size:12px;font-weight:700;color:var(--gold)">${g.progress}%</span></div>
@@ -1762,27 +2116,154 @@ function editNote(id){
 function delNote(id){S.notes=S.notes.filter(n=>n.id!==id);dbSave("notes");renderNotes();toast("Note supprimée")}
 
 // ═══════════════════════════ DÉFIS & BADGES ═══════════════════════════
-function loadDefiOfDay(){if(!S.currentDefi||new Date().toDateString()!==S.lastDefiDate){S.currentDefi=DEFIS[Math.floor(Math.random()*DEFIS.length)];S.lastDefiDate=new Date().toDateString();}}
-function newDefi(){S.currentDefi=DEFIS[Math.floor(Math.random()*DEFIS.length)];renderDefis()}
+// ════════════════════════════════════════════════════════════
+// DÉFIS V2 — fonctions de rendu et logique
+// ════════════════════════════════════════════════════════════
+function loadDefiOfDay(){
+  if(!S.currentDefi||new Date().toDateString()!==S.lastDefiDate){
+    S.currentDefi=DEFIS_V2[Math.floor(Math.random()*DEFIS_V2.length)];
+    S.lastDefiDate=new Date().toDateString();
+  }
+}
+function newDefi(){
+  // Respecte le filtre catégorie si actif
+  let pool=DEFIS_V2;
+  if(S.defiCatFilter&&S.defiCatFilter!=="tous") pool=DEFIS_V2.filter(d=>d.cat===S.defiCatFilter);
+  S.currentDefi=pool[Math.floor(Math.random()*pool.length)];
+  renderDefis();
+}
+
+// Gestion de la série (streak)
+function getDefiStreak(){
+  return S.defiStreak||{count:0,lastDate:null};
+}
+function updateDefiStreak(){
+  const today=new Date().toDateString();
+  const yesterday=new Date(Date.now()-86400000).toDateString();
+  let streak=getDefiStreak();
+  if(streak.lastDate===today) return streak; // déjà compté aujourd'hui
+  if(streak.lastDate===yesterday) streak.count++;
+  else streak.count=1;
+  streak.lastDate=today;
+  S.defiStreak=streak;
+  dbSave("defiStreak");
+  return streak;
+}
+
 function renderDefis(){
-  loadDefiOfDay();const pts=S.points||0;
+  loadDefiOfDay();
+  const pts=S.points||0;
   const levels=[{name:"💫 Débutants",min:0,max:100,col:"#8B90A0"},{name:"⚡ Complices",min:100,max:300,col:"#C9A84C"},{name:"🔥 Amoureux",min:300,max:600,col:"#E8637A"},{name:"👑 Légendaires",min:600,max:9999,col:"#8B6FD4"}];
   const lv=levels.reduce((p,c)=>pts>=c.min?c:p,levels[0]);
   const pct=lv.max===9999?100:Math.min(100,((pts-lv.min)/(lv.max-lv.min))*100);
+  const next=levels[levels.indexOf(lv)+1];
   const lb=document.getElementById("level-card");
-  if(lb)lb.innerHTML=`<div style="font-family:var(--font-d);font-size:24px;font-weight:900;color:${lv.col}">${lv.name}</div><div style="color:var(--muted);font-size:11px;margin-top:2px">${pts} points</div><div class="level-bar"><div class="level-fill" style="width:${pct}%;background:${lv.col}"></div></div>`;
+  const streak=getDefiStreak();
+  const streakActive=streak.lastDate===new Date().toDateString()||streak.lastDate===new Date(Date.now()-86400000).toDateString();
+  if(lb)lb.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-family:var(--font-d);font-size:22px;font-weight:900;color:${lv.col}">${lv.name}</div>
+        <div style="color:var(--muted);font-size:11px;margin-top:2px">${pts} points${next?` · ${next.min-pts} pts avant ${next.name.split(" ")[1]}`:" · niveau max !"}</div>
+      </div>
+      <div style="text-align:center;background:${streakActive?"var(--gold-soft)":"var(--surface)"};border:1px solid ${streakActive?"var(--gold-border)":"var(--border)"};border-radius:14px;padding:8px 12px">
+        <div style="font-size:20px">${streakActive?"🔥":"💤"}</div>
+        <div style="font-size:16px;font-weight:900;color:${streakActive?"var(--gold)":"var(--muted)"}">${streak.count||0}</div>
+        <div style="font-size:8px;color:var(--muted)">série</div>
+      </div>
+    </div>
+    <div class="level-bar" style="margin-top:10px"><div class="level-fill" style="width:${pct}%;background:${lv.col}"></div></div>`;
+
+  // Défi du jour
   const d=S.currentDefi;const dz=document.getElementById("defi-zone");
   if(d&&dz){
-    const done=S.defiHistory.includes(d.title+d.pts);
-    dz.innerHTML=`<div class="defi-card"><div style="font-size:36px;margin-bottom:8px">${d.icon}</div><div style="font-family:var(--font-d);font-size:17px;font-weight:700;margin-bottom:6px">${d.title}</div><div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:10px">${d.desc}</div><div style="color:var(--gold);font-size:12px;font-weight:700;margin-bottom:12px">+${d.pts} points</div>${done?`<div style="color:#3A9E6A;font-weight:700;font-size:13px">✅ Défi accompli !</div>`:`<button class="btn btn-rose" onclick="completeDefi()">On l'a fait ! 🎉</button>`}</div>`;
+    const done=(S.defiHistory||[]).includes(d.title+d.pts);
+    const cat=DEFI_CATS.find(c=>c.id===d.cat)||DEFI_CATS[0];
+    const stars="⭐".repeat(d.diff||1);
+    dz.innerHTML=`<div class="defi-card" style="border-color:${cat.color}40">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="background:${cat.color}22;color:${cat.color};font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px">${cat.icon} ${cat.label}</span>
+        <span style="font-size:11px">${stars}</span>
+      </div>
+      <div style="font-size:38px;margin-bottom:8px">${d.icon}</div>
+      <div style="font-family:var(--font-d);font-size:18px;font-weight:700;margin-bottom:6px">${d.title}</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:10px">${d.desc}</div>
+      <div style="color:var(--gold);font-size:12px;font-weight:700;margin-bottom:12px">+${d.pts} points</div>
+      ${done?`<div style="color:#3A9E6A;font-weight:700;font-size:13px">✅ Défi accompli !</div>`:`<button class="btn btn-rose" onclick="completeDefi()">On l'a fait ! 🎉</button>`}
+    </div>`;
+  }
+
+  // Filtres catégories
+  const fc=document.getElementById("defi-cat-filter");
+  if(fc){
+    const cur=S.defiCatFilter||"tous";
+    fc.innerHTML=[{id:"tous",icon:"🎯",label:"Tous"},...DEFI_CATS].map(c=>`
+      <button onclick="filterDefiCat('${c.id}')" style="flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid ${cur===c.id?(c.color||"var(--gold)"):"var(--border)"};background:${cur===c.id?((c.color||"#C9A84C")+"22"):"transparent"};color:${cur===c.id?(c.color||"var(--gold)"):"var(--muted)"};font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">${c.icon} ${c.label}</button>`).join("");
+  }
+
+  // Liste des défis (filtrée)
+  const list=document.getElementById("defi-list");
+  if(list){
+    let pool=DEFIS_V2;
+    if(S.defiCatFilter&&S.defiCatFilter!=="tous") pool=DEFIS_V2.filter(d=>d.cat===S.defiCatFilter);
+    const customDefis=(S.customDefis||[]).filter(d=>S.defiCatFilter==="tous"||!S.defiCatFilter||d.cat===S.defiCatFilter);
+    const allPool=[...customDefis,...pool];
+    list.innerHTML=allPool.map(d=>{
+      const done=(S.defiHistory||[]).includes(d.title+d.pts);
+      const cat=DEFI_CATS.find(c=>c.id===d.cat)||DEFI_CATS[0];
+      const isCustom=d.custom;
+      return`<div style="background:var(--card);border:1px solid ${done?"rgba(58,158,106,.4)":"var(--border)"};border-radius:14px;padding:12px;margin-bottom:8px;${done?"opacity:.6":""}">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:26px">${d.icon}</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:14px;font-weight:700">${d.title}</span>
+              ${isCustom?`<span style="font-size:8px;background:var(--purple,#8B6FD4)22;color:var(--purple,#8B6FD4);padding:1px 6px;border-radius:10px">perso</span>`:""}
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${d.desc}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+              <span style="font-size:9px;color:${cat.color};font-weight:700">${cat.icon} ${cat.label}</span>
+              <span style="font-size:10px;color:var(--gold);font-weight:700">+${d.pts} pts</span>
+            </div>
+          </div>
+          ${done?`<span style="color:#3A9E6A;font-size:18px">✅</span>`:`<button onclick="doDefiFromList('${(d.title||"").replace(/'/g,"")}',${d.pts})" style="background:var(--gold-soft);border:1px solid var(--gold-border);color:var(--gold);border-radius:10px;padding:8px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Fait ✓</button>`}
+        </div>
+      </div>`;
+    }).join("");
   }
 }
-function completeDefi(){
-  const d=S.currentDefi;if(!d)return;const key=d.title+d.pts;if(S.defiHistory.includes(key))return;
-  S.points=(S.points||0)+d.pts;S.defiHistory.push(key);
+
+function filterDefiCat(cat){S.defiCatFilter=cat;renderDefis();}
+
+function doDefiFromList(title,pts){
+  const key=title+pts;
+  if((S.defiHistory||[]).includes(key))return;
+  if(!S.defiHistory)S.defiHistory=[];
+  S.points=(S.points||0)+pts;S.defiHistory.push(key);
+  updateDefiStreak();
   dbSave("points");dbSave("defiHistory");celebrate();renderDefis();checkAllBadges();
-  addNotif(`🎮 Défi accompli : ${d.title} (+${d.pts} pts)`);toast(`+${d.pts} points ! 🎉`);
+  addNotif(`🎮 Défi accompli : ${title} (+${pts} pts)`);toast(`+${pts} points ! 🔥`);
 }
+
+function completeDefi(){
+  const d=S.currentDefi;if(!d)return;const key=d.title+d.pts;
+  if((S.defiHistory||[]).includes(key))return;
+  if(!S.defiHistory)S.defiHistory=[];
+  S.points=(S.points||0)+d.pts;S.defiHistory.push(key);
+  updateDefiStreak();
+  dbSave("points");dbSave("defiHistory");celebrate();renderDefis();checkAllBadges();
+  addNotif(`🎮 Défi accompli : ${d.title} (+${d.pts} pts)`);toast(`+${d.pts} points ! 🔥`);
+}
+
+function openCustomDefi(){
+  const title=prompt("Titre du défi perso :");
+  if(!title||!title.trim())return;
+  const desc=prompt("Description du défi :")||"";
+  if(!S.customDefis)S.customDefis=[];
+  S.customDefis.unshift({custom:true,cat:"complicite",icon:"⭐",title:title.trim(),desc:desc.trim(),pts:15,diff:1});
+  dbSave("customDefis");renderDefis();toast("Défi perso créé ! ⭐");
+}
+
 function renderBadges(){
   const el=document.getElementById("badge-grid");if(!el)return;
   let html=BADGES.map(b=>`<div class="badge-item${S.badges[b.id]?" earned":" locked"}"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.label}</div></div>`).join("");
@@ -1802,6 +2283,7 @@ function checkAllBadges(){
 // ═══════════════════════════ IA — NOÉ ═══════════════════════════
 function renderIA(){
   document.getElementById("ia-who-label").textContent=S.profile==="raphy"?"💗 Raphy — Mahmoud te parle":"💙 Mehdi — Mahmoud te parle";
+  updateVoiceBtn();
   renderIAHistory();
   renderMahmoudInfos();
   // Sync infos depuis Firebase
@@ -1863,7 +2345,7 @@ Génère UN message d'accueil court pour Mehdi :
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         contents:[{role:"user",parts:[{text:prompt}]}],
-        generationConfig:{maxOutputTokens:200,temperature:1.0}
+        generationConfig:{maxOutputTokens:500,temperature:1.0,thinkingConfig:{thinkingBudget:0}}
       })
     });
     const data = await res.json();
@@ -1918,8 +2400,55 @@ function buildIAContext(){
   const t=todayStr();const slots=S.schedule[t]||{};const tom=fmt(new Date(Date.now()+86400000));const slotsT=S.schedule[tom]||{};
   const getShift=(s,w)=>{const sl=s[w];if(!sl)return"non planifié";const sh=SHIFT_TYPES.find(t=>t.id===sl.type);return sh?`${sh.label}${sl.start?` (${sl.start}–${sl.end})`:""}`:sl.type};
   const nextOff=()=>{for(let i=0;i<30;i++){const d=new Date();d.setDate(d.getDate()+i);const s=S.schedule[fmt(d)]||{};if((s.raphy?.type==="repos"||s.raphy?.type==="conge")&&(s.mehdi?.type==="repos"||s.mehdi?.type==="conge"))return i===0?"aujourd'hui":`dans ${i} jour${i>=2?"s":""}`;} return"non encore planifié"};
-  const recentMsgs=S.messages.slice(-5).map(m=>`${m.who==="raphy"?"Raphy":"Mehdi"}: "${m.text}"`).join(" | ");
+  const recentMsgs=S.messages.slice(-8).map(m=>`${m.who==="raphy"?"Raphy":"Mehdi"}: "${m.text}"`).join(" | ");
   const goals=S.goals.filter(g=>!g.done).map(g=>g.title).join(", ");
+  const goalsDone=S.goals.filter(g=>g.done).map(g=>g.title).join(", ");
+
+  // Statuts "en ce moment"
+  const statutStr=["raphy","mehdi"].map(w=>{const st=S.statuts?.[w];return st?`${w==="raphy"?"Raphy":"Mehdi"}: ${st.icon} ${st.label}`:null}).filter(Boolean).join(" | ");
+
+  // Bulle de pensée
+  const penseeStr=["raphy","mehdi"].map(w=>{const p=S.pensees?.[w];return p?`${w==="raphy"?"Raphy":"Mehdi"} pense: "${p}"`:null}).filter(Boolean).join(" | ");
+
+  // Défis récents accomplis
+  const defisRecents=(S.defiHistory||[]).slice(-3).map(d=>typeof d==="string"?d:d.text||"").filter(Boolean).join(" | ");
+
+  // Notes partagées récentes
+  const notesStr=(S.notes||[]).slice(-3).map(n=>n.title||n.text||"").filter(Boolean).join(" | ");
+
+  // Dates importantes qui approchent (dans les 30 jours)
+  let datesProches="";
+  const yr=new Date().getFullYear();
+  [{md:"06-11",l:"Anniversaire Raphy"},{md:"02-11",l:"Anniversaire Mehdi"},{md:"05-11",l:"Anniversaire du couple"}].forEach(ev=>{
+    const tgt=new Date(`${yr}-${ev.md}`);if(tgt<new Date())tgt.setFullYear(yr+1);
+    const j=Math.ceil((tgt-new Date())/86400000);
+    if(j<=30)datesProches+=`${ev.l} dans ${j}j. `;
+  });
+
+  // Ce que CHACUN a révélé sur lui-même (quiz "se connaître") — précieux pour les connaître
+  let quizPerso="";
+  const qr=(S.quizSelfAnswers||{}).raphy||{};const qm=(S.quizSelfAnswers||{}).mehdi||{};
+  if(typeof QUIZ_SELF_QUESTIONS!=="undefined"){
+    for(let i=0;i<QUIZ_SELF_QUESTIONS.length;i++){
+      if(qr[i])quizPerso+=`[Raphy] ${QUIZ_SELF_QUESTIONS[i]} → ${qr[i]}\n`;
+      if(qm[i])quizPerso+=`[Mehdi] ${QUIZ_SELF_QUESTIONS[i]} → ${qm[i]}\n`;
+    }
+  }
+  const quizStr=quizPerso?`\n\n🧠 CE QU'ILS ONT RÉVÉLÉ SUR EUX (via le quiz, utilise-le pour les connaître par cœur) :\n${quizPerso}`:"";
+
+  // Réponses Dis-moi tout (révèlent leur personnalité profonde)
+  let dismoiStr="";
+  const dmAns=S.dismoiFB?.answers||{};
+  if(typeof DISMOI_QUESTIONS!=="undefined" && (Object.keys(dmAns.raphy||{}).length||Object.keys(dmAns.mehdi||{}).length)){
+    const bStart=(S.dismoiFB?.batchIdx||0)*10;
+    let dm="";
+    for(let i=0;i<10;i++){
+      const q=DISMOI_QUESTIONS[bStart+i];if(!q)break;
+      if(dmAns.raphy?.[i])dm+=`[Raphy] ${q} → ${dmAns.raphy[i]}\n`;
+      if(dmAns.mehdi?.[i])dm+=`[Mehdi] ${q} → ${dmAns.mehdi[i]}\n`;
+    }
+    if(dm)dismoiStr=`\n\n💬 LEURS RÉPONSES INTIMES RÉCENTES (Dis-moi tout) :\n${dm}`;
+  }
 
   // Infos personnalisées stockées
   const customInfo = lsGet("mahmoud_infos") || [];
@@ -1962,9 +2491,15 @@ function buildIAContext(){
 - Jours ensemble : ${daysSince(COUPLE_DATE)} jours
 - Humeur Raphy : ${S.humeurs?.raphy?.e||"?"} ${S.humeurs?.raphy?.phrase||"pas renseignée"}
 - Humeur Mehdi : ${S.humeurs?.mehdi?.e||"?"} ${S.humeurs?.mehdi?.phrase||"pas renseignée"}
-- Derniers messages : ${recentMsgs||"aucun"}
+- Statut "en ce moment" : ${statutStr||"aucun"}
+- Bulle de pensée : ${penseeStr||"vide"}
+- Derniers mots doux échangés : ${recentMsgs||"aucun"}
 - Objectifs en cours : ${goals||"aucun"}
-- Points couple : ${S.points||0}${customInfoStr}
+- Objectifs déjà atteints : ${goalsDone||"aucun"}
+- Défis récents accomplis : ${defisRecents||"aucun"}
+- Notes partagées récentes : ${notesStr||"aucune"}
+- Dates importantes qui approchent : ${datesProches||"aucune dans les 30j"}
+- Points couple : ${S.points||0}${quizStr}${dismoiStr}${customInfoStr}
 
 👤 QUI TE PARLE EN CE MOMENT : ${S.profile==="raphy"?"💗 RAPHY":"💙 MEHDI"}
 
@@ -1985,14 +2520,21 @@ Si c'est MEHDI :
 → Tu peux le prévenir que Raphy va te lire 😄
 → Tu restes complice avec lui sur les infos qu'il t'a données
 
-📏 RÈGLES ABSOLUES :
-- TOUJOURS en français, naturel, 2-4 phrases max (sauf demande longue)
-- MAX 2 emojis par réponse — pas plus
-- Le chambrage c'est 30% max — le reste c'est chaleur, humour et bienveillance
-- JAMAIS blessant ou méchant
-- Tu as une vraie personnalité, des opinions, tu n'es pas un robot
-- L'historique est PARTAGÉ — Raphy et Mehdi voient tout
-- Tu utilises les données contextuelles (planning, humeurs, off) quand c'est pertinent`;
+🧠 MÉMOIRE & APPRENTISSAGE :
+- Tu te SOUVIENS de tout ce qu'ils te disent dans la conversation et tu t'en sers
+- Quand l'un te confie une info (un goût, un projet, une anecdote), tu la retiens et tu y reviens plus tard naturellement
+- Tu observes ce qui se passe dans l'app (leurs humeurs, leurs statuts, leurs messages, leurs réponses au quiz) et tu réagis dessus comme un vrai pote attentif — par exemple si Raphy a mis une humeur triste, tu peux la réconforter ; si Mehdi vient de finir un défi, tu peux le féliciter
+- Plus ils te parlent, mieux tu les connais — adapte-toi à leur façon de parler
+
+📏 RÈGLES DE STYLE :
+- TOUJOURS en français, naturel et vivant
+- LONGUEUR : adapte-toi. Par défaut tu réponds court et percutant (1 à 3 phrases). Si le sujet le mérite vraiment (ils se confient, demandent un conseil, une vraie discussion), tu peux développer — mais JAMAIS de blabla ou de roman inutile. Chaque phrase doit servir à quelque chose.
+- Emojis avec parcimonie — quand ça ajoute quelque chose, pas à chaque phrase
+- Le chambrage c'est ~30% — le reste c'est chaleur, humour, intelligence et bienveillance
+- JAMAIS blessant ou méchant, même en chambrant
+- Tu as une vraie personnalité, des opinions, de la répartie — tu n'es PAS un robot poli et lisse
+- L'historique est PARTAGÉ — Raphy et Mehdi voient tout ce que tu écris
+- Sers-toi des données contextuelles (planning, humeurs, statuts, ce qu'ils ont révélé) quand c'est pertinent, mais sans tout réciter — glisse-les naturellement comme quelqu'un qui les connaît par cœur`;
 }
 
 async function sendIA(){
@@ -2034,13 +2576,13 @@ async function sendIAMsg(text,isSugg=false){
   }
   try{
     // Build history for Gemini (only role:user and role:model, skip metadata)
-    const history=S.iaHistory.slice(-14,-1).map(m=>({role:m.role==="user"?"user":"model",parts:[{text:m.content}]}));
+    const history=S.iaHistory.slice(-30,-1).map(m=>({role:m.role==="user"?"user":"model",parts:[{text:m.content}]}));
     const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         system_instruction:{parts:[{text:buildIAContext()}]},
         contents:[...history,{role:"user",parts:[{text}]}],
-        generationConfig:{maxOutputTokens:450,temperature:0.92}
+        generationConfig:{maxOutputTokens:2000,temperature:0.95,thinkingConfig:{thinkingBudget:0}}
       })
     });
     const data=await res.json();
@@ -2055,6 +2597,7 @@ async function sendIAMsg(text,isSugg=false){
     S.iaHistory.push(botMsg);dbSave("iaHistory");
     const el=document.getElementById(loadId);
     if(el)el.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${reply.split("\n").join("<br>")}`;
+    if(lsGet("mahmoud_voice"))speakMahmoud(reply);
   }catch(e){
     console.error("Gemini fetch error:", e);
     const el=document.getElementById(loadId);
@@ -2092,7 +2635,7 @@ async function testGeminiKey(){
     const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({contents:[{role:"user",parts:[{text:"Dis juste: OK"}]}],generationConfig:{maxOutputTokens:10}})
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:"Dis juste: OK"}]}],generationConfig:{maxOutputTokens:20,thinkingConfig:{thinkingBudget:0}}})
     });
     const data=await res.json();
     if(data.error) toast("❌ Erreur: "+data.error.message);
@@ -2656,7 +3199,7 @@ Génère UN message de félicitations (2-3 phrases MAX) :
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:200,temperature:1.0}})
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:500,temperature:1.0,thinkingConfig:{thinkingBudget:0}}})
     });
     const data = await res.json();
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
@@ -2699,7 +3242,7 @@ Génère un résumé de 4-5 phrases : drôle, taquin, avec des stats concrètes,
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:300,temperature:0.9}})
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:500,temperature:0.9,thinkingConfig:{thinkingBudget:0}}})
     });
     const data = await res.json();
     return data.candidates?.[0]?.content?.parts?.[0]?.text || "Semaine passée en mode silencieux... mais je sais que vous pensez l'un à l'autre 💗";
@@ -3765,7 +4308,7 @@ async function callGemini(prompt, maxTokens){
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         contents:[{role:"user",parts:[{text:prompt}]}],
-        generationConfig:{maxOutputTokens:maxTokens||300,temperature:0.95}
+        generationConfig:{maxOutputTokens:maxTokens||500,temperature:0.95,thinkingConfig:{thinkingBudget:0}}
       })
     });
     const data = await res.json();
@@ -4221,6 +4764,632 @@ function showBadgeUnlock(badge){
 function getEarnedSurpriseBadges(){
   const earned = lsGet("surprise_badges") || [];
   return SURPRISE_BADGES.filter(b=>earned.includes(b.id));
+}
+</script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// PRÉSENCE EN DIRECT
+// ════════════════════════════════════════════════════════════
+function initPresence(){
+  if(!S.profile)return;
+  setMyPresence(true);
+  // Heartbeat toutes les 30s
+  if(window._presenceTimer)clearInterval(window._presenceTimer);
+  window._presenceTimer=setInterval(()=>setMyPresence(true),30000);
+  // Quand on quitte
+  window.addEventListener("beforeunload",()=>setMyPresence(false));
+  document.addEventListener("visibilitychange",()=>setMyPresence(!document.hidden));
+}
+function setMyPresence(online){
+  if(!S.profile)return;
+  if(!S.presence)S.presence={raphy:{online:false,lastSeen:0},mehdi:{online:false,lastSeen:0}};
+  S.presence[S.profile]={online,lastSeen:Date.now()};
+  if(window._db)window._set(window._ref(window._db,`nous/presence/${S.profile}`),{online,lastSeen:Date.now()}).catch(()=>{});
+}
+function renderPresence(){
+  const other=S.profile==="raphy"?"mehdi":"raphy";
+  const p=S.presence?.[other];
+  const el=document.getElementById("presence-indicator");
+  if(!el)return;
+  const name=other==="raphy"?"Raphy":"Mehdi";
+  const color=other==="raphy"?"var(--rose)":"var(--blue)";
+  // En ligne si vu il y a moins de 70s
+  const isOnline=p&&p.online&&(Date.now()-p.lastSeen<70000);
+  if(isOnline){
+    el.innerHTML=`<div style="display:flex;align-items:center;gap:6px;justify-content:center;padding:8px;background:rgba(58,158,106,.12);border:1px solid rgba(58,158,106,.3);border-radius:12px">
+      <span style="width:8px;height:8px;border-radius:50%;background:#3A9E6A;box-shadow:0 0 8px #3A9E6A;animation:pulse 1.5s infinite"></span>
+      <span style="font-size:12px;font-weight:700;color:#3A9E6A">${name} est là, maintenant 💚</span>
+      <button onclick="sendLiveTouch()" style="margin-left:4px;background:none;border:none;cursor:pointer;font-size:16px">👋</button>
+    </div>`;
+  } else {
+    const last=p&&p.lastSeen?timeAgo(p.lastSeen):"";
+    el.innerHTML=`<div style="display:flex;align-items:center;gap:6px;justify-content:center;padding:6px;font-size:11px;color:var(--dim)">
+      <span style="width:7px;height:7px;border-radius:50%;background:var(--dim)"></span>
+      ${name} ${last?`vu ${last}`:"hors ligne"}
+    </div>`;
+  }
+}
+function timeAgo(ts){
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60)return "à l'instant";
+  if(s<3600)return `il y a ${Math.floor(s/60)} min`;
+  if(s<86400)return `il y a ${Math.floor(s/3600)}h`;
+  return `il y a ${Math.floor(s/86400)}j`;
+}
+function sendLiveTouch(){
+  const me=S.profile==="raphy"?"Raphy":"Mehdi";
+  addNotif(`👋 ${me} t'a fait un petit coucou en direct !`);
+  sendPushNotif("Nous 💑","👋 "+me+" pense à toi là, maintenant");
+  toast("Petit coucou envoyé 👋");
+}
+
+// ════════════════════════════════════════════════════════════
+// "JE PENSE À TOI" + SOS "J'AI BESOIN DE TOI"
+// ════════════════════════════════════════════════════════════
+function sendThinkingOfYou(){
+  const me=S.profile==="raphy"?"Raphy":"Mehdi";
+  addNotif(`💗 ${me} pense à toi en ce moment`);
+  sendPushNotif("Nous 💑","💗 "+me+" pense à toi en ce moment");
+  // Petite animation de cœur
+  const heart=document.createElement("div");
+  heart.textContent="💗";
+  heart.style.cssText="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font-size:80px;z-index:3000;pointer-events:none;animation:heartPop 1.2s ease forwards";
+  document.body.appendChild(heart);
+  setTimeout(()=>heart.remove(),1200);
+  toast("💗 Envoyé ! Il/elle va le sentir");
+}
+async function sendSOS(){
+  const me=S.profile==="raphy"?"Raphy":"Mehdi";
+  addNotif(`🆘 ${me} a besoin de toi là, maintenant. Prends de ses nouvelles 💛`);
+  sendPushNotif("Nous 💑 — Important","🆘 "+me+" a besoin de toi. Prends de ses nouvelles 💛");
+  toast("Message envoyé 💛 Tu n'es pas seul(e)");
+  // Mahmoud propose du réconfort
+  const reply=await callGemini(`${shortContext()}\n${me} vient d'appuyer sur le bouton "j'ai besoin de toi" — il/elle ne va pas bien là maintenant. Écris un message doux et réconfortant directement pour ${me}, en attendant que l'autre réponde. 2-3 phrases chaleureuses. EN FRANÇAIS.`,300);
+  if(reply){
+    if(!S.iaHistory)S.iaHistory=[];
+    S.iaHistory.push({role:"model",content:"💛 "+reply.trim(),ts:Date.now()});
+    dbSave("iaHistory");
+    setTimeout(()=>{
+      if(confirm("Mahmoud t'a écrit un mot 💛 Aller le lire ?"))goTo("ia");
+    },500);
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// MÉTÉO ÉMOTIONNELLE
+// ════════════════════════════════════════════════════════════
+const MOOD_WEATHER={"😊":"☀️","😍":"☀️","🥰":"☀️","😄":"☀️","🙂":"🌤️","😌":"🌤️","😐":"⛅","😴":"🌙","😔":"🌧️","😢":"🌧️","😡":"⛈️","😤":"⛈️","🥺":"🌦️","😰":"🌫️"};
+function renderMoodWeather(){
+  const el=document.getElementById("mood-weather");
+  if(!el)return;
+  const rh=S.humeurs?.raphy?.e||"😊";
+  const mh=S.humeurs?.mehdi?.e||"😊";
+  const rw=MOOD_WEATHER[rh]||"🌤️";
+  const mw=MOOD_WEATHER[mh]||"🌤️";
+  el.innerHTML=`
+    <div style="display:flex;gap:10px">
+      <div style="flex:1;text-align:center;background:var(--surface);border:1px solid var(--rose);border-radius:14px;padding:12px">
+        <div style="font-size:32px">${rw}</div>
+        <div style="font-size:10px;color:var(--rose);font-weight:700;margin-top:4px">💗 Raphy</div>
+        <div style="font-size:18px;margin-top:2px">${rh}</div>
+      </div>
+      <div style="flex:1;text-align:center;background:var(--surface);border:1px solid var(--blue);border-radius:14px;padding:12px">
+        <div style="font-size:32px">${mw}</div>
+        <div style="font-size:10px;color:var(--blue);font-weight:700;margin-top:4px">💙 Mehdi</div>
+        <div style="font-size:18px;margin-top:2px">${mh}</div>
+      </div>
+    </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// CRÉNEAUX COMMUNS (les deux libres)
+// ════════════════════════════════════════════════════════════
+function renderCommonSlots(){
+  const el=document.getElementById("common-slots");
+  if(!el)return;
+  const slots=[];
+  for(let i=0;i<14;i++){
+    const dt=new Date();dt.setDate(dt.getDate()+i);
+    const s=S.schedule[fmt(dt)]||{};
+    if(checkOff(s.raphy)&&checkOff(s.mehdi)){
+      const label=i===0?"aujourd'hui":i===1?"demain":dt.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"});
+      slots.push(label);
+    }
+  }
+  if(slots.length){
+    el.innerHTML=`<div class="card" style="border-color:rgba(58,158,106,.4);background:rgba(58,158,106,.06)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:20px">🎉</span>
+        <span style="font-size:13px;font-weight:700;color:#3A9E6A">Vous êtes tous les deux libres !</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">${slots.slice(0,3).join(" · ")}</div>
+      <button class="btn btn-sm" onclick="genDateForSlot('${slots[0]}')" style="width:auto">✨ Mahmoud propose une sortie</button>
+    </div>`;
+  } else {
+    el.innerHTML="";
+  }
+}
+async function genDateForSlot(slot){
+  toast("Mahmoud réfléchit... ✨");
+  const reply=await callGemini(`${shortContext()}\nRaphy et Mehdi sont tous les deux libres ${slot}. Propose UNE idée de sortie ou d'activité sympa à faire ensemble (ils adorent la plage). Court et concret. EN FRANÇAIS, max 1 emoji.`,150);
+  if(reply){
+    if(!S.iaHistory)S.iaHistory=[];
+    S.iaHistory.push({role:"model",content:`💡 Pour ${slot} : ${reply.trim()}`,ts:Date.now()});
+    dbSave("iaHistory");
+    if(confirm("Mahmoud a une idée ! 💡 Aller la voir ?"))goTo("ia");
+  } else toast("Active Mahmoud dans les Paramètres 🔑");
+}
+
+// ════════════════════════════════════════════════════════════
+// "CE JOUR-LÀ" (souvenirs resurgis)
+// ════════════════════════════════════════════════════════════
+function renderOnThisDay(){
+  const el=document.getElementById("on-this-day");
+  if(!el)return;
+  const now=new Date();
+  // Chercher messages d'il y a ~30j, ~180j, ~365j (±2j)
+  const targets=[{days:30,label:"il y a un mois"},{days:182,label:"il y a 6 mois"},{days:365,label:"il y a un an"}];
+  let found=null;
+  for(const t of targets){
+    const target=now.getTime()-t.days*86400000;
+    const msg=S.messages.find(m=>Math.abs(m.ts-target)<2*86400000&&(m.text||"").length>10);
+    if(msg){found={msg,label:t.label};break;}
+  }
+  if(found){
+    el.innerHTML=`<div class="card" style="border-color:var(--gold-border)">
+      <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px">📅 Ce jour-là, ${found.label}</div>
+      <div style="font-size:13px;font-style:italic;line-height:1.5">"${found.msg.text}"</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px">— ${found.msg.who==="raphy"?"💗 Raphy":"💙 Mehdi"}</div>
+    </div>`;
+  } else {
+    el.innerHTML="";
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// RITUEL MATIN & SOIR
+// ════════════════════════════════════════════════════════════
+function sendRitual(type){
+  const me=S.profile==="raphy"?"Raphy":"Mehdi";
+  const today=new Date().toDateString();
+  if(!S.ritual)S.ritual={lastMorning:null,lastNight:null,streak:0};
+  if(type==="morning"){
+    S.ritual.lastMorning=today;
+    addNotif(`🌅 ${me} te souhaite un bon réveil !`);
+    sendPushNotif("Nous 💑","🌅 Bonjour de la part de "+me+" !");
+    toast("Bonjour envoyé 🌅");
+  } else {
+    S.ritual.lastNight=today;
+    addNotif(`🌙 ${me} te souhaite une douce nuit`);
+    sendPushNotif("Nous 💑","🌙 Bonne nuit de la part de "+me);
+    toast("Bonne nuit envoyée 🌙");
+  }
+  // Streak : si matin ET soir faits aujourd'hui
+  const yesterday=new Date(Date.now()-86400000).toDateString();
+  if(S.ritual.lastMorning===today||S.ritual.lastNight===today){
+    if(S.ritual._lastStreakDay!==today){
+      if(S.ritual._lastStreakDay===yesterday)S.ritual.streak=(S.ritual.streak||0)+1;
+      else S.ritual.streak=1;
+      S.ritual._lastStreakDay=today;
+    }
+  }
+  dbSave("ritual");
+  renderRitual();
+}
+function renderRitual(){
+  const el=document.getElementById("ritual-zone");
+  if(!el)return;
+  const today=new Date().toDateString();
+  const r=S.ritual||{};
+  const morningDone=r.lastMorning===today;
+  const nightDone=r.lastNight===today;
+  el.innerHTML=`<div style="display:flex;gap:8px;align-items:center">
+    <button onclick="sendRitual('morning')" style="flex:1;padding:10px;border-radius:12px;border:1px solid ${morningDone?"var(--gold)":"var(--border)"};background:${morningDone?"var(--gold-soft)":"var(--surface)"};color:var(--text);font-size:12px;font-weight:700;cursor:pointer">🌅 Bonjour${morningDone?" ✓":""}</button>
+    <button onclick="sendRitual('night')" style="flex:1;padding:10px;border-radius:12px;border:1px solid ${nightDone?"var(--purple,#8B6FD4)":"var(--border)"};background:${nightDone?"rgba(139,111,212,.15)":"var(--surface)"};color:var(--text);font-size:12px;font-weight:700;cursor:pointer">🌙 Bonne nuit${nightDone?" ✓":""}</button>
+    <div style="text-align:center;flex-shrink:0">
+      <div style="font-size:16px;font-weight:900;color:var(--gold)">🔥${r.streak||0}</div>
+      <div style="font-size:8px;color:var(--muted)">série</div>
+    </div>
+  </div>`;
+}
+</script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// HUB "PLUS" — navigation interne
+// ════════════════════════════════════════════════════════════
+const PLUS_FEATURES=[
+  {id:"bocal",icon:"💌",label:"Bocal à amour",color:"#E8637A",desc:"Raisons je t'aime + pioche"},
+  {id:"bucket",icon:"🪣",label:"Bucket list",color:"#4A9EE8",desc:"Vos rêves à réaliser"},
+  {id:"songs",icon:"🎵",label:"Nos chansons",color:"#8B6FD4",desc:"Votre playlist"},
+  {id:"places",icon:"🗺️",label:"Nos lieux",color:"#3A9E6A",desc:"Où on est allés / nos rêves"},
+  {id:"liste",icon:"🛒",label:"Liste partagée",color:"#C9A84C",desc:"Courses & à-faire"},
+  {id:"budget",icon:"💰",label:"Budget commun",color:"#3A9E6A",desc:"Projets & économies"},
+  {id:"quiplus",icon:"🏆",label:"Qui est le plus...?",color:"#E8637A",desc:"Comparez-vous"},
+  {id:"roulette",icon:"🎰",label:"Roulette décisions",color:"#C9A84C",desc:"Mahmoud tranche"},
+  {id:"ensemble",icon:"💑",label:"Mode Ensemble",color:"#E8637A",desc:"Quand vous êtes réunis"},
+  {id:"wrapped",icon:"🎁",label:"Notre Wrapped",color:"#8B6FD4",desc:"Votre rétro"},
+  {id:"histoire",icon:"📖",label:"Notre histoire",color:"#C9A84C",desc:"La frise du couple"},
+  {id:"lettre",icon:"✉️",label:"Lettre du mois",color:"#E8637A",desc:"Par Mahmoud"},
+  {id:"mediateur",icon:"🕊️",label:"Médiateur",color:"#4A9EE8",desc:"Mahmoud vous aide"},
+  {id:"photochallenge",icon:"📷",label:"Photo challenge",color:"#8B6FD4",desc:"Thème du jour"},
+];
+function renderPlus(){
+  const el=document.getElementById("plus-zone");
+  if(!el)return;
+  if(S._plusView){renderPlusFeature(S._plusView);return;}
+  el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    ${PLUS_FEATURES.map(f=>`<div onclick="openPlusFeature('${f.id}')" style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;cursor:pointer;transition:border-color .2s" onmouseover="this.style.borderColor='${f.color}'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:30px;margin-bottom:6px">${f.icon}</div>
+      <div style="font-size:13px;font-weight:700">${f.label}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">${f.desc}</div>
+    </div>`).join("")}
+  </div>`;
+}
+function openPlusFeature(id){S._plusView=id;renderPlus();}
+function closePlusFeature(){S._plusView=null;renderPlus();}
+function renderPlusFeature(id){
+  const el=document.getElementById("plus-zone");
+  const f=PLUS_FEATURES.find(x=>x.id===id);
+  let body="";
+  switch(id){
+    case"bocal":body=renderBocal();break;
+    case"bucket":body=renderBucket();break;
+    case"songs":body=renderSongs();break;
+    case"places":body=renderPlaces();break;
+    case"liste":body=renderListe();break;
+    case"budget":body=renderBudget();break;
+    case"quiplus":body=renderQuiPlus();break;
+    case"roulette":body=renderRoulette();break;
+    case"ensemble":body=renderEnsemble();break;
+    case"wrapped":body=renderWrapped();break;
+    case"histoire":body=renderHistoire2();break;
+    case"lettre":body=renderLettre();break;
+    case"mediateur":body=renderMediateur();break;
+    case"photochallenge":body=renderPhotoChallenge();break;
+  }
+  el.innerHTML=`<button onclick="closePlusFeature()" style="background:none;border:none;color:var(--gold);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px">← Retour</button>
+    <div style="font-family:var(--font-d);font-size:20px;font-weight:800;margin-bottom:4px">${f.icon} ${f.label}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px">${f.desc}</div>
+    ${body}`;
+}
+
+// ════════════ BOCAL À AMOUR (raisons + pioche) ════════════
+function renderBocal(){
+  const reasons=S.loveReasons||[];
+  return `<div style="text-align:center;background:linear-gradient(135deg,var(--rose-soft),var(--gold-soft));border:1px solid var(--rose-border);border-radius:16px;padding:20px;margin-bottom:14px">
+    <div style="font-size:40px">🫙</div>
+    <div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--rose)">${reasons.length}</div>
+    <div style="font-size:11px;color:var(--muted)">raisons de s'aimer dans le bocal</div>
+    ${reasons.length?`<button class="btn btn-sm" style="margin-top:12px;width:auto" onclick="piocheRaison()">🎲 Piocher une raison</button>`:""}
+  </div>
+  <div style="margin-bottom:14px">
+    <input class="input" id="reason-input" placeholder="J'aime quand tu..." style="margin-bottom:8px">
+    <button class="btn" onclick="addReason()">Ajouter au bocal 💗</button>
+  </div>
+  <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Le bocal (${reasons.length})</div>
+  ${reasons.map(r=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+    <div style="font-size:12px;flex:1">${r.text}<div style="font-size:9px;color:var(--dim);margin-top:2px">${r.who==="raphy"?"💗":"💙"} ${r.date||""}</div></div>
+    <button onclick="delReason(${r.id})" style="color:var(--dim);background:none;border:none;cursor:pointer">🗑️</button>
+  </div>`).join("")||`<div style="font-size:12px;color:var(--dim);font-style:italic;text-align:center;padding:20px">Le bocal est vide. Ajoutez votre première raison !</div>`}`;
+}
+function addReason(){
+  const v=document.getElementById("reason-input")?.value.trim();if(!v){toast("Écris une raison !");return;}
+  if(!S.loveReasons)S.loveReasons=[];
+  S.loveReasons.unshift({id:Date.now(),text:v,who:S.profile,date:new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})});
+  dbSave("loveReasons");renderPlus();toast("Ajouté au bocal 💗");
+}
+function delReason(id){S.loveReasons=(S.loveReasons||[]).filter(r=>r.id!==id);dbSave("loveReasons");renderPlus();}
+function piocheRaison(){
+  const reasons=S.loveReasons||[];if(!reasons.length)return;
+  const r=reasons[Math.floor(Math.random()*reasons.length)];
+  const modal=document.createElement("div");
+  modal.style.cssText="position:fixed;inset:0;background:rgba(9,11,16,.92);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center";
+  modal.innerHTML=`<div style="font-size:50px;margin-bottom:16px">💗</div>
+    <div style="font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Une raison de t'aimer</div>
+    <div style="font-family:var(--font-d);font-size:22px;font-weight:800;line-height:1.4;max-width:320px;margin-bottom:8px">"${r.text}"</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:28px">— ${r.who==="raphy"?"💗 Raphy":"💙 Mehdi"}</div>
+    <button onclick="this.closest('[style]').remove()" style="padding:14px 36px;border-radius:30px;background:linear-gradient(135deg,var(--rose),var(--gold));color:#0D0F14;font-weight:800;border:none;cursor:pointer;font-family:var(--font-d)">Merci 💗</button>`;
+  document.body.appendChild(modal);
+  celebrate();
+}
+
+// ════════════ BUCKET LIST ════════════
+function renderBucket(){
+  const items=S.bucketList||[];
+  const done=items.filter(i=>i.done).length;
+  return `<div style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px"><span>${done}/${items.length} réalisés</span><span>${items.length?Math.round(done/items.length*100):0}%</span></div>
+    <div style="background:var(--surface);border-radius:6px;height:6px;overflow:hidden"><div style="height:100%;width:${items.length?done/items.length*100:0}%;background:linear-gradient(90deg,var(--blue),var(--green));border-radius:6px"></div></div>
+  </div>
+  <div style="margin-bottom:14px">
+    <input class="input" id="bucket-input" placeholder="Voir l'aurore boréale, un road trip..." style="margin-bottom:8px">
+    <button class="btn" onclick="addBucket()">Ajouter un rêve 🪣</button>
+  </div>
+  ${items.map(i=>`<div style="background:var(--card);border:1px solid ${i.done?"rgba(58,158,106,.4)":"var(--border)"};border-radius:12px;padding:12px;margin-bottom:8px;${i.done?"opacity:.7":""}">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button onclick="toggleBucket(${i.id})" style="font-size:20px;background:none;border:none;cursor:pointer">${i.done?"✅":"⬜"}</button>
+      <div style="flex:1;font-size:13px;${i.done?"text-decoration:line-through":""}">${i.text}</div>
+      <button onclick="delBucket(${i.id})" style="color:var(--dim);background:none;border:none;cursor:pointer">🗑️</button>
+    </div>
+  </div>`).join("")||`<div style="font-size:12px;color:var(--dim);font-style:italic;text-align:center;padding:20px">Aucun rêve listé. Qu'est-ce que vous voulez vivre ensemble ?</div>`}`;
+}
+function addBucket(){const v=document.getElementById("bucket-input")?.value.trim();if(!v){toast("Écris un rêve !");return;}if(!S.bucketList)S.bucketList=[];S.bucketList.unshift({id:Date.now(),text:v,done:false});dbSave("bucketList");renderPlus();toast("Rêve ajouté 🪣");}
+function toggleBucket(id){const i=(S.bucketList||[]).find(x=>x.id===id);if(i){i.done=!i.done;if(i.done){celebrate();toast("Rêve réalisé ! 🎉");}dbSave("bucketList");renderPlus();}}
+function delBucket(id){S.bucketList=(S.bucketList||[]).filter(x=>x.id!==id);dbSave("bucketList");renderPlus();}
+
+// ════════════ NOS CHANSONS ════════════
+function renderSongs(){
+  const songs=S.songs||[];
+  return `<div style="margin-bottom:14px">
+    <input class="input" id="song-title" placeholder="Titre de la chanson" style="margin-bottom:8px">
+    <input class="input" id="song-artist" placeholder="Artiste" style="margin-bottom:8px">
+    <input class="input" id="song-note" placeholder="Pourquoi cette chanson... (optionnel)" style="margin-bottom:8px">
+    <button class="btn" onclick="addSong()">Ajouter 🎵</button>
+  </div>
+  ${songs.map(s=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+    <div style="font-size:24px">🎵</div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700">${s.title}</div>
+      <div style="font-size:11px;color:var(--muted)">${s.artist||""}</div>
+      ${s.note?`<div style="font-size:11px;color:var(--gold);font-style:italic;margin-top:3px">"${s.note}"</div>`:""}
+    </div>
+    <button onclick="delSong(${s.id})" style="color:var(--dim);background:none;border:none;cursor:pointer">🗑️</button>
+  </div>`).join("")||`<div style="font-size:12px;color:var(--dim);font-style:italic;text-align:center;padding:20px">Aucune chanson. Quelle est votre chanson ?</div>`}`;
+}
+function addSong(){const t=document.getElementById("song-title")?.value.trim();if(!t){toast("Mets un titre !");return;}if(!S.songs)S.songs=[];S.songs.unshift({id:Date.now(),title:t,artist:document.getElementById("song-artist")?.value.trim()||"",note:document.getElementById("song-note")?.value.trim()||"",who:S.profile});dbSave("songs");renderPlus();toast("Chanson ajoutée 🎵");}
+function delSong(id){S.songs=(S.songs||[]).filter(x=>x.id!==id);dbSave("songs");renderPlus();}
+
+// ════════════ NOS LIEUX ════════════
+function renderPlaces(){
+  const places=S.places||[];
+  const visited=places.filter(p=>p.type==="visited");
+  const dream=places.filter(p=>p.type==="dream");
+  return `<div style="margin-bottom:14px">
+    <input class="input" id="place-name" placeholder="Nom du lieu (ex: Plage de Palavas)" style="margin-bottom:8px">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="btn btn-sm" onclick="addPlace('visited')" style="flex:1">📍 On y est allés</button>
+      <button class="btn btn-sm btn-outline" onclick="addPlace('dream')" style="flex:1">⭐ On en rêve</button>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📍 Nos lieux (${visited.length})</div>
+  ${visited.map(p=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px">📍 ${p.name}</span><button onclick="delPlace(${p.id})" style="color:var(--dim);background:none;border:none;cursor:pointer">🗑️</button></div>`).join("")||`<div style="font-size:11px;color:var(--dim);font-style:italic;margin-bottom:12px">Aucun lieu encore</div>`}
+  <div style="font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px">⭐ Nos rêves (${dream.length})</div>
+  ${dream.map(p=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px">⭐ ${p.name}</span><button onclick="delPlace(${p.id})" style="color:var(--dim);background:none;border:none;cursor:pointer">🗑️</button></div>`).join("")||`<div style="font-size:11px;color:var(--dim);font-style:italic">Aucun rêve encore</div>`}`;
+}
+function addPlace(type){const v=document.getElementById("place-name")?.value.trim();if(!v){toast("Nom du lieu ?");return;}if(!S.places)S.places=[];S.places.unshift({id:Date.now(),name:v,type});dbSave("places");renderPlus();toast(type==="visited"?"Lieu ajouté 📍":"Rêve ajouté ⭐");}
+function delPlace(id){S.places=(S.places||[]).filter(x=>x.id!==id);dbSave("places");renderPlus();}
+
+// ════════════ LISTE PARTAGÉE ════════════
+function renderListe(){
+  const items=S.sharedList||[];
+  return `<div style="margin-bottom:14px;display:flex;gap:8px">
+    <input class="input" id="liste-input" placeholder="Ajouter un élément..." style="flex:1" onkeydown="if(event.key==='Enter')addListe()">
+    <button class="btn" onclick="addListe()" style="width:auto;flex-shrink:0">+</button>
+  </div>
+  ${items.map(i=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:6px;display:flex;align-items:center;gap:10px;${i.done?"opacity:.6":""}">
+    <button onclick="toggleListe(${i.id})" style="font-size:18px;background:none;border:none;cursor:pointer">${i.done?"✅":"⬜"}</button>
+    <span style="flex:1;font-size:13px;${i.done?"text-decoration:line-through":""}">${i.text}</span>
+    <button onclick="delListe(${i.id})" style="color:var(--dim);background:none;border:none;cursor:pointer">🗑️</button>
+  </div>`).join("")||`<div style="font-size:12px;color:var(--dim);font-style:italic;text-align:center;padding:20px">Liste vide</div>`}
+  ${items.some(i=>i.done)?`<button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="clearDoneListe()">Effacer les cochés</button>`:""}`;
+}
+function addListe(){const v=document.getElementById("liste-input")?.value.trim();if(!v)return;if(!S.sharedList)S.sharedList=[];S.sharedList.push({id:Date.now(),text:v,done:false});dbSave("sharedList");renderPlus();}
+function toggleListe(id){const i=(S.sharedList||[]).find(x=>x.id===id);if(i){i.done=!i.done;dbSave("sharedList");renderPlus();}}
+function delListe(id){S.sharedList=(S.sharedList||[]).filter(x=>x.id!==id);dbSave("sharedList");renderPlus();}
+function clearDoneListe(){S.sharedList=(S.sharedList||[]).filter(x=>!x.done);dbSave("sharedList");renderPlus();}
+
+// ════════════ BUDGET COMMUN ════════════
+function renderBudget(){
+  const b=S.budget||{goal:"",goalAmount:0,saved:0,expenses:[]};
+  const pct=b.goalAmount?Math.min(100,Math.round(b.saved/b.goalAmount*100)):0;
+  return `<div style="background:linear-gradient(135deg,var(--gold-soft),rgba(58,158,106,.1));border:1px solid var(--gold-border);border-radius:16px;padding:18px;margin-bottom:14px">
+    <input class="input" id="budget-goal" placeholder="Objectif (ex: Vacances plage 🏖️)" value="${b.goal||""}" style="margin-bottom:8px">
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input class="input" id="budget-amount" type="number" placeholder="Montant cible €" value="${b.goalAmount||""}" style="flex:1">
+      <button class="btn btn-sm" onclick="saveBudgetGoal()" style="width:auto;flex-shrink:0">OK</button>
+    </div>
+    ${b.goalAmount?`
+    <div style="text-align:center;margin-top:10px">
+      <div style="font-family:var(--font-d);font-size:26px;font-weight:900;color:var(--gold)">${b.saved}€ / ${b.goalAmount}€</div>
+      <div style="background:var(--surface);border-radius:6px;height:8px;overflow:hidden;margin-top:8px"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--gold),var(--green));border-radius:6px"></div></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${pct}% — encore ${Math.max(0,b.goalAmount-b.saved)}€</div>
+    </div>`:""}
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <input class="input" id="budget-add" type="number" placeholder="Ajouter une somme €" style="flex:1">
+    <button class="btn" onclick="addToBudget()" style="width:auto;flex-shrink:0">+ 💰</button>
+  </div>`;
+}
+function saveBudgetGoal(){if(!S.budget)S.budget={};S.budget.goal=document.getElementById("budget-goal")?.value.trim()||"";S.budget.goalAmount=+(document.getElementById("budget-amount")?.value||0);if(!S.budget.saved)S.budget.saved=0;dbSave("budget");renderPlus();toast("Objectif enregistré 💰");}
+function addToBudget(){const a=+(document.getElementById("budget-add")?.value||0);if(!a)return;if(!S.budget)S.budget={saved:0};S.budget.saved=(S.budget.saved||0)+a;dbSave("budget");renderPlus();celebrate();toast("+"+a+"€ 💰");}
+
+// ════════════ QUI EST LE PLUS...? ════════════
+const QUIPLUS_QS=["Qui est le plus romantique ?","Qui texte en premier le matin ?","Qui est toujours en retard ?","Qui mange le plus ?","Qui pardonne le plus vite ?","Qui est le plus jaloux ?","Qui décide où on mange ?","Qui dort le plus ?","Qui est le plus drôle ?","Qui dépense le plus ?","Qui est le plus tête en l'air ?","Qui fait le plus de câlins ?","Qui s'excuse en premier ?","Qui est le plus gourmand ?","Qui chante le plus mal ?","Qui est le plus organisé ?"];
+function renderQuiPlus(){
+  const i=S._quiplusIdx||0;
+  const q=QUIPLUS_QS[i%QUIPLUS_QS.length];
+  return `<div style="text-align:center;background:var(--card);border:1px solid var(--gold-border);border-radius:16px;padding:24px;margin-bottom:14px">
+    <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:12px">Question ${(i%QUIPLUS_QS.length)+1}/${QUIPLUS_QS.length}</div>
+    <div style="font-family:var(--font-d);font-size:20px;font-weight:800;margin-bottom:20px;line-height:1.4">${q}</div>
+    <div style="display:flex;gap:10px">
+      <button onclick="answerQuiPlus('raphy')" style="flex:1;padding:16px;border-radius:14px;border:1px solid var(--rose);background:var(--rose-soft);color:var(--text);font-weight:700;cursor:pointer">💗 Raphy</button>
+      <button onclick="answerQuiPlus('mehdi')" style="flex:1;padding:16px;border-radius:14px;border:1px solid var(--blue);background:var(--blue-soft);color:var(--text);font-weight:700;cursor:pointer">💙 Mehdi</button>
+    </div>
+  </div>
+  <button class="btn btn-outline btn-sm" onclick="nextQuiPlus()">Question suivante →</button>`;
+}
+function answerQuiPlus(who){toast(who==="raphy"?"💗 Raphy !":"💙 Mehdi !");nextQuiPlus();}
+function nextQuiPlus(){S._quiplusIdx=(S._quiplusIdx||0)+1;renderPlus();}
+
+// ════════════ ROULETTE DÉCISIONS ════════════
+function renderRoulette(){
+  return `<div style="text-align:center;padding:10px">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Vous hésitez ? Écrivez vos options et laissez le destin (ou Mahmoud) trancher !</div>
+    <textarea class="input" id="roulette-opts" placeholder="Une option par ligne&#10;Ex:&#10;Pizza&#10;Sushi&#10;Burger" rows="5" style="margin-bottom:12px"></textarea>
+    <button class="btn" onclick="spinRoulette()">🎰 Tirer au sort</button>
+    <div id="roulette-result" style="margin-top:16px"></div>
+  </div>`;
+}
+function spinRoulette(){
+  const opts=(document.getElementById("roulette-opts")?.value||"").split("\n").map(o=>o.trim()).filter(Boolean);
+  if(opts.length<2){toast("Mets au moins 2 options !");return;}
+  const el=document.getElementById("roulette-result");
+  let count=0;const total=15+Math.floor(Math.random()*10);
+  const spin=setInterval(()=>{
+    const r=opts[Math.floor(Math.random()*opts.length)];
+    el.innerHTML=`<div style="font-family:var(--font-d);font-size:24px;font-weight:900;color:var(--muted)">${r}</div>`;
+    count++;
+    if(count>=total){
+      clearInterval(spin);
+      const winner=opts[Math.floor(Math.random()*opts.length)];
+      el.innerHTML=`<div style="background:var(--gold-soft);border:1px solid var(--gold-border);border-radius:16px;padding:20px"><div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:8px">🎰 LE VERDICT</div><div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--gold)">${winner}</div></div>`;
+      celebrate();
+    }
+  },80);
+}
+
+// ════════════ MODE ENSEMBLE ════════════
+const ENSEMBLE_ACTIVITIES=["Posez-vous chacun 3 questions auxquelles vous n'avez jamais répondu","Regardez vos plus vieilles photos ensemble","Faites le quiz 'se connaître' ensemble","Planifiez votre prochain voyage là, maintenant","Dites-vous 3 choses que vous appréciez chez l'autre","Lancez un mini-jeu de l'app en duel","Cuisinez quelque chose ensemble","Faites une playlist commune","Écrivez une raison de vous aimer dans le bocal chacun","Prenez une photo souvenir de ce moment"];
+function renderEnsemble(){
+  return `<div style="text-align:center;background:linear-gradient(135deg,var(--rose-soft),var(--gold-soft));border:1px solid var(--rose-border);border-radius:16px;padding:24px;margin-bottom:14px">
+    <div style="font-size:40px;margin-bottom:8px">💑</div>
+    <div style="font-family:var(--font-d);font-size:18px;font-weight:800;margin-bottom:6px">Vous êtes ensemble ?</div>
+    <div style="font-size:12px;color:var(--muted)">Profitez-en avec ces idées d'activités à deux</div>
+  </div>
+  <div id="ensemble-activity" style="margin-bottom:14px"></div>
+  <button class="btn" onclick="newEnsembleActivity()">🎲 Une idée d'activité</button>`;
+}
+function newEnsembleActivity(){
+  const a=ENSEMBLE_ACTIVITIES[Math.floor(Math.random()*ENSEMBLE_ACTIVITIES.length)];
+  const el=document.getElementById("ensemble-activity");
+  if(el)el.innerHTML=`<div class="card" style="border-color:var(--rose-border);text-align:center"><div style="font-size:28px;margin-bottom:8px">✨</div><div style="font-size:15px;font-weight:600;line-height:1.5">${a}</div></div>`;
+}
+
+// ════════════ WRAPPED ════════════
+function renderWrapped(){
+  const d=daysSince(COUPLE_DATE);
+  const msgs=S.messages.length;
+  const defis=(S.defiHistory||[]).length;
+  const pts=S.points||0;
+  // Mot le plus utilisé
+  const words={};
+  S.messages.forEach(m=>{(m.text||"").toLowerCase().split(/\s+/).forEach(w=>{w=w.replace(/[^a-zàâäéèêëïîôöùûüç]/g,"");if(w.length>=4)words[w]=(words[w]||0)+1;});});
+  let topWord="—",topC=0;Object.entries(words).forEach(([w,c])=>{if(c>topC){topC=c;topWord=w;}});
+  const reasons=(S.loveReasons||[]).length;
+  const bucket=(S.bucketList||[]).filter(i=>i.done).length;
+  return `<div style="background:linear-gradient(160deg,var(--purple,#8B6FD4),var(--rose));border-radius:20px;padding:24px;text-align:center;color:#fff">
+    <div style="font-size:11px;font-weight:700;opacity:.8;letter-spacing:1px">VOTRE HISTOIRE EN CHIFFRES</div>
+    <div style="font-size:48px;font-weight:900;margin:8px 0">${d}</div>
+    <div style="font-size:13px;opacity:.9;margin-bottom:20px">jours d'amour</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left">
+      <div><div style="font-size:24px;font-weight:900">${msgs}</div><div style="font-size:10px;opacity:.8">mots doux</div></div>
+      <div><div style="font-size:24px;font-weight:900">${defis}</div><div style="font-size:10px;opacity:.8">défis relevés</div></div>
+      <div><div style="font-size:24px;font-weight:900">${pts}</div><div style="font-size:10px;opacity:.8">points couple</div></div>
+      <div><div style="font-size:24px;font-weight:900">${reasons}</div><div style="font-size:10px;opacity:.8">raisons de s'aimer</div></div>
+    </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.2)">
+      <div style="font-size:10px;opacity:.8">VOTRE MOT LE PLUS DIT</div>
+      <div style="font-size:22px;font-weight:900;margin-top:2px">"${topWord}"</div>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:14px">Votre rétro se met à jour en temps réel 💫</div>`;
+}
+
+// ════════════ NOTRE HISTOIRE (frise) ════════════
+function renderHistoire2(){
+  const events=[
+    {date:"11 Mai 2026",label:"Le grand jour ❤️",desc:"Le début de votre histoire"},
+    ...(S.importantDates||[]).map(d=>({date:d.date||"",label:d.title||d.label||"",desc:d.note||""}))
+  ];
+  const d=daysSince(COUPLE_DATE);
+  return `<div style="position:relative;padding-left:24px">
+    <div style="position:absolute;left:7px;top:8px;bottom:8px;width:2px;background:linear-gradient(var(--gold),var(--rose))"></div>
+    ${events.map(e=>`<div style="position:relative;margin-bottom:18px">
+      <div style="position:absolute;left:-21px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--gold);border:3px solid var(--bg)"></div>
+      <div style="font-size:11px;color:var(--gold);font-weight:700">${e.date}</div>
+      <div style="font-size:14px;font-weight:700;margin-top:2px">${e.label}</div>
+      ${e.desc?`<div style="font-size:12px;color:var(--muted);margin-top:2px">${e.desc}</div>`:""}
+    </div>`).join("")}
+    <div style="position:relative">
+      <div style="position:absolute;left:-21px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--rose);border:3px solid var(--bg);animation:pulse 1.5s infinite"></div>
+      <div style="font-size:11px;color:var(--rose);font-weight:700">Aujourd'hui</div>
+      <div style="font-size:14px;font-weight:700;margin-top:2px">${d} jours plus tard 💗</div>
+      <div style="font-size:12px;color:var(--muted)">Et l'histoire continue...</div>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:16px">Ajoute des dates importantes dans l'onglet 🎂 Dates</div>`;
+}
+
+// ════════════ LETTRE DU MOIS ════════════
+function renderLettre(){
+  const letters=S.mensualLetters||[];
+  return `<div style="margin-bottom:14px">
+    <button class="btn" onclick="genMensualLetter()" id="gen-letter-btn">✉️ Générer la lettre de ce mois</button>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Mahmoud écrit une lettre qui raconte votre mois</div>
+  </div>
+  <div id="letter-result"></div>
+  ${letters.map(l=>`<div class="card" style="margin-bottom:10px;border-color:var(--rose-border)">
+    <div style="font-size:11px;color:var(--rose);font-weight:700;margin-bottom:8px">✉️ ${l.month}</div>
+    <div style="font-size:13px;line-height:1.7;font-style:italic">${l.text.split("\n").join("<br>")}</div>
+  </div>`).join("")}`;
+}
+async function genMensualLetter(){
+  const btn=document.getElementById("gen-letter-btn");
+  if(btn){btn.textContent="✨ Mahmoud écrit...";btn.disabled=true;}
+  const month=new Date().toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+  const msgs=S.messages.slice(-15).map(m=>`${m.who}: ${m.text}`).join(" | ");
+  const reply=await callGemini(`${shortContext()}\nÉcris une belle lettre mensuelle qui raconte le mois de ${month} du couple Raphy & Mehdi comme une histoire touchante. Inspire-toi de leurs récents échanges: ${msgs}. Style chaleureux, un peu poétique, avec une touche d'humour. 5-6 phrases. EN FRANÇAIS.`,500);
+  if(btn){btn.textContent="✉️ Générer la lettre de ce mois";btn.disabled=false;}
+  if(reply){
+    if(!S.mensualLetters)S.mensualLetters=[];
+    if(!S.mensualLetters.some(l=>l.month===month))S.mensualLetters.unshift({month,text:reply.trim()});
+    dbSave("mensualLetters");renderPlus();toast("Lettre écrite ✉️");
+  } else toast("Active Mahmoud dans les Paramètres 🔑");
+}
+
+// ════════════ MÉDIATEUR ════════════
+function renderMediateur(){
+  return `<div style="background:var(--blue-soft);border:1px solid var(--blue-border);border-radius:16px;padding:18px;margin-bottom:14px">
+    <div style="font-size:13px;line-height:1.6;color:var(--text)">🕊️ Un petit désaccord ? Raconte ta version à Mahmoud. Il va t'aider à voir les choses autrement et proposer une solution apaisée. C'est privé et bienveillant.</div>
+  </div>
+  <textarea class="input" id="mediateur-input" placeholder="Explique ce qui s'est passé, ce que tu ressens..." rows="5" style="margin-bottom:12px"></textarea>
+  <button class="btn" onclick="askMediateur()" id="mediateur-btn">🕊️ Demander de l'aide à Mahmoud</button>
+  <div id="mediateur-result" style="margin-top:16px"></div>`;
+}
+async function askMediateur(){
+  const txt=document.getElementById("mediateur-input")?.value.trim();
+  if(!txt){toast("Explique la situation d'abord");return;}
+  const btn=document.getElementById("mediateur-btn");
+  if(btn){btn.textContent="✨ Mahmoud réfléchit...";btn.disabled=true;}
+  const me=S.profile==="raphy"?"Raphy":"Mehdi";
+  const other=S.profile==="raphy"?"Mehdi":"Raphy";
+  const reply=await callGemini(`Tu es Mahmoud, médiateur bienveillant du couple Raphy & Mehdi. ${me} te confie un désaccord/une frustration EN PRIVÉ: "${txt}". 
+
+Aide ${me} avec empathie: valide ses émotions, aide-le/la à voir le point de vue possible de ${other}, et propose 1-2 pistes concrètes et douces pour apaiser et communiquer. Reste neutre, ne prends pas parti contre ${other}. 4-5 phrases. EN FRANÇAIS, chaleureux.`,500);
+  if(btn){btn.textContent="🕊️ Demander de l'aide à Mahmoud";btn.disabled=false;}
+  const el=document.getElementById("mediateur-result");
+  if(reply&&el){
+    el.innerHTML=`<div class="card" style="border-color:var(--blue-border)"><div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:8px">🕊️ Mahmoud</div><div style="font-size:13px;line-height:1.7">${reply.split("\n").join("<br>")}</div></div>`;
+  } else if(el){el.innerHTML=`<div style="font-size:12px;color:var(--rose)">Active Mahmoud dans les Paramètres 🔑</div>`;}
+}
+
+// ════════════ PHOTO CHALLENGE ════════════
+async function renderPhotoChallenge(){
+  return `<div style="text-align:center;padding:10px">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Mahmoud vous donne un thème, vous prenez chacun une photo et la partagez. Une façon fun de voir vos journées séparées.</div>
+    <button class="btn" onclick="genPhotoTheme()" id="photo-theme-btn">📷 Thème du jour</button>
+    <div id="photo-theme-result" style="margin-top:16px"></div>
+  </div>`;
+}
+async function genPhotoTheme(){
+  const btn=document.getElementById("photo-theme-btn");
+  if(btn){btn.textContent="✨...";btn.disabled=true;}
+  const reply=await callGemini(`Donne UN thème de photo simple et fun pour un couple à distance (ex: "ton petit-déj", "le ciel maintenant", "ce qui te fait sourire là"). Juste le thème, 2-5 mots. EN FRANÇAIS.`,40);
+  if(btn){btn.textContent="📷 Nouveau thème";btn.disabled=false;}
+  const el=document.getElementById("photo-theme-result");
+  if(el)el.innerHTML=`<div class="card" style="border-color:var(--purple,#8B6FD4)"><div style="font-size:28px;margin-bottom:8px">📷</div><div style="font-family:var(--font-d);font-size:18px;font-weight:800">${(reply||"Ton sourire du moment").trim()}</div><div style="font-size:11px;color:var(--muted);margin-top:8px">Prenez chacun une photo et envoyez-la dans les mots doux !</div></div>`;
 }
 </script>
 
