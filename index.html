@@ -2345,11 +2345,11 @@ Génère UN message d'accueil court pour Mehdi :
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         contents:[{role:"user",parts:[{text:prompt}]}],
-        generationConfig:{maxOutputTokens:500,temperature:1.0,thinkingConfig:{thinkingBudget:0}}
+        generationConfig:{maxOutputTokens:800,temperature:1.0,thinkingConfig:{thinkingBudget:0}}
       })
     });
     const data = await res.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Salut toi ! Content de te voir 😊";
+    const reply = (data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join("").trim() || "Salut toi ! Content de te voir 😊";
     const el = document.getElementById(loadId);
     if(el){ el.style.opacity="1"; el.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${reply.split("\n").join("<br>")}`; }
     // Afficher suggestions après le message d'accueil
@@ -2385,14 +2385,20 @@ function initIASuggestions(){
 
 function renderIAHistory(){
   const chat=document.getElementById("ia-chat");if(!chat)return;
-  if(!S.iaHistory||!S.iaHistory.length){chat.innerHTML="";return}
-  chat.innerHTML=S.iaHistory.map(m=>{
-    if(m.role==="user"){
-      const color=m.who==="raphy"?"var(--rose)":"var(--blue)";const name=m.who==="raphy"?"💗 Raphy":"💙 Mehdi";
-      return`<div class="ia-msg user"><div class="ia-who-tag" style="color:${color}">${name}</div>${m.content}</div>`;
-    }
-    return`<div class="ia-msg bot"><div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${m.content.split("\n").join("<br>")}</div>`;
-  }).join("");
+  let html="";
+  if(S.iaHistory&&S.iaHistory.length){
+    html=S.iaHistory.map(m=>{
+      if(m.role==="user"){
+        const color=m.who==="raphy"?"var(--rose)":"var(--blue)";const name=m.who==="raphy"?"💗 Raphy":"💙 Mehdi";
+        return`<div class="ia-msg user"><div class="ia-who-tag" style="color:${color}">${name}</div>${m.content}</div>`;
+      }
+      return`<div class="ia-msg bot"><div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${m.content.split("\n").join("<br>")}</div>`;
+    }).join("");
+  }
+  if(S._iaPending){
+    html+=`<div class="ia-msg bot" id="ia-typing"><div style="display:flex;gap:4px;align-items:center;padding:4px 0"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+  }
+  chat.innerHTML=html;
   setTimeout(()=>chat.lastElementChild?.scrollIntoView({behavior:"smooth"}),50);
 }
 
@@ -2528,7 +2534,7 @@ Si c'est MEHDI :
 
 📏 RÈGLES DE STYLE :
 - TOUJOURS en français, naturel et vivant
-- LONGUEUR : adapte-toi. Par défaut tu réponds court et percutant (1 à 3 phrases). Si le sujet le mérite vraiment (ils se confient, demandent un conseil, une vraie discussion), tu peux développer — mais JAMAIS de blabla ou de roman inutile. Chaque phrase doit servir à quelque chose.
+- LONGUEUR : écris des réponses naturelles et COMPLÈTES — termine toujours tes phrases et tes idées, ne coupe jamais au milieu. En général 2 à 5 phrases, plus si la discussion le mérite (ils se confient, demandent un conseil, racontent leur journée). Sois vivant et développé sans tomber dans le blabla inutile.
 - Emojis avec parcimonie — quand ça ajoute quelque chose, pas à chaque phrase
 - Le chambrage c'est ~30% — le reste c'est chaleur, humour, intelligence et bienveillance
 - JAMAIS blessant ou méchant, même en chambrant
@@ -2537,73 +2543,68 @@ Si c'est MEHDI :
 - Sers-toi des données contextuelles (planning, humeurs, statuts, ce qu'ils ont révélé) quand c'est pertinent, mais sans tout réciter — glisse-les naturellement comme quelqu'un qui les connaît par cœur`;
 }
 
+let _iaSending=false;
 async function sendIA(){
+  if(_iaSending)return; // anti double-envoi
   const inp=document.getElementById("ia-input");const text=inp.value.trim();if(!text)return;inp.value="";
-  // Vérifier si c'est une commande pour la base de Mahmoud
+  // Commande pour la base de Mahmoud
   if(processMahmoudCommand(text)){
-    // Ajouter quand même à la conversation IA
-    const chat=document.getElementById("ia-chat");
-    if(chat){
-      const who=S.profile;const color=who==="raphy"?"var(--rose)":"var(--blue)";const name=who==="raphy"?"💗 Raphy":"💙 Mehdi";
-      chat.innerHTML+=`<div class="ia-msg user fade-in"><div class="ia-who-tag" style="color:${color}">${name}</div>${text}</div>`;
-      chat.innerHTML+=`<div class="ia-msg bot fade-in"><div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>Noté ! J'ai bien enregistré ça dans ma mémoire. Tu peux me demander à n'importe quel moment 🧠</div>`;
-      chat.lastElementChild?.scrollIntoView({behavior:"smooth"});
-      const botMsg={role:"model",content:"Noté ! J'ai bien enregistré ça dans ma mémoire.",ts:Date.now()};
-      if(!S.iaHistory)S.iaHistory=[];S.iaHistory.push({role:"user",content:text,who,ts:Date.now()});S.iaHistory.push(botMsg);dbSave("iaHistory");
-    }
+    if(!S.iaHistory)S.iaHistory=[];
+    S.iaHistory.push({role:"user",content:text,who:S.profile,ts:Date.now()});
+    S.iaHistory.push({role:"model",content:"Noté ! J'ai bien enregistré ça dans ma mémoire. Tu peux me demander à n'importe quel moment 🧠",ts:Date.now()});
+    dbSave("iaHistory");renderIAHistory();
     return;
   }
   await sendIAMsg(text,false);
 }
 
 async function sendIAMsg(text,isSugg=false){
-  if(!text)return;
-  const chat=document.getElementById("ia-chat");const suggs=document.getElementById("ia-suggestions");
+  if(!text||_iaSending)return;
+  _iaSending=true;
+  const suggs=document.getElementById("ia-suggestions");
   if(suggs)suggs.style.display="none";
   if(!S.iaHistory)S.iaHistory=[];
-  const userMsg={role:"user",content:text,who:S.profile||"raphy",ts:Date.now()};
-  S.iaHistory.push(userMsg);dbSave("iaHistory");
-  const color=S.profile==="raphy"?"var(--rose)":"var(--blue)";const name=S.profile==="raphy"?"💗 Raphy":"💙 Mehdi";
-  chat.innerHTML+=`<div class="ia-msg user fade-in"><div class="ia-who-tag" style="color:${color}">${name}</div>${text}</div>`;
-  const loadId="ld"+Date.now();
-  chat.innerHTML+=`<div class="ia-msg bot" id="${loadId}"><div style="display:flex;gap:4px;align-items:center;padding:4px 0"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
-  chat.lastElementChild?.scrollIntoView({behavior:"smooth"});
+  S.iaHistory.push({role:"user",content:text,who:S.profile||"raphy",ts:Date.now()});
+  S._iaPending=true;
+  renderIAHistory();
+  dbSave("iaHistory");
   const key=lsGet("gemini_key")||GEMINI_KEY;
   if(!key){
-    const el2=document.getElementById(loadId);
-    if(el2)el2.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>Entre ta clé API Gemini dans ⚙️ Paramètres pour m'activer 🔑`;
+    S._iaPending=false;_iaSending=false;
+    S.iaHistory.push({role:"model",content:"Entre ta clé API Gemini dans ⚙️ Paramètres pour m'activer 🔑",ts:Date.now()});
+    renderIAHistory();dbSave("iaHistory");
     return;
   }
   try{
-    // Build history for Gemini (only role:user and role:model, skip metadata)
-    const history=S.iaHistory.slice(-30,-1).map(m=>({role:m.role==="user"?"user":"model",parts:[{text:m.content}]}));
+    const history=S.iaHistory.filter(m=>m.role==="user"||m.role==="model").slice(-30,-1).map(m=>({role:m.role==="user"?"user":"model",parts:[{text:m.content}]}));
     const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         system_instruction:{parts:[{text:buildIAContext()}]},
         contents:[...history,{role:"user",parts:[{text}]}],
-        generationConfig:{maxOutputTokens:2000,temperature:0.95,thinkingConfig:{thinkingBudget:0}}
+        generationConfig:{maxOutputTokens:2048,temperature:0.95,thinkingConfig:{thinkingBudget:0}}
       })
     });
     const data=await res.json();
+    S._iaPending=false;_iaSending=false;
     if(data.error){
       console.error("Gemini API error:", data.error);
-      const el=document.getElementById(loadId);
-      if(el)el.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>Petit souci technique (${data.error.message||data.error.status}) 😅 Réessaie !`;
-      return;
+      S.iaHistory.push({role:"model",content:`Petit souci technique (${data.error.message||data.error.status}) 😅 Réessaie !`,ts:Date.now()});
+      renderIAHistory();return;
     }
-    const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||"Oups, j'ai eu un bug 😅 Réessaie !";
-    const botMsg={role:"model",content:reply,ts:Date.now()};
-    S.iaHistory.push(botMsg);dbSave("iaHistory");
-    const el=document.getElementById(loadId);
-    if(el)el.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>${reply.split("\n").join("<br>")}`;
+    // Joindre TOUTES les parts pour éviter les coupures
+    const parts=data.candidates?.[0]?.content?.parts||[];
+    let reply=parts.map(p=>p.text||"").join("").trim();
+    if(!reply)reply="Oups, j'ai eu un bug 😅 Réessaie !";
+    S.iaHistory.push({role:"model",content:reply,ts:Date.now()});
+    renderIAHistory();dbSave("iaHistory");
     if(lsGet("mahmoud_voice"))speakMahmoud(reply);
   }catch(e){
     console.error("Gemini fetch error:", e);
-    const el=document.getElementById(loadId);
-    if(el)el.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>Erreur réseau 😕 (${e.message}) — vérifie ta connexion et réessaie !`;
+    S._iaPending=false;_iaSending=false;
+    S.iaHistory.push({role:"model",content:`Erreur réseau 😕 — vérifie ta connexion et réessaie !`,ts:Date.now()});
+    renderIAHistory();
   }
-  chat.lastElementChild?.scrollIntoView({behavior:"smooth"});
 }
 
 function clearIAChat(){
@@ -2820,7 +2821,7 @@ async function genJournalSummary(){
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({contents:[{parts:[{text:`Voici les entrées de journal du couple Raphy & Mehdi :\n${entries}\n\nRédige un résumé poétique et touchant de cette période en 3-4 phrases, comme si tu racontais leur histoire d'amour. Termine par une phrase d'encouragement. En français.`}]}]})
     });
-    const data=await res.json();const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||"";
+    const data=await res.json();const reply=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join("").trim();
     const jsum=document.getElementById("jsum");
     if(jsum)jsum.innerHTML=`<div style="color:var(--gold);font-size:10px;font-weight:700;margin-bottom:8px">✨ Résumé IA de votre période</div><div style="font-family:var(--font-d);font-size:14px;line-height:1.7;font-style:italic">${reply}</div>`;
   }catch{document.getElementById("jsum")?.remove();toast("Erreur IA 😕")}
@@ -3199,10 +3200,10 @@ Génère UN message de félicitations (2-3 phrases MAX) :
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:500,temperature:1.0,thinkingConfig:{thinkingBudget:0}}})
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:800,temperature:1.0,thinkingConfig:{thinkingBudget:0}}})
     });
     const data = await res.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const reply = (data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join("").trim();
     subEl.textContent = reply || (isRaphy ? "Bon... je vais pas te mentir, je pensais pas que t'allais y arriver. Mais te voilà Sonia, ma Blédarde qui va finir en Algérie en XXL. Mehdi avait raison — pour une fois. Bienvenue dans votre espace. 💗" : "Bien joué chef. T'as intérêt de pas décevoir Raphy maintenant. Bienvenue.");
   } catch(e){
     subEl.textContent = isRaphy
@@ -3242,10 +3243,10 @@ Génère un résumé de 4-5 phrases : drôle, taquin, avec des stats concrètes,
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:500,temperature:0.9,thinkingConfig:{thinkingBudget:0}}})
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:800,temperature:0.9,thinkingConfig:{thinkingBudget:0}}})
     });
     const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Semaine passée en mode silencieux... mais je sais que vous pensez l'un à l'autre 💗";
+    return (data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||"").join("").trim() || "Semaine passée en mode silencieux... mais je sais que vous pensez l'un à l'autre 💗";
   } catch(e){
     return "Erreur de connexion — mais votre semaine était sûrement incroyable 💗";
   }
@@ -4308,12 +4309,14 @@ async function callGemini(prompt, maxTokens){
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         contents:[{role:"user",parts:[{text:prompt}]}],
-        generationConfig:{maxOutputTokens:maxTokens||500,temperature:0.95,thinkingConfig:{thinkingBudget:0}}
+        generationConfig:{maxOutputTokens:maxTokens||800,temperature:0.95,thinkingConfig:{thinkingBudget:0}}
       })
     });
     const data = await res.json();
     if(data.error){console.error("Gemini error:",data.error);return null;}
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    const parts=data.candidates?.[0]?.content?.parts||[];
+    const txt=parts.map(p=>p.text||"").join("").trim();
+    return txt||null;
   }catch(e){console.error("callGemini error:",e);return null;}
 }
 
