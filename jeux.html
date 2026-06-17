@@ -457,7 +457,7 @@ const VINGT_QUESTIONS = [
 
 const BAC_CATEGORIES = ["Prénom","Animal","Pays","Film/Série","Plat","Chanteur/Groupe","Métier","Marque","Mot tendre"];
 const LETTERS = "ABCDEFGHIJLMNOPRSTV".split("");
-const GEMINI_KEY = "AIzaSyD9o6exESRrRkej_7c7zxVl4lc-6uLTx88";
+const GEMINI_KEY = "AIzaSyB_xXh2AdKEOHkL5etuEoiDahKU1-C14Nk";
 
 // ═══════════════════════════ STATE ═══════════════════════════
 let S = {
@@ -479,7 +479,7 @@ function toast(msg,dur=2500){const t=document.getElementById("toast");t.textCont
 function celebrate(){
   const w=document.getElementById("conf-wrap");w.style.display="block";w.innerHTML="";
   const colors=["#C9A84C","#E8637A","#4A9EE8","#8B6FD4","#3A9E6A"];
-  for(let i=0;i<50;i++){const p=document.createElement("div");p.className="conf";const c=colors[Math.floor(Math.random()*colors.length)];p.style.cssText=`--x:${Math.random()*100}%;--d:${1+Math.random()*2}s;--dl:${Math.random()*.5}s;--c:${c};--r:${Math.random()*360}deg;--br:${Math.random()>.5?"50%":"2px"}`;w.appendChild(p);}
+  for(let i=0;i<50;i++){const p=document.createElement("div");p.className="conf";const c=colors[Math.floor(Math.random()*colors.length)];p.style.cssText=`--x:${Math.random()*100}%;--d:${1+Math.random()*2}s;--dl:${Math.random()*.5}s;--c:${c};--r:${Math.random()*360}deg;--br:${Math.random()>=0.5?"50%":"2px"}`;w.appendChild(p);}
   setTimeout(()=>{w.style.display="none";w.innerHTML=""},3500);
 }
 function dbSave(path, val){if(!window._db)return;window._set(window._ref(window._db,`nous/jeux/${path}`),val).catch(()=>{})}
@@ -660,13 +660,13 @@ function renderQuizQuestion(){
     <div class="quiz-q-about" style="color:${whoColor}">À propos de ${who}</div>
   </div>
   ${shuffledOpts.map((item,si)=>`
-    <button class="quiz-answer-btn" id="qa-${si}" onclick="answerQuiz(${si},${correctShuffled},${JSON.stringify(q.expl)})">
+    <button class="quiz-answer-btn" id="qa-${si}" onclick="answerQuiz(${si},${correctShuffled})">
       <div class="quiz-letter">${String.fromCharCode(65+si)}</div>
       ${item.o}
     </button>`).join("")}`;
 }
 
-function answerQuiz(chosen, correct, expl){
+function answerQuiz(chosen, correct){
   const btns = document.querySelectorAll(".quiz-answer-btn");
   btns.forEach((b,i)=>{
     if(i===correct)b.classList.add("correct");
@@ -676,6 +676,7 @@ function answerQuiz(chosen, correct, expl){
   if(chosen===correct){S.quiz.score++;celebrate();}
   // Ajouter explication
   const q = QUIZ_QUESTIONS[S.quiz.cat][S.quiz.idx];
+  const expl = q.expl;
   const expEl = document.createElement("div");
   expEl.className="card fade-in";
   expEl.style.cssText="margin-top:8px;border-color:"+(chosen===correct?"var(--green)":"var(--rose)");
@@ -773,7 +774,7 @@ function renderComplic(){
       <div class="complic-q fade-in">
         <div style="font-size:24px;margin-bottom:8px">${q.emoji}</div>
         <div class="complic-q-text">${q.q}</div>
-        ${q.opts.map((o,i)=>`<button onclick="answerComplic('${o}')" style="background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-size:14px;width:100%;margin-bottom:8px;text-align:left;cursor:pointer;font-family:var(--font-b);transition:all .2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+        ${q.opts.map((o,i)=>`<button onclick="answerComplicIdx(${i})" style="background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-size:14px;width:100%;margin-bottom:8px;text-align:left;cursor:pointer;font-family:var(--font-b);transition:all .2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
           <span style="color:var(--gold);font-weight:700;margin-right:8px">${String.fromCharCode(65+i)}.</span>${o}
         </button>`).join("")}`;
     return;
@@ -819,7 +820,7 @@ function renderComplic(){
       ?`<div class="complic-match"><div style="font-size:24px;margin-bottom:6px">🎉</div><div style="font-size:15px;font-weight:700;color:var(--green)">Même réponse !</div><div style="font-size:12px;color:var(--muted);margin-top:4px">+5 points chacun 💑</div></div>`
       :`<div class="complic-nomatch"><div style="font-size:24px;margin-bottom:6px">🤔</div><div style="font-size:15px;font-weight:700;color:var(--rose)">Réponses différentes !</div><div style="font-size:12px;color:var(--muted);margin-top:4px">C'est ça qui est intéressant 😄</div></div>`}
     <div class="complic-level">${level}</div>
-    <div style="color:var(--muted);font-size:12px;text-align:center;margin-bottom:16px">Complicité sur ${totalCount} question${totalCount>1?"s":""} : ${matchCount} fois pareil</div>
+    <div style="color:var(--muted);font-size:12px;text-align:center;margin-bottom:16px">Complicité sur ${totalCount} question${totalCount>=2?"s":""} : ${matchCount} fois pareil</div>
     <button class="btn" onclick="nextComplicQ()">Question suivante →</button>
   </div>`;
 
@@ -827,6 +828,11 @@ function renderComplic(){
   if(match && !state.pointed){addPoints("raphy",5);addPoints("mehdi",5);dbSave("complic_state/pointed",true);}
 }
 
+function answerComplicIdx(optIdx){
+  const idx = S.complicFB?.qIdx||0;
+  const q = COMPLIC_QUESTIONS[idx];
+  if(q && q.opts[optIdx]!==undefined) answerComplic(q.opts[optIdx]);
+}
 function answerComplic(answer){
   const idx = S.complicFB?.qIdx||0;
   const update={};
@@ -885,7 +891,7 @@ function renderDevine(){
       el.innerHTML=`<div class="quiz-result-card fade-in">
         <div style="font-size:56px;margin-bottom:12px">🎉</div>
         <div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--gold)">${state.word}</div>
-        <div style="color:var(--muted);font-size:13px;margin:8px 0">${other==="raphy"?"Raphy":"Mehdi"} a trouvé en ${guesses.length} essai${guesses.length>1?"s":""} !</div>
+        <div style="color:var(--muted);font-size:13px;margin:8px 0">${other==="raphy"?"Raphy":"Mehdi"} a trouvé en ${guesses.length} essai${guesses.length>=2?"s":""} !</div>
         <div style="color:var(--gold);font-size:14px;font-weight:700;margin-bottom:16px">+5 pts pour ${other==="raphy"?"💗":"💙"} ${other}</div>
         <button class="btn" onclick="resetDevine()">Nouvelle partie 🎲</button>
       </div>`;
@@ -924,7 +930,7 @@ function renderDevine(){
       el.innerHTML=`<div class="quiz-result-card fade-in">
         <div style="font-size:56px;margin-bottom:12px">🏆</div>
         <div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--gold)">${state.word}</div>
-        <div style="color:var(--green);font-size:16px;font-weight:700;margin:8px 0">Trouvé en ${guesses.length} essai${guesses.length>1?"s":""} !</div>
+        <div style="color:var(--green);font-size:16px;font-weight:700;margin:8px 0">Trouvé en ${guesses.length} essai${guesses.length>=2?"s":""} !</div>
         <div style="color:var(--gold);font-size:14px;font-weight:700;margin-bottom:16px">+5 points pour toi 🎉</div>
         <button class="btn" onclick="resetDevine()">Rejouer 🎲</button>
       </div>`;
@@ -950,7 +956,7 @@ function renderDevine(){
     el.innerHTML=`<div class="fade-in">
       <div style="text-align:center;margin-bottom:14px">
         <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px">Catégorie : ${cat?.label} ${cat?.emoji}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">${word.length} lettre${word.length>1?"s":""}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">${word.length} lettre${word.length>=2?"s":""}</div>
       </div>
       <div class="devine-word-display">${word.split("").map(c=>c===" "?"&nbsp;&nbsp;":"_").join(" ")}</div>
       <div class="devine-lives">
@@ -1067,7 +1073,7 @@ function renderBac(){
           <div class="bac-reveal-col" style="border-color:var(--rose)">
             <div class="bac-reveal-who" style="color:var(--rose)">💗 Raphy</div>
             <div class="bac-reveal-item">
-              <span style="font-size:13px">${rAns[cat]||<span style='color:var(--dim)'>—</span>}</span>
+              <span style="font-size:13px">${rAns[cat]||`<span style='color:var(--dim)'>—</span>`}</span>
               ${rAns[cat]?`<button class="bac-point-btn" onclick="giveBacPoint('raphy','${cat}')" title="+1 pt Raphy">💗</button>`:""}
             </div>
           </div>
@@ -1168,7 +1174,7 @@ function renderVingt(){
     el.innerHTML=`<div class="quiz-result-card fade-in">
       <div style="font-size:56px;margin-bottom:12px">${state.correct?"🎉":"💡"}</div>
       <div style="font-family:var(--font-d);font-size:22px;font-weight:900;color:var(--gold);margin-bottom:8px">${state.item}</div>
-      <div style="color:var(--muted);font-size:13px;margin-bottom:12px">${state.correct?"Bien deviné en "+currentQ+" question"+(currentQ>1?"s":"")+" !":"Pas deviné, mais ça valait le coup d'essayer !"}</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:12px">${state.correct?"Bien deviné en "+currentQ+" question"+(currentQ>=2?"s":"")+" !":"Pas deviné, mais ça valait le coup d'essayer !"}</div>
       ${state.correct?`<div style="color:var(--gold);font-size:14px;font-weight:700;margin-bottom:16px">+8 pts pour ${state.guesser==="raphy"?"💗 Raphy":"💙 Mehdi"}</div>`:""}
       <button class="btn" onclick="resetVingt()">Nouvelle partie 🎯</button>
     </div>`;
@@ -1193,9 +1199,17 @@ function renderVingt(){
             <button class="vingt-q-btn" onclick="answerVingt('peut')">🤔 Parfois</button>
           </div>
         </div>
+        ${state.pendingGuess?`
+          <div style="margin-top:12px;background:var(--gold-soft);border:1px solid var(--gold-border);border-radius:14px;padding:14px;text-align:center">
+            <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px">💡 ${state.guesser==="raphy"?"Raphy":"Mehdi"} tente :</div>
+            <div style="font-family:var(--font-d);font-size:20px;font-weight:900;margin-bottom:12px">${state.pendingGuess}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <button class="btn btn-green btn-sm" onclick="vingtGuessed(true)">✅ Correct !</button>
+              <button class="btn btn-outline-rose btn-sm" onclick="rejectVingtGuess()">❌ Non, continue</button>
+            </div>
+          </div>`:""}
         <div style="margin-top:12px">
-          <button class="btn btn-green btn-sm" style="width:auto" onclick="vingtGuessed(true)">🎉 Il/Elle a trouvé !</button>
-          <button class="btn btn-outline-rose btn-sm" style="margin-top:8px;width:auto" onclick="vingtGuessed(false)">😅 Impossible, révéler</button>
+          <button class="btn btn-outline-rose btn-sm" style="width:auto" onclick="vingtGuessed(false)">😅 Impossible, révéler le mot</button>
         </div>`:"<div class='card' style='text-align:center;color:var(--muted)'>20 questions posées ! A-t-il/elle trouvé ?</div>"}
       <div style="margin-top:14px">
         <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:8px">Réponses précédentes :</div>
@@ -1216,9 +1230,16 @@ function renderVingt(){
         ${answered.map((a,i)=>`<div class="vingt-answered"><span class="vingt-answered-q">${VINGT_QUESTIONS[i]}</span><span class="vingt-answered-r">${a==="oui"?"✅":a==="non"?"❌":"🤔"}</span></div>`).join("")}
       </div>
       <div class="vingt-guess-area" style="margin-top:14px">
-        <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:8px">Ta tentative :</div>
-        <input class="input" id="vingt-final-guess" placeholder="J'ai trouvé ! C'est..." style="margin-bottom:10px">
-        <button class="btn btn-rose" onclick="submitVingtGuess()">Je tente ma chance ! 🎯</button>
+        ${state.pendingGuess?`
+          <div style="text-align:center">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Ta tentative envoyée :</div>
+            <div style="font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--gold);margin-bottom:8px">${state.pendingGuess}</div>
+            <div style="font-size:12px;color:var(--muted)">En attente de validation de ${state.picker==="raphy"?"Raphy 💗":"Mehdi 💙"}...</div>
+            <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="cancelVingtGuess()">Modifier ma tentative</button>
+          </div>`:`
+          <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:8px">Ta tentative :</div>
+          <input class="input" id="vingt-final-guess" placeholder="J'ai trouvé ! C'est..." style="margin-bottom:10px">
+          <button class="btn btn-rose" onclick="submitVingtGuess()">Je tente ma chance ! 🎯</button>`}
       </div>
     </div>`;
   }
@@ -1245,7 +1266,10 @@ function answerVingt(answer){
 function submitVingtGuess(){
   const guess=document.getElementById("vingt-final-guess")?.value.trim();if(!guess)return;
   const state=S.vingtFB||{};
-  toast(`"${guess}" envoyé... ${state.picker==="raphy"?"Raphy":"Mehdi"} va valider !`);
+  dbSave("vingt_state/pendingGuess",guess);
+  S.vingtFB={...state,pendingGuess:guess};
+  toast(`"${guess}" envoyé ! ${state.picker==="raphy"?"Raphy":"Mehdi"} va valider 🎯`);
+  renderVingt();
 }
 
 function vingtGuessed(correct){
@@ -1253,6 +1277,18 @@ function vingtGuessed(correct){
   dbSave("vingt_state/phase","guessed");
   dbSave("vingt_state/correct",correct);
   S.vingtFB={...state,phase:"guessed",correct};
+  renderVingt();
+}
+function rejectVingtGuess(){
+  // Le picker refuse la tentative — on efface et le guesser continue
+  dbSave("vingt_state/pendingGuess",null);
+  if(S.vingtFB)S.vingtFB.pendingGuess=null;
+  toast("Tentative refusée — continuez le jeu !");
+  renderVingt();
+}
+function cancelVingtGuess(){
+  dbSave("vingt_state/pendingGuess",null);
+  if(S.vingtFB)S.vingtFB.pendingGuess=null;
   renderVingt();
 }
 
