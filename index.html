@@ -305,6 +305,12 @@ textarea.input{resize:vertical;min-height:80px}
 .empty-state{text-align:center;color:var(--dim);padding:40px 0}
 .empty-icon{font-size:48px;margin-bottom:10px}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.spin{display:inline-block;animation:spinA 1s linear infinite}
+@keyframes spinA{to{transform:rotate(360deg)}}
+body.anniv-mode{background:linear-gradient(135deg,#1a0d14,#0d0f14)}
+body.anniv-mode .home-card,body.anniv-mode .card{border-color:var(--gold-border)}
+.pensee-react-badge{font-size:16px;margin-left:6px}
 .fade-in{animation:fadeIn .3s ease forwards}
 .spin{animation:spin 1s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -450,13 +456,15 @@ document.dispatchEvent(new Event("firebaseReady"));
       <div class="card" style="margin-bottom:12px">
         <div class="card-title">💭 Bulle de pensée</div>
         <div class="pensee-grid">
-          <div class="pensee-item" onclick="openPensee('raphy')">
-            <div class="pensee-who" style="color:var(--rose)">💗 Raphy</div>
-            <div id="pensee-raphy" style="font-size:12px;color:var(--muted);font-style:italic">Appuie pour écrire...</div>
+          <div class="pensee-item">
+            <div class="pensee-who" style="color:var(--rose)">💗 Raphy <span id="pensee-react-raphy" class="pensee-react-badge"></span></div>
+            <div onclick="openPensee('raphy')" id="pensee-raphy" style="font-size:12px;color:var(--muted);font-style:italic;cursor:pointer">Appuie pour écrire...</div>
+            <button onclick="reactPensee('raphy')" style="margin-top:6px;font-size:10px;color:var(--gold);background:none;border:none;cursor:pointer">+ réagir</button>
           </div>
-          <div class="pensee-item" onclick="openPensee('mehdi')">
-            <div class="pensee-who" style="color:var(--blue)">💙 Mehdi</div>
-            <div id="pensee-mehdi" style="font-size:12px;color:var(--muted);font-style:italic">Appuie pour écrire...</div>
+          <div class="pensee-item">
+            <div class="pensee-who" style="color:var(--blue)">💙 Mehdi <span id="pensee-react-mehdi" class="pensee-react-badge"></span></div>
+            <div onclick="openPensee('mehdi')" id="pensee-mehdi" style="font-size:12px;color:var(--muted);font-style:italic;cursor:pointer">Appuie pour écrire...</div>
+            <button onclick="reactPensee('mehdi')" style="margin-top:6px;font-size:10px;color:var(--gold);background:none;border:none;cursor:pointer">+ réagir</button>
           </div>
         </div>
       </div>
@@ -491,6 +499,15 @@ document.dispatchEvent(new Event("firebaseReady"));
         <div style="font-family:var(--font-d);font-size:13px;font-style:italic;line-height:1.6" id="last-mot-text"></div>
         <div style="color:var(--muted);font-size:10px;margin-top:4px" id="last-mot-from"></div>
       </div>
+      <!-- STATUT EN DIRECT -->
+      <div class="card" style="margin-bottom:12px;border-color:rgba(74,158,232,.3)">
+        <div class="card-title">⚡ En ce moment</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px" id="home-statut-cards"></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px" id="home-statut-opts"></div>
+        <input class="input" id="home-statut-custom" placeholder="Statut libre..." style="margin-bottom:8px;font-size:13px">
+        <button class="btn btn-sm" onclick="saveStatutHome()" style="width:auto">Mettre à jour ⚡</button>
+      </div>
+
       <div class="quick-actions">
         <div class="quick-btn" onclick="goTo('mots')"><span class="quick-btn-icon">💌</span>Mots doux</div>
         <div class="quick-btn" onclick="goTo('planning')"><span class="quick-btn-icon">📅</span>Planning</div>
@@ -536,8 +553,9 @@ document.dispatchEvent(new Event("firebaseReady"));
       <div id="mots-content">
         <div class="chat-wrap" id="chat-wrap"></div>
       </div>
-      <div id="ia-history-content" style="display:none;padding-bottom:140px" id="ia-hist-mots"></div>
+      <div id="ia-history-content" style="display:none;padding-bottom:140px"></div>
       <div class="chat-input-sticky">
+        <button id="mot-sugg-btn" onclick="genMotSuggestion()" style="width:100%;margin-bottom:8px;padding:8px;border-radius:10px;background:var(--gold-soft);border:1px solid var(--gold-border);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer">✨ Suggérer un mot doux</button>
         <div class="who-row" style="margin-bottom:8px">
           <button class="who-btn active-r" id="who-r" onclick="setWho('raphy')">💗 Raphy</button>
           <button class="who-btn" id="who-m" onclick="setWho('mehdi')">💙 Mehdi</button>
@@ -548,20 +566,7 @@ document.dispatchEvent(new Event("firebaseReady"));
           <button class="send-btn" onclick="sendMsg()">➤</button>
         </div>
       </div>
-    </div>
-
-    <!-- GALERIE -->
-    <div class="page" id="page-galerie">
-      <div class="section-header">
-        <div class="section-title">📸 Galerie</div>
-        <button class="btn btn-sm" style="width:auto" onclick="document.getElementById('photo-file').click()">+ Photo</button>
-      </div>
-      <input type="file" id="photo-file" accept="image/*" style="display:none" onchange="handlePhoto(this)">
-      <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px" id="album-tabs"></div>
-      <div class="photo-grid" id="photo-grid"></div>
-    </div>
-
-    <!-- OBJECTIFS -->
+    </div><!-- OBJECTIFS -->
     <div class="page" id="page-objectifs">
       <div class="section-header">
         <div class="section-title">🎯 Objectifs</div>
@@ -579,6 +584,7 @@ document.dispatchEvent(new Event("firebaseReady"));
         <button class="btn btn-sm btn-outline" style="width:auto" onclick="newDefi()">🎲 Nouveau</button>
       </div>
       <div id="defi-zone"></div>
+      <button id="smart-defi-btn" onclick="genSmartDefi()" style="width:100%;margin-top:10px;padding:10px;border-radius:12px;background:var(--gold-soft);border:1px solid var(--gold-border);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer">✨ Défi du jour par Mahmoud</button>
       <div style="margin-top:16px">
         <div class="section-header"><span style="font-size:14px;font-weight:700">🏆 Badges</span></div>
         <div class="badge-grid" id="badge-grid"></div>
@@ -650,7 +656,8 @@ document.dispatchEvent(new Event("firebaseReady"));
       <div style="background:linear-gradient(135deg,rgba(138,107,212,.15),var(--rose-soft));border:1px solid rgba(138,107,212,.3);border-radius:var(--radius);padding:18px;text-align:center;margin-bottom:14px">
         <div style="font-size:36px;margin-bottom:8px">💭</div>
         <div style="font-family:var(--font-d);font-size:16px;font-weight:700;line-height:1.5;margin-bottom:14px" id="q-text">Chargement...</div>
-        <button class="btn btn-sm btn-outline" style="width:auto;margin:0 auto" onclick="newQuestion()">Nouvelle ❓</button>
+        <button class="btn btn-sm btn-outline" style="width:auto;margin:0 auto 8px" onclick="newQuestion()">Nouvelle ❓</button>
+        <button id="gen-question-btn" onclick="genCoupleQuestion()" style="display:block;margin:0 auto;font-size:11px;padding:6px 14px;border-radius:20px;background:var(--gold-soft);border:1px solid var(--gold-border);color:var(--gold);font-weight:700;cursor:pointer">✨ Nouvelle question par Mahmoud</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
         <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px">
@@ -716,27 +723,7 @@ document.dispatchEvent(new Event("firebaseReady"));
       <div class="section-title" style="text-align:center;margin-bottom:6px">🧠 Quiz sur l'autre</div>
       <div style="text-align:center;color:var(--muted);font-size:12px;margin-bottom:16px">Combien tu me connais vraiment ?</div>
       <div id="quiz-zone"></div>
-    </div>
-
-    <!-- JOURNAL -->
-    <div class="page" id="page-journal">
-      <div class="section-header">
-        <div class="section-title">📓 Journal IA</div>
-        <button class="btn btn-sm btn-outline" style="width:auto" onclick="genJournalSummary()">✨ Résumé IA</button>
-      </div>
-      <div class="card">
-        <div class="card-title">Entrée du jour</div>
-        <div class="who-row" style="margin-bottom:10px">
-          <button class="who-btn active-r" id="jour-r" onclick="setJourWho('raphy')">💗 Raphy</button>
-          <button class="who-btn" id="jour-m" onclick="setJourWho('mehdi')">💙 Mehdi</button>
-        </div>
-        <textarea class="input" id="journal-input" placeholder="Raconte ta journée..." rows="4"></textarea>
-        <button class="btn" style="margin-top:10px" onclick="saveJournal()">Enregistrer 📝</button>
-      </div>
-      <div id="journal-list"></div>
-    </div>
-
-    <!-- CADEAUX -->
+    </div><!-- CADEAUX -->
     <div class="page" id="page-cadeaux">
       <div class="section-title" style="margin-bottom:4px">🎁 Boîte à Cadeaux</div>
       <div style="color:var(--muted);font-size:12px;margin-bottom:14px">Nos envies secrètes 🤫</div>
@@ -750,6 +737,21 @@ document.dispatchEvent(new Event("firebaseReady"));
         <button class="btn" onclick="addGift()">Ajouter 🎁</button>
       </div>
       <div id="gifts-list"></div>
+    </div>
+
+    <!-- DIS-MOI TOUT -->
+    <!-- NOUS -->
+    <div class="page" id="page-nous">
+      <div class="section-header"><div class="section-title">💑 Nous</div></div>
+      <div id="nous-zone"></div>
+    </div>
+
+    <div class="page" id="page-dismoi">
+      <div class="section-header">
+        <div class="section-title">💬 Dis-moi tout</div>
+        <div style="font-size:11px;color:var(--muted)" id="dismoi-progress-label"></div>
+      </div>
+      <div id="dismoi-zone"></div>
     </div>
 
     <!-- SETTINGS -->
@@ -775,11 +777,12 @@ document.dispatchEvent(new Event("firebaseReady"));
           <button class="theme-btn" id="theme-ocean" onclick="setTheme('ocean',this)">💙 Océan</button>
         </div>
       </div>
-      <div class="card">
-        <div class="card-title">IA — Mahmoud (Gemini)</div>
-        <div style="color:var(--muted);font-size:12px;margin-bottom:10px">Clé configurée ✅</div>
-        <input class="input" id="gemini-key-input" type="password" placeholder="AIza..." style="margin-bottom:10px">
+      <div class="card" style="border-color:var(--gold-border)">
+        <div class="card-title">✨ Mahmoud — Clé API Gemini</div>
+        <div id="gemini-key-status" style="font-size:12px;margin-bottom:10px"></div>
+        <input class="input" id="gemini-key-input" placeholder="AIzaSy..." style="margin-bottom:10px">
         <button class="btn" onclick="saveGeminiKey()">Sauvegarder 🔑</button>
+        <button class="btn btn-outline" style="margin-top:8px" onclick="testGeminiKey()">Tester la connexion ⚡</button>
       </div>
       <div class="card">
         <div class="card-title">Infos du couple</div>
@@ -801,9 +804,9 @@ document.dispatchEvent(new Event("firebaseReady"));
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <button class="nav-btn active" onclick="goTo('home',this)"><span class="nav-icon">🏠</span><span class="nav-label">Accueil</span></button>
+    <button class="nav-btn" onclick="goTo('nous',this)"><span class="nav-icon">💑</span><span class="nav-label">Nous</span></button>
     <button class="nav-btn" onclick="goTo('planning',this)"><span class="nav-icon">📅</span><span class="nav-label">Planning</span></button>
     <button class="nav-btn" onclick="goTo('mots',this)"><span class="nav-icon">💌</span><span class="nav-label">Mots</span></button>
-    <button class="nav-btn" onclick="goTo('galerie',this)"><span class="nav-icon">📸</span><span class="nav-label">Galerie</span></button>
     <button class="nav-btn" onclick="goTo('objectifs',this)"><span class="nav-icon">🎯</span><span class="nav-label">Objectifs</span></button>
     <button class="nav-btn" onclick="goTo('defis',this)"><span class="nav-icon">🎮</span><span class="nav-label">Défis</span></button>
     <button class="nav-btn" onclick="goTo('notes',this)"><span class="nav-icon">📝</span><span class="nav-label">Notes</span></button>
@@ -813,8 +816,8 @@ document.dispatchEvent(new Event("firebaseReady"));
     <button class="nav-btn" onclick="goTo('statut',this)"><span class="nav-icon">⚡</span><span class="nav-label">Statut</span></button>
     <button class="nav-btn" onclick="goTo('dates',this)"><span class="nav-icon">🎂</span><span class="nav-label">Dates</span></button>
     <button class="nav-btn" onclick="goTo('quiz',this)"><span class="nav-icon">🧠</span><span class="nav-label">Quiz</span></button>
-    <button class="nav-btn" onclick="goTo('journal',this)"><span class="nav-icon">📓</span><span class="nav-label">Journal</span></button>
     <button class="nav-btn" onclick="openJeux()" id="nav-jeux"><span class="nav-icon">🎮</span><span class="nav-label">Jeux</span></button>
+    <button class="nav-btn" onclick="goTo('dismoi',this)"><span class="nav-icon">💬</span><span class="nav-label">Dis-moi tout</span></button>
     <button class="nav-btn" onclick="goTo('settings',this)"><span class="nav-icon">⚙️</span><span class="nav-label">Réglages</span></button>
   </nav>
 </div><!-- /app-screen -->
@@ -969,9 +972,12 @@ document.dispatchEvent(new Event("firebaseReady"));
   </div>
 </div>
 <script>
+
+// Helper pour éviter les > dans template literals
+function _if(cond, html, fallback){return cond?html:(fallback||"")}
 // ═══════════════════════════ CONSTANTS ═══════════════════════════
 const PIN="1105";
-const GEMINI_KEY="AIzaSyD9o6exESRrRkej_7c7zxVl4lc-6uLTx88";
+const GEMINI_KEY=""; // Clé entrée dans Paramètres
 const COUPLE_DATE=new Date("2026-05-11");
 const MFR=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const MFR_S=["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"];
@@ -1101,22 +1107,7 @@ const DEFIS=[
   {icon:"🧁",title:"Pâtisserie",desc:"Faites des gâteaux ou cookies ensemble.",pts:15},
 ];
 
-const QUESTIONS_LIST=[
-  "Si tu pouvais voyager n'importe où demain matin, où irais-tu ?",
-  "Quel est ton souvenir préféré de nous deux depuis qu'on est ensemble ?",
-  "Si on était un film, lequel ce serait et qui jouerait nos rôles ?",
-  "Qu'est-ce qui te fait te sentir le plus aimé(e) au quotidien ?",
-  "Dans 5 ans, tu nous imagines où et comment ?",
-  "Quel est ton défaut préféré chez moi ? 😄",
-  "Quelle est la chose que tu n'osais pas faire avant et que tu fais maintenant grâce à moi ?",
-  "Si tu pouvais changer une seule chose dans notre quotidien, ce serait quoi ?",
-  "Quel est le moment où tu as su que j'étais la bonne personne pour toi ?",
-  "Si on avait une journée parfaite ensemble demain, elle ressemblerait à quoi ?",
-  "Quel est ton rêve secret que tu ne m'as jamais dit ?",
-  "Qu'est-ce qui te rend le plus fier(e) de toi en ce moment ?",
-  "Si tu pouvais m'offrir n'importe quoi, ce serait quoi ?",
-  "Quelle chanson te fait automatiquement penser à moi ?",
-];
+
 
 const QUIZ_QS=[
   {q:"Ma couleur préférée ?",who:"raphy",opts:["Rose","Bleu","Noir","Violet"],correct:0},
@@ -1145,7 +1136,7 @@ let S={
   currentGratWho:"raphy",currentJourWho:"raphy",currentGiftWho:"raphy",
   currentCapsWho:"raphy",currentPenseeFor:"raphy",currentMood:"😍",
   weekOffset:0,currentPlanTab:"semaine",currentDateType:"anniv",
-  notifs:[],bonneNuitCount:0,currentQuestion:null,
+  notifs:[],bonneNuitCount:0,currentQuestion:null,quizSelfAnswers:{},quizGuesses:{},dismoiFB:{batchIdx:0,answers:{},revealed:false},
   wheelAngle:0,wheelSpinning:false,quizIdx:0,quizScore:0,
   couplePhoto:null,noteFilter:"tous",selectedStatut:null,currentPage:"home",
 };
@@ -1166,7 +1157,7 @@ function celebrate(){
   for(let i=0;i<60;i++){
     const p=document.createElement("div");p.className="conf";
     const c=colors[Math.floor(Math.random()*colors.length)];
-    p.style.cssText=`--x:${Math.random()*100}%;--d:${1+Math.random()*2}s;--dl:${Math.random()*.6}s;--c:${c};--r:${Math.random()*360}deg;--br:${Math.random()>.5?"50%":"2px"}`;
+    p.style.cssText=`--x:${Math.random()*100}%;--d:${1+Math.random()*2}s;--dl:${Math.random()*.6}s;--c:${c};--r:${Math.random()*360}deg;--br:${Math.random()>=0.5?"50%":"2px"}`;
     w.appendChild(p);
   }
   setTimeout(()=>{w.style.display="none";w.innerHTML=""},4000);
@@ -1284,11 +1275,14 @@ function initApp(){
   document.getElementById("header-date").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
   document.getElementById("profile-label").textContent=S.profile==="raphy"?"💗 Raphy":"💙 Mehdi";
   initMoodRow();initShiftTypeGrid();initGoalCatGrid();initNoteTypeBtns();initNoteFilterTabs();initAlbumTabs();initAlbumPicker();initStatutOpts();initDateTypeGrid();initHumeurPicker();initHumeurSuggestions();
-  loadQuestionOfDay();loadDefiOfDay();
+  loadQuestionOfDay();loadDefiOfDay();initHomeStatut();updateGeminiKeyStatus();
   renderPage("home");
   document.addEventListener("firebaseReady",initFirebase);
   if(window.firebaseReady)initFirebase();
   setTimeout(checkBirthdays,1000);
+  // Nouvelles features
+  checkAnniversaryMode();
+  setTimeout(()=>{checkMilestone();checkBirthdayReminders();checkSurpriseBadges();},1500);
 }
 function applyTheme(t){S.theme=t;lsSet("theme_p",t);document.documentElement.setAttribute("data-theme",t==="nuit"?"":t);document.querySelectorAll(".theme-btn").forEach(b=>b.classList.toggle("active",b.id===`theme-${t}`));}
 function setTheme(t){applyTheme(t)}
@@ -1302,20 +1296,23 @@ function goTo(page,btn){
   else document.querySelectorAll(".nav-btn").forEach(b=>{if(b.getAttribute("onclick")?.includes(`'${page}'`))b.classList.add("active")});
   S.currentPage=page;
   if(page==="ia") S._welcomeInjected=false;
+  if(page==="home") S._morningInjected=false;
   renderPage(page);
 }
 function renderCurrent(){if(S.currentPage)renderPage(S.currentPage)}
 function renderPage(p){
   switch(p){
     case"home":renderHome();break;case"planning":renderPlanning();break;
-    case"mots":renderMots();break;case"galerie":renderGalerie();break;
+    case"mots":renderMots();break;
     case"objectifs":renderObjectifs();break;case"defis":renderDefis();renderBadges();break;
     case"notes":renderNotes();break;case"ia":renderIA();break;
     case"roue":renderRoue();break;case"question":renderQuestion();break;
     case"gratitude":renderGrat();break;case"statut":renderStatut();break;
     case"histoire":renderHistoire();break;case"dates":renderDates();break;
-    case"quiz":renderQuiz();break;case"journal":renderJournal();break;
+    case"quiz":renderQuiz();break;
     case"cadeaux":renderCadeaux();break;
+    case"nous":renderNous();break;
+    case"dismoi":renderDisMoi();break;
   }
 }
 
@@ -1346,6 +1343,8 @@ function renderHome(){
   document.getElementById("hum-p-raphy").textContent=S.humeurs.raphy?.phrase||"Comment tu vas ?";
   document.getElementById("hum-e-mehdi").textContent=S.humeurs.mehdi?.e||"😊";
   document.getElementById("hum-p-mehdi").textContent=S.humeurs.mehdi?.phrase||"Comment tu vas ?";
+  renderPenseeReactions();
+  injectSmartMorning();
   renderTodaySchedule();renderNextOff();
   document.getElementById("stat-msgs").textContent=S.messages.length;
   document.getElementById("stat-off").textContent=countWeekOff();
@@ -1383,7 +1382,7 @@ function renderNextOff(){
   for(let i=0;i<60;i++){
     const d=new Date(t);d.setDate(t.getDate()+i);const str=fmt(d);const s=S.schedule[str]||{};
     const rO=s.raphy?.type==="repos"||s.raphy?.type==="conge";const mO=s.mehdi?.type==="repos"||s.mehdi?.type==="conge";
-    if(rO&&mO){document.getElementById("off-num").textContent=i===0?"Aujourd'hui ! 🎉":`Dans ${i} jour${i>1?"s":""}`;document.getElementById("off-date").textContent=d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});return;}
+    if(rO&&mO){document.getElementById("off-num").textContent=i===0?"Aujourd'hui ! 🎉":`Dans ${i} jour${i>=2?"s":""}`;document.getElementById("off-date").textContent=d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});return;}
   }
   document.getElementById("off-num").textContent="—";document.getElementById("off-date").textContent="Remplissez votre planning !";
 }
@@ -1401,7 +1400,7 @@ function renderWeekPlan(){
   const freeDays=days.filter(d=>{const s=S.schedule[fmt(d)]||{};return(s.raphy?.type==="repos"||s.raphy?.type==="conge")&&(s.mehdi?.type==="repos"||s.mehdi?.type==="conge")});
   let html=`<div class="week-nav">
     <button class="week-nav-btn" onclick="changeWeek(-1)">‹</button>
-    <div style="text-align:center"><div style="font-size:13px;font-weight:700">${days[0].getDate()} ${MFR_S[days[0].getMonth()]} — ${days[6].getDate()} ${MFR_S[days[6].getMonth()]}</div><div style="font-size:10px;color:var(--muted);margin-top:1px">${S.weekOffset===0?"Cette semaine":S.weekOffset>0?`+${S.weekOffset} sem.`:`${S.weekOffset} sem.`}</div></div>
+    <div style="text-align:center"><div style="font-size:13px;font-weight:700">${days[0].getDate()} ${MFR_S[days[0].getMonth()]} — ${days[6].getDate()} ${MFR_S[days[6].getMonth()]}</div><div style="font-size:10px;color:var(--muted);margin-top:1px">${S.weekOffset===0?"Cette semaine":S.weekOffset>=1?`+${S.weekOffset} sem.`:`${S.weekOffset} sem.`}</div></div>
     <button class="week-nav-btn" onclick="changeWeek(1)">›</button>
   </div>`;
   if(freeDays.length>0)html+=`<div class="free-banner">🎉 Libres ensemble : ${freeDays.map(d=>DFR[days.indexOf(d)]).join(", ")}</div>`;
@@ -1420,7 +1419,7 @@ function renderWeekPlan(){
           <div class="plan-slot-label">${sh.label}</div>
           <div class="plan-slot-hours">${primary.start?`${primary.start}–${primary.end}`:""}</div>
           ${primary.note?`<div style="font-size:8px;color:var(--gold);margin-top:1px">📌 ${primary.note}</div>`:""}
-          ${extraCount>0?`<div style="font-size:8px;background:${sh.color}33;color:${sh.color};border-radius:6px;padding:1px 5px;margin-top:2px">+${extraCount} autre${extraCount>1?"s":""}</div>`:""}
+          ${extraCount>=1?`<div style="font-size:8px;background:${sh.color}33;color:${sh.color};border-radius:6px;padding:1px 5px;margin-top:2px">+${extraCount} autre${extraCount>=2?"s":""}</div>`:""}
         </div>`;
       } else {
         html+=`<div class="plan-slot" onclick="openShiftModal('${ds}','${who}')"><div style="color:var(--dim);font-size:22px">+</div></div>`;
@@ -1749,7 +1748,7 @@ function renderNotes(){
         <button onclick="event.stopPropagation();delNote(${n.id})" style="color:var(--dim);font-size:14px">🗑️</button>
       </div>
       ${n.title?`<div style="font-size:14px;font-weight:700;margin-top:6px">${n.title}</div>`:""}${extra}
-      ${n.body?`<div style="font-size:12px;color:var(--muted);line-height:1.4">${n.body.slice(0,120)}${n.body.length>120?"...":""}</div>`:""}
+      ${n.body?`<div style="font-size:12px;color:var(--muted);line-height:1.4">${n.body.slice(0,120)}${n.body.length>=121?"...":""}</div>`:""}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span style="font-size:10px;color:var(--dim)">${n.date}</span><span style="font-size:9px;color:var(--dim)">${n.addedBy==="raphy"?"💗":"💙"}</span></div>
     </div>`;
   }).join("");
@@ -1786,12 +1785,18 @@ function completeDefi(){
 }
 function renderBadges(){
   const el=document.getElementById("badge-grid");if(!el)return;
-  el.innerHTML=BADGES.map(b=>`<div class="badge-item${S.badges[b.id]?" earned":" locked"}"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.label}</div></div>`).join("");
+  let html=BADGES.map(b=>`<div class="badge-item${S.badges[b.id]?" earned":" locked"}"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.label}</div></div>`).join("");
+  const surprises=getEarnedSurpriseBadges();
+  if(surprises.length){
+    html+=surprises.map(b=>`<div class="badge-item earned" style="border-color:var(--gold)"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.label}</div></div>`).join("");
+  }
+  el.innerHTML=html;
 }
 function checkAllBadges(){
   let changed=false;
   BADGES.forEach(b=>{if(!S.badges[b.id]&&b.cond(S)){S.badges[b.id]=true;changed=true;toast(`🏆 Badge : ${b.label} !`);addNotif(`🏆 Badge débloqué : ${b.icon} ${b.label}`);celebrate();}});
   if(changed){dbSave("badges");renderBadges();}
+  checkSurpriseBadges();
 }
 
 // ═══════════════════════════ IA — NOÉ ═══════════════════════════
@@ -1842,7 +1847,7 @@ Génère UN message d'accueil court pour Mehdi :
 - MAX 1 emoji
 - EN FRANÇAIS`;
 
-  const key = lsGet("gemini_key") || "AIzaSyD9o6exESRrRkej_7c7zxVl4lc-6uLTx88";
+  const key = lsGet("gemini_key") || "";
   const loadId = "welcome-" + Date.now();
 
   // Afficher indicateur de chargement
@@ -1854,7 +1859,7 @@ Génère UN message d'accueil court pour Mehdi :
   }
 
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         contents:[{role:"user",parts:[{text:prompt}]}],
@@ -1912,7 +1917,7 @@ function renderIAHistory(){
 function buildIAContext(){
   const t=todayStr();const slots=S.schedule[t]||{};const tom=fmt(new Date(Date.now()+86400000));const slotsT=S.schedule[tom]||{};
   const getShift=(s,w)=>{const sl=s[w];if(!sl)return"non planifié";const sh=SHIFT_TYPES.find(t=>t.id===sl.type);return sh?`${sh.label}${sl.start?` (${sl.start}–${sl.end})`:""}`:sl.type};
-  const nextOff=()=>{for(let i=0;i<30;i++){const d=new Date();d.setDate(d.getDate()+i);const s=S.schedule[fmt(d)]||{};if((s.raphy?.type==="repos"||s.raphy?.type==="conge")&&(s.mehdi?.type==="repos"||s.mehdi?.type==="conge"))return i===0?"aujourd'hui":`dans ${i} jour${i>1?"s":""}`;} return"non encore planifié"};
+  const nextOff=()=>{for(let i=0;i<30;i++){const d=new Date();d.setDate(d.getDate()+i);const s=S.schedule[fmt(d)]||{};if((s.raphy?.type==="repos"||s.raphy?.type==="conge")&&(s.mehdi?.type==="repos"||s.mehdi?.type==="conge"))return i===0?"aujourd'hui":`dans ${i} jour${i>=2?"s":""}`;} return"non encore planifié"};
   const recentMsgs=S.messages.slice(-5).map(m=>`${m.who==="raphy"?"Raphy":"Mehdi"}: "${m.text}"`).join(" | ");
   const goals=S.goals.filter(g=>!g.done).map(g=>g.title).join(", ");
 
@@ -2022,10 +2027,15 @@ async function sendIAMsg(text,isSugg=false){
   chat.innerHTML+=`<div class="ia-msg bot" id="${loadId}"><div style="display:flex;gap:4px;align-items:center;padding:4px 0"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
   chat.lastElementChild?.scrollIntoView({behavior:"smooth"});
   const key=lsGet("gemini_key")||GEMINI_KEY;
+  if(!key){
+    const el2=document.getElementById(loadId);
+    if(el2)el2.innerHTML=`<div class="ia-who-tag" style="color:var(--gold)">✨ Mahmoud</div>Entre ta clé API Gemini dans ⚙️ Paramètres pour m'activer 🔑`;
+    return;
+  }
   try{
     // Build history for Gemini (only role:user and role:model, skip metadata)
     const history=S.iaHistory.slice(-14,-1).map(m=>({role:m.role==="user"?"user":"model",parts:[{text:m.content}]}));
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         system_instruction:{parts:[{text:buildIAContext()}]},
@@ -2060,7 +2070,35 @@ function clearIAChat(){
   if(suggs){suggs.style.display="flex";initIASuggestions();}
   toast("Conversation effacée");
 }
-function saveGeminiKey(){const key=document.getElementById("gemini-key-input").value.trim();lsSet("gemini_key",key);toast("Clé API sauvegardée 🔑")}
+function saveGeminiKey(){
+  const key=document.getElementById("gemini-key-input").value.trim();
+  if(!key){toast("Entre une clé valide !");return;}
+  lsSet("gemini_key",key);
+  updateGeminiKeyStatus();
+  toast("Clé API sauvegardée 🔑");
+}
+function updateGeminiKeyStatus(){
+  const el=document.getElementById("gemini-key-status");
+  if(!el)return;
+  const key=lsGet("gemini_key");
+  if(key) el.innerHTML=`<span style="color:#3A9E6A">✅ Clé configurée — Mahmoud est prêt !</span>`;
+  else el.innerHTML=`<span style="color:var(--rose)">❌ Clé manquante — entre ta clé Gemini ci-dessous</span>`;
+}
+async function testGeminiKey(){
+  const key=lsGet("gemini_key");
+  if(!key){toast("Entre d'abord une clé !");return;}
+  toast("Test en cours... ⏳");
+  try{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contents:[{role:"user",parts:[{text:"Dis juste: OK"}]}],generationConfig:{maxOutputTokens:10}})
+    });
+    const data=await res.json();
+    if(data.error) toast("❌ Erreur: "+data.error.message);
+    else toast("✅ Clé valide ! Mahmoud fonctionne !");
+  }catch(e){toast("❌ Connexion impossible: "+e.message);}
+}
 </script>
 <script>
 // ═══════════════════════════ ROUE ═══════════════════════════
@@ -2099,7 +2137,8 @@ function spinWheel(){
       const norm=((S.wheelAngle%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
       const aidx=Math.floor(((Math.PI*1.5-norm+Math.PI*2)%(Math.PI*2))/(Math.PI*2/n))%n;
       const result=items[(n-1-aidx+n)%n];
-      const el2=document.getElementById("wheel-result");el2.textContent=result;el2.style.display="block";
+      const el2=document.getElementById("wheel-result");el2.style.display="block";
+      el2.innerHTML=`${result}<br><button onclick="genRoueDetails('${result.replace(/'/g,"")}')" style="margin-top:8px;font-size:11px;padding:6px 14px;border-radius:20px;background:var(--card);border:1px solid var(--gold-border);color:var(--gold);font-weight:700;cursor:pointer">✨ Mahmoud organise ça</button>`;
       toast(`🎲 ${result} !`);
     }
   }
@@ -2215,22 +2254,11 @@ function checkBirthdays(){
 }
 
 // ═══════════════════════════ QUIZ ═══════════════════════════
-function renderQuiz(){
-  const el=document.getElementById("quiz-zone");if(!el)return;
-  if(S.quizIdx===undefined)S.quizIdx=0;if(S.quizScore===undefined)S.quizScore=0;
-  if(S.quizIdx>=QUIZ_QS.length){
-    el.innerHTML=`<div style="text-align:center;padding:30px 0"><div style="font-size:56px;margin-bottom:12px">🏆</div><div style="font-family:var(--font-d);font-size:28px;font-weight:900;color:var(--gold)">${S.quizScore}/${QUIZ_QS.length}</div><div style="color:var(--muted);margin-top:6px">Tu me connais à ${Math.round(S.quizScore/QUIZ_QS.length*100)}% !</div><div style="color:var(--muted);font-size:12px;margin-top:4px">${S.quizScore>=6?"Impressionnant ! 😍":"On va améliorer ça ! 😄"}</div><button class="btn" style="margin-top:20px" onclick="resetQuiz()">Rejouer 🔄</button></div>`;
-    return;
-  }
-  const q=QUIZ_QS[S.quizIdx];const name=q.who==="raphy"?"💗 Raphy":"💙 Mehdi";const color=q.who==="raphy"?"var(--rose)":"var(--blue)";
-  el.innerHTML=`<div style="text-align:center;margin-bottom:16px"><div style="color:var(--muted);font-size:12px">Question ${S.quizIdx+1}/${QUIZ_QS.length}</div><div style="background:${q.who==="raphy"?"var(--rose-soft)":"var(--blue-soft)"};border:1px solid ${q.who==="raphy"?"var(--rose-border)":"var(--blue-border)"};border-radius:12px;padding:6px 16px;display:inline-block;margin:8px 0;font-size:12px;color:${color};font-weight:700">À propos de ${name}</div><div style="font-family:var(--font-d);font-size:17px;font-weight:700;line-height:1.5">${q.q}</div></div>
-  ${q.opts.map((o,i)=>`<button class="quiz-answer-btn" onclick="answerQuiz(${i})">${String.fromCharCode(65+i)}. ${o}</button>`).join("")}`;
-}
 function answerQuiz(idx){
   const q=QUIZ_QS[S.quizIdx];document.querySelectorAll(".quiz-answer-btn").forEach((b,i)=>{if(i===q.correct)b.classList.add("correct");else if(i===idx&&idx!==q.correct)b.classList.add("wrong");b.disabled=true;});
   if(idx===q.correct){S.quizScore++;celebrate();}S.quizIdx++;setTimeout(renderQuiz,1200);
 }
-function resetQuiz(){S.quizIdx=0;S.quizScore=0;renderQuiz()}
+
 
 // ═══════════════════════════ JOURNAL ═══════════════════════════
 function setJourWho(w){S.currentJourWho=w;document.getElementById("jour-r").className="who-btn"+(w==="raphy"?" active-r":"");document.getElementById("jour-m").className="who-btn"+(w==="mehdi"?" active-m":"")}
@@ -2245,7 +2273,7 @@ async function genJournalSummary(){
   el.insertAdjacentHTML("afterbegin",`<div id="jsum" class="card" style="border-color:var(--gold-border);text-align:center"><div class="spin">✨</div> Génération en cours...</div>`);
   const entries=S.journalEntries.slice(0,10).map(e=>`${e.date} (${e.who}): ${e.text}`).join("\n");
   try{
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({contents:[{parts:[{text:`Voici les entrées de journal du couple Raphy & Mehdi :\n${entries}\n\nRédige un résumé poétique et touchant de cette période en 3-4 phrases, comme si tu racontais leur histoire d'amour. Termine par une phrase d'encouragement. En français.`}]}]})
     });
@@ -2588,7 +2616,7 @@ async function showQuizSuccess(){
   const colors=["#C9A84C","#E8637A","#4A9EE8","#8B6FD4","#3A9E6A","#F0EDE8"];
   for(let i=0;i<80;i++){
     const p=document.createElement("div");
-    p.style.cssText=`position:absolute;width:8px;height:8px;border-radius:${Math.random()>.5?"50%":"2px"};background:${colors[Math.floor(Math.random()*colors.length)]};top:-10px;left:${Math.random()*100}%;animation:confFall ${1+Math.random()*2}s ease-in ${Math.random()*.5}s forwards;transform:rotate(${Math.random()*360}deg)`;
+    p.style.cssText=`position:absolute;width:8px;height:8px;border-radius:${Math.random()>=0.5?"50%":"2px"};background:${colors[Math.floor(Math.random()*colors.length)]};top:-10px;left:${Math.random()*100}%;animation:confFall ${1+Math.random()*2}s ease-in ${Math.random()*.5}s forwards;transform:rotate(${Math.random()*360}deg)`;
     wrap.appendChild(p);
   }
   const hearts=["💗","💕","💖","💓","✨"];
@@ -2600,7 +2628,7 @@ async function showQuizSuccess(){
   }
 
   // Message Mahmoud via Gemini
-  const key = lsGet("gemini_key") || "AIzaSyD9o6exESRrRkej_7c7zxVl4lc-6uLTx88";
+  const key = lsGet("gemini_key") || "";
   const isRaphy = quizState.profile === "raphy";
   const titleEl = document.getElementById("quiz-success-title");
   const subEl = document.getElementById("quiz-success-sub");
@@ -2626,7 +2654,7 @@ Génère UN message de félicitations (2-3 phrases MAX) :
 - MAX 1 emoji, EN FRANÇAIS`;
 
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:200,temperature:1.0}})
     });
@@ -2644,14 +2672,14 @@ Génère UN message de félicitations (2-3 phrases MAX) :
 
 // ═══════════════════════════ RÉSUMÉ SEMAINE ═══════════════════════════
 async function genWeeklySummary(){
-  const key = lsGet("gemini_key") || "AIzaSyD9o6exESRrRkej_7c7zxVl4lc-6uLTx88";
+  const key = lsGet("gemini_key") || "";
   const msgs = S.messages.length;
   const defis = S.defiHistory.length;
   const pts = S.points || 0;
   const photos = S.photos.length;
   const goals_done = S.goals.filter(g=>g.done).length;
   const nextOff = (() => {
-    for(let i=0;i<30;i++){const d=new Date();d.setDate(d.getDate()+i);const s=S.schedule[fmt(d)]||{};if((s.raphy?.type==="repos"||s.raphy?.type==="conge")&&(s.mehdi?.type==="repos"||s.mehdi?.type==="conge"))return i===0?"aujourd'hui":`dans ${i} jour${i>1?"s":""}`;}
+    for(let i=0;i<30;i++){const d=new Date();d.setDate(d.getDate()+i);const s=S.schedule[fmt(d)]||{};if((s.raphy?.type==="repos"||s.raphy?.type==="conge")&&(s.mehdi?.type==="repos"||s.mehdi?.type==="conge"))return i===0?"aujourd'hui":`dans ${i} jour${i>=2?"s":""}`;}
     return "pas encore planifié";
   })();
   const humR = S.humeurs?.raphy?.e || "?";
@@ -2669,7 +2697,7 @@ async function genWeeklySummary(){
 Génère un résumé de 4-5 phrases : drôle, taquin, avec des stats concrètes, une taquinerie sur leurs habitudes (Raphy toujours en retard, Mehdi le chambreur), et termine par quelque chose d'encourageant et mignon pour la semaine prochaine. EN FRANÇAIS, MAX 3 emojis.`;
 
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:300,temperature:0.9}})
     });
@@ -2772,5 +2800,1429 @@ document.addEventListener("DOMContentLoaded",()=>{
   setTimeout(requestPushPermission, 3000);
 });
 </script>
+<script>
+// ════════════════════════════════════════════════════════════
+// 30 QUESTIONS COUPLE
+// ════════════════════════════════════════════════════════════
+const QUESTIONS_LIST = [
+  "Si tu pouvais voyager n'importe où demain matin, où irais-tu et pourquoi ?",
+  "Quel est ton souvenir préféré de nous deux depuis qu'on est ensemble ?",
+  "Si on était un film, lequel ce serait et qui jouerait nos rôles ?",
+  "Qu'est-ce qui te fait te sentir le plus aimé(e) au quotidien ?",
+  "Dans 5 ans, tu nous imagines où et comment ?",
+  "Quel est ton défaut préféré chez moi ? (oui oui, ton préféré 😄)",
+  "Quelle est la chose que tu n'osais pas faire avant et que tu fais maintenant grâce à moi ?",
+  "Si tu pouvais changer une seule chose dans notre quotidien, ce serait quoi ?",
+  "Quel est le moment où tu as su que j'étais la bonne personne pour toi ?",
+  "Si on avait une journée parfaite ensemble demain, elle ressemblerait à quoi exactement ?",
+  "Quel est ton rêve secret que tu ne m'as jamais vraiment dit ?",
+  "Qu'est-ce qui te rend le plus fier(e) de toi en ce moment ?",
+  "Si tu pouvais m'offrir n'importe quoi sans limite de budget, ce serait quoi ?",
+  "Quelle chanson te fait automatiquement penser à moi et pourquoi ?",
+  "C'est quoi la chose la plus folle qu'on devrait faire ensemble avant la fin de l'année ?",
+  "Qu'est-ce que je fais qui te rend vraiment heureux(se) sans que je le sache peut-être ?",
+  "Si tu devais me décrire en 3 mots à quelqu'un qui ne me connaît pas, ce seraient lesquels ?",
+  "Quel est le moment de notre relation où tu t'es senti(e) le plus proche de moi ?",
+  "C'est quoi la prochaine étape que tu aimerais qu'on franchisse ensemble ?",
+  "Si on pouvait revivre un seul moment de notre relation, lequel tu choisirais ?",
+  "Qu'est-ce que tu apprends sur toi-même grâce à notre relation ?",
+  "C'est quoi une chose que tu n'as jamais osé me dire mais que tu voudrais que je sache ?",
+  "Si tu pouvais changer une chose dans la façon dont on communique, ce serait quoi ?",
+  "Quel est le plus beau compliment que tu m'as fait et dont je me souviens peut-être pas ?",
+  "C'est quoi ton rituel préféré qu'on partage même à distance ?",
+  "Si notre relation était une saison, ce serait laquelle et pourquoi ?",
+  "Qu'est-ce qui te manque le plus quand on est séparés pendant la journée ?",
+  "C'est quoi la chose la plus importante que tu as apprise sur l'amour grâce à nous ?",
+  "Si tu écrivais une lettre à notre couple dans 10 ans, tu dirais quoi ?",
+  "C'est quoi ton geste d'amour préféré — celui que tu préfères donner et celui que tu préfères recevoir ?",
+];
+
+// ════════════════════════════════════════════════════════════
+// 50 QUESTIONS QUIZ SUR SOI (chacun remplit ses réponses)
+// ════════════════════════════════════════════════════════════
+const QUIZ_SELF_QUESTIONS = [
+  // Goûts
+  "C'est quoi ta couleur préférée ?",
+  "Ton plat que tu pourrais manger tous les jours ?",
+  "Ta boisson préférée au réveil ?",
+  "Ton dessert favori ?",
+  "La cuisine d'un pays que tu adorerais manger tous les jours ?",
+  "Ton snack préféré pour regarder un film ?",
+  "Ta saison préférée et pourquoi ?",
+  "Ton genre de musique préféré ?",
+  "L'artiste ou groupe que tu écoutes en boucle en ce moment ?",
+  "Ton film ou série que tu pourrais regarder en boucle ?",
+  // Habitudes
+  "La première chose que tu fais en te levant le matin ?",
+  "À quelle heure tu te lèves naturellement sans alarme ?",
+  "Tu es plutôt du matin ou du soir ?",
+  "Ton rituel du soir avant de dormir ?",
+  "Ce que tu fais quand tu es stressé(e) ?",
+  "Ton péché mignon au quotidien ?",
+  "Ce qu'il y a toujours dans ton sac ou tes poches ?",
+  "Ton appli la plus utilisée sur ton téléphone ?",
+  "Ce que tu fais pendant tes pauses au travail ?",
+  "Ton émoji le plus envoyé ?",
+  // Personnalité
+  "Ton plus grand défaut selon toi ?",
+  "Ta plus grande qualité selon toi ?",
+  "Ce qui t'énerve le plus chez les gens ?",
+  "Ce dont tu es le plus fier(e) dans ta vie ?",
+  "Ta plus grande peur ?",
+  "Ce qui te met instantanément de bonne humeur ?",
+  "Quand tu es triste, tu as besoin de quoi ?",
+  "Tu es plutôt introverti(e) ou extraverti(e) ?",
+  "Ce que les gens pensent de toi qui est complètement faux ?",
+  "Ce que les gens ne savent pas de toi ?",
+  // Souvenirs
+  "Ton meilleur souvenir d'enfance ?",
+  "Le moment le plus drôle de ta vie ?",
+  "Ton souvenir préféré avec ta famille ?",
+  "La chose la plus folle que tu aies jamais faite ?",
+  "Ton premier souvenir de nous deux ?",
+  // Rêves & projets
+  "Ton rêve de voyage absolu ?",
+  "Ce que tu ferais si tu gagnais 1 million d'euros demain ?",
+  "Ton métier de rêve si tout était possible ?",
+  "Dans 10 ans, tu te vois où et comment ?",
+  "La chose que tu veux absolument accomplir dans ta vie ?",
+  "Si tu pouvais apprendre n'importe quoi en un jour, ce serait quoi ?",
+  "Ton objectif pour cette année ?",
+  "Ce que tu voudrais que les gens retiennent de toi ?",
+  // Couple
+  "Ce que tu préfères chez moi ?",
+  "Ce qui t'a fait craquer chez moi au début ?",
+  "Notre meilleur souvenir ensemble selon toi ?",
+  "Ce que tu aimerais qu'on fasse plus souvent ?",
+  "La chose que je fais qui te rend le plus heureux(se) ?",
+  "Comment tu décrirais notre relation en un mot ?",
+];
+
+// ════════════════════════════════════════════════════════════
+// 500 QUESTIONS "DIS-MOI TOUT"
+// ════════════════════════════════════════════════════════════
+const DISMOI_QUESTIONS = [
+// ── FUN & LÉGÈRES (80)
+"Si tu étais un animal, tu serais lequel et pourquoi ?",
+"C'est quoi ton talent caché que personne ne connaît ?",
+"Si tu pouvais avoir un super-pouvoir, ce serait lequel ?",
+"C'est quoi ton guilty pleasure que tu assumes complètement ?",
+"Le truc le plus bizarre que tu aies mangé ?",
+"Si tu devais changer de prénom, tu choisirais lequel ?",
+"C'est quoi ton appli que tu supprimerais en dernier sur ton téléphone ?",
+"Si tu pouvais vivre dans un film, ce serait lequel ?",
+"C'est quoi la chanson que tu chantes sous la douche ?",
+"Si tu étais un personnage de dessin animé, tu serais qui ?",
+"Le truc le plus stupide que tu aies fait par amour ?",
+"Si tu pouvais dîner avec 3 personnes célèbres, qui tu invites ?",
+"C'est quoi ton film honte que tu regardes en secret ?",
+"Si tu gagnais à la loterie demain, première chose que tu fais ?",
+"C'est quoi le pire cadeau que tu aies reçu ?",
+"Si tu pouvais avoir une maison n'importe où dans le monde, c'est où ?",
+"C'est quoi le truc le plus courageux que tu aies jamais fait ?",
+"Si tu devais manger le même repas pendant 1 mois, ce serait quoi ?",
+"C'est quoi ton rituel bizarre dont tu es gêné(e) ?",
+"Si tu pouvais changer une loi, ce serait laquelle ?",
+"C'est quoi la mode des années passées que tu regrettes ou que tu detestes ?",
+"Si tu étais une emoji, tu serais laquelle ?",
+"C'est quoi ton pire cauchemar récurrent ?",
+"Si tu pouvais maîtriser parfaitement une langue, ce serait laquelle ?",
+"C'est quoi le truc le plus enfantin que tu fais encore adulte ?",
+"Si tu pouvais remonter le temps à une époque, ce serait laquelle ?",
+"C'est quoi ton snobisme secret dont tu n'es pas fier(e) ?",
+"Si tu avais 24h pour faire n'importe quoi sans conséquences, tu ferais quoi ?",
+"C'est quoi la compétence inutile dont tu es super fier(e) ?",
+"Si tu étais un plat, tu serais lequel et pourquoi ?",
+"C'est quoi le mensonge le plus innocent que tu racontes régulièrement ?",
+"Si tu pouvais choisir ton âge pour toujours, ce serait lequel ?",
+"C'est quoi ta manie la plus bizarre quand tu es seul(e) ?",
+"Si tu étais milliardaire, tu dépenserais comment ton argent ?",
+"C'est quoi le compliment qui te touche le plus ?",
+"Si tu pouvais être expert(e) en quelque chose instantanément, ce serait quoi ?",
+"C'est quoi ton mot préféré dans ta langue ?",
+"Si tu devais créer un cocktail qui te représente, il aurait quoi dedans ?",
+"C'est quoi la chose la plus random que tu fasses pour te détendre ?",
+"Si tu pouvais avoir un animal de compagnie exotique, ce serait lequel ?",
+"C'est quoi ton lieu préféré sur terre que tu aies visité ?",
+"Si tu étais une couleur, tu serais laquelle ?",
+"C'est quoi ton running joke préféré ?",
+"Si tu pouvais effacer un truc de ta liste Netflix/YouTube, ce serait quoi ?",
+"C'est quoi la chose la plus impulsive que tu aies achetée ?",
+"Si tu étais un personnage de Harry Potter, tu serais qui ?",
+"C'est quoi ton opinion impopulaire que tu assumes ?",
+"Si tu pouvais choisir ta façon de mourir (de vieillesse évidemment), ce serait comment ?",
+"C'est quoi le truc dont tu parles avec le plus de passion ?",
+"Si tu pouvais avoir un robot assistant qui fait une seule chose, il ferait quoi ?",
+"C'est quoi ton endroit préféré dans ta ville ?",
+"Si tu étais un mois de l'année, tu serais lequel ?",
+"C'est quoi ta tradition familiale préférée ?",
+"Si tu pouvais changer une chose dans ton apparence, ce serait quoi ?",
+"C'est quoi le truc le plus inattendu que tu aies aimé faire ?",
+"Si tu avais une deuxième vie, tu ferais quoi de différent ?",
+"C'est quoi la chose la plus maladroite que tu aies faite en public ?",
+"Si tu pouvais revivre un jour de ta vie exactement pareil, lequel tu choisirais ?",
+"C'est quoi ton péché mignon alimentaire que tu essaies de cacher ?",
+"Si tu pouvais être invisible pendant une journée, tu ferais quoi ?",
+"C'est quoi la chose la plus bizarre dans laquelle tu crois ?",
+"Si tu devais choisir entre plage ou montagne pour toujours, tu choisis quoi ?",
+"C'est quoi ton geste automatique quand tu es nerveux(se) ?",
+"Si tu pouvais avoir la voix d'un(e) chanteur(euse), ce serait qui ?",
+"C'est quoi ton film qui te fait toujours pleurer ?",
+"Si tu étais un jour de la semaine, tu serais lequel ?",
+"C'est quoi le truc que tu fais et que tu pensais ne jamais faire ?",
+"Si tu pouvais recommencer tes études, tu étudierais quoi ?",
+"C'est quoi ta superstition secrète ?",
+"Si tu devais résumer ta vie en un hashtag, ce serait lequel ?",
+"C'est quoi la question qu'on ne t'a jamais posée et à laquelle tu voudrais répondre ?",
+"Si tu étais un genre musical, tu serais lequel ?",
+"C'est quoi la chose la plus courageuse que tu aies refusé de faire ?",
+"Si tu pouvais connaître la réponse à une grande question de l'univers, ce serait laquelle ?",
+"C'est quoi ton expression préférée en ce moment ?",
+"Si tu pouvais te téléporter quelque part là maintenant, c'est où ?",
+"C'est quoi le truc le plus généreux que tu aies fait sans le dire à personne ?",
+"Si tu pouvais avoir un talent artistique, ce serait lequel ?",
+
+// ── PROFONDES & RÉFLEXIVES (80)
+"C'est quoi la chose dont tu es le plus fier(e) dans ta vie jusqu'ici ?",
+"Qu'est-ce que tu changerais dans ta façon d'aimer si tu pouvais ?",
+"C'est quoi la leçon la plus difficile que la vie t'ait apprise ?",
+"Qu'est-ce qui te fait vraiment peur dans l'avenir ?",
+"C'est quoi la chose que tu regrettes le plus de ne pas avoir dit à quelqu'un ?",
+"Si tu pouvais parler à ton moi de 15 ans, tu lui dirais quoi ?",
+"C'est quoi ton rapport à l'argent — ça te stresse ou tu t'en fous ?",
+"Qu'est-ce que tu fais quand tu te sens vraiment seul(e) ?",
+"C'est quoi ta définition du bonheur ?",
+"Qu'est-ce qui te manque le plus dans ta vie en ce moment ?",
+"C'est quoi la chose la plus difficile que tu aies traversée et qui t'a rendu(e) plus fort(e) ?",
+"Qu'est-ce que tu ne te permets pas de ressentir souvent ?",
+"C'est quoi ton rapport à l'échec ?",
+"Qu'est-ce que tu voudrais que les gens comprennent mieux de toi ?",
+"C'est quoi la chose que tu te répètes quand tout va mal ?",
+"Si tu devais identifier ton plus grand blocage dans la vie, ce serait quoi ?",
+"C'est quoi la décision la plus difficile que tu aies jamais prise ?",
+"Qu'est-ce qui te donne envie de te lever le matin ?",
+"C'est quoi ta relation avec ta famille — proche, distante, compliquée ?",
+"Qu'est-ce que tu as sacrifié pour quelqu'un et tu ne regrettes pas ?",
+"C'est quoi la chose dont tu as le plus honte de ton passé ?",
+"Qu'est-ce que tu fais pour prendre soin de ta santé mentale ?",
+"C'est quoi ta vision de la vie idéale dans 20 ans ?",
+"Qu'est-ce que tu penses que les gens voient en toi que tu ne vois pas toi-même ?",
+"C'est quoi la chose dont tu as besoin mais que tu n'oses pas demander ?",
+"Qu'est-ce que tu ferais si tu n'avais pas peur ?",
+"C'est quoi ton rapport à la solitude ?",
+"Qu'est-ce que tu as mis longtemps à accepter de toi-même ?",
+"C'est quoi la valeur la plus importante dans ta vie ?",
+"Qu'est-ce que tu ferais différemment si tu savais que personne ne te jugerait ?",
+"C'est quoi ta plus grande contradiction en tant que personne ?",
+"Qu'est-ce qui te rend vulnérable et comment tu le gères ?",
+"C'est quoi la chose que tu veux accomplir avant de mourir absolument ?",
+"Qu'est-ce que le succès signifie vraiment pour toi ?",
+"C'est quoi le mensonge que tu te racontes le plus souvent ?",
+"Qu'est-ce que tu as appris sur toi-même cette année ?",
+"C'est quoi ta relation avec la religion ou la spiritualité ?",
+"Qu'est-ce que tu ferais si tu savais que tu ne pouvais pas échouer ?",
+"C'est quoi ton rapport au temps — tu vis dans le passé, le présent ou le futur ?",
+"Qu'est-ce qui te manquait enfant et que tu essaies de te donner maintenant ?",
+"C'est quoi la chose dont tu parles mais que tu n'appliques pas encore ?",
+"Qu'est-ce que tu penses de la mort — ça t'angoisse ou tu l'as acceptée ?",
+"C'est quoi ton rapport à la confiance en les autres ?",
+"Qu'est-ce que tu aimerais que ton futur moi sache ?",
+"C'est quoi la chose la plus importante que tu aies comprise sur l'amour ?",
+"Qu'est-ce que tu fais quand tu dois prendre une grande décision ?",
+"C'est quoi ton rapport à l'imperfection — la tienne et celle des autres ?",
+"Qu'est-ce qui te rend vraiment en colère — pas juste agacé(e), vraiment en colère ?",
+"C'est quoi le sacrifice que tu ferais sans hésiter pour quelqu'un que tu aimes ?",
+"Qu'est-ce que tu aurais aimé apprendre plus tôt dans ta vie ?",
+"C'est quoi ta plus grande source d'inspiration au quotidien ?",
+"Qu'est-ce que tu penses que tu mérites mais que tu n'as pas encore ?",
+"C'est quoi ton rapport à la jalousie ?",
+"Qu'est-ce qui te fait te sentir vivant(e) vraiment ?",
+"C'est quoi la chose la plus importante que tu veux transmettre un jour ?",
+"Qu'est-ce que tu penses du pardon — tu pardonnes facilement ou pas du tout ?",
+"C'est quoi ta vision des relations humaines en général ?",
+"Qu'est-ce qui te rend différent(e) des autres selon toi ?",
+"C'est quoi la chose que tu portes seul(e) et que tu aimerais partager ?",
+"Qu'est-ce que tu ferais si tu apprenais qu'il te reste 6 mois à vivre ?",
+"C'est quoi le truc le plus important que tu aies appris de tes parents ?",
+"Qu'est-ce que tu penses de l'amitié — tu y crois vraiment ?",
+"C'est quoi ton rapport au changement — tu l'aimes ou tu le subis ?",
+"Qu'est-ce que tu penses être ta mission dans la vie ?",
+"C'est quoi la limite que tu as du mal à te fixer ?",
+"Qu'est-ce que tu changerais dans la société si tu avais le pouvoir ?",
+"C'est quoi la chose qui te rend inconfortable mais qui te fait grandir ?",
+"Qu'est-ce que tu as fait et dont tu es vraiment fier(e) même si personne le sait ?",
+"C'est quoi ton plus grand combat intérieur en ce moment ?",
+"Qu'est-ce que tu n'as jamais pardonné à toi-même ?",
+"C'est quoi la chose la plus précieuse que tu possèdes — pas matérielle ?",
+"Qu'est-ce que tu apprendrais à tes enfants en premier si tu en avais ?",
+"Qu'est-ce que tu penserais de toi si tu étais quelqu'un d'autre ?",
+"C'est quoi la chose que tu fais par peur et pas par envie vraiment ?",
+"Qu'est-ce que tu voudrais qu'on dise de toi lors de tes funérailles ?",
+"C'est quoi ta vision de la justice ?",
+"Qu'est-ce que tu penses de la chance — elle existe ou on la crée ?",
+
+// ── COUPLE & AMOUR (80)
+"C'est quoi ton geste d'amour préféré à donner ?",
+"Et celui que tu préfères recevoir ?",
+"C'est quoi la chose que je fais qui te touche le plus sans que je le sache peut-être ?",
+"Comment tu sais que tu aimes vraiment quelqu'un ?",
+"C'est quoi ton plus grand besoin dans une relation ?",
+"La chose que tu ne supportes absolument pas dans une relation ?",
+"C'est quoi ta définition de la confiance dans un couple ?",
+"Comment tu gères les conflits dans une relation ?",
+"C'est quoi ton rapport à la jalousie dans le couple ?",
+"La chose qui te rend le plus amoureux(se) de moi ?",
+"C'est quoi ton rituel préféré qu'on devrait avoir ensemble ?",
+"Comment tu imagines notre vie dans 1 an ?",
+"C'est quoi la chose que tu n'as jamais osé me dire ?",
+"Qu'est-ce que tu apprends sur toi-même grâce à notre relation ?",
+"C'est quoi ce que tu veux qu'on construise ensemble ?",
+"Comment tu montres ton amour autrement qu'avec des mots ?",
+"C'est quoi le moment où tu te sens le plus en sécurité avec moi ?",
+"La chose qui t'a le plus surpris(e) chez moi depuis qu'on se connaît ?",
+"C'est quoi ton plus grand espoir pour notre relation ?",
+"Et ta plus grande peur pour nous deux ?",
+"C'est quoi la chose que je pourrais faire qui te ferait le plus plaisir ?",
+"Comment tu vois la répartition dans un couple idéal ?",
+"C'est quoi ton rapport à l'espace dans une relation — tu as besoin de beaucoup ou peu ?",
+"La chose que tu aimes faire mais que tu n'oses pas proposer ?",
+"C'est quoi le truc le plus romantique que quelqu'un ait jamais fait pour toi ?",
+"Comment tu te sens quand on ne se voit pas pendant longtemps ?",
+"C'est quoi la chose qui te manque le plus de moi quand on est séparés ?",
+"La phrase que tu aimerais m'entendre dire plus souvent ?",
+"C'est quoi ton rêve de couple — pas un voyage, un état d'esprit ?",
+"Comment tu définirais notre complicité en une image ?",
+"C'est quoi la chose qu'on n'a jamais faite et qu'on devrait faire absolument ?",
+"Comment tu gères quand tu es blessé(e) par quelqu'un que tu aimes ?",
+"C'est quoi la limite que tu mettrais dans n'importe quelle relation ?",
+"La chose qui te rend le plus heureux(se) dans notre quotidien ?",
+"C'est quoi ton rapport au futur dans notre relation ?",
+"Comment tu te sens quand je t'admets que j'ai tort ?",
+"C'est quoi la chose que tu veux qu'on améliore dans notre communication ?",
+"La façon dont tu voudrais qu'on fête nos anniversaires ?",
+"C'est quoi ton moment préféré de la journée avec moi ?",
+"Comment tu imagines notre chez-nous idéal ?",
+"C'est quoi la chose que tu as peur de me demander ?",
+"Comment tu définirais le respect dans notre couple ?",
+"C'est quoi la phrase que tu te répètes sur l'amour ?",
+"La chose que tu apprécies de moi que tu n'as jamais vraiment dit ?",
+"C'est quoi ton rapport à la routine dans une relation — tu l'aimes ou tu la fuis ?",
+"Comment tu réagis quand tu te sens incompris(e) par moi ?",
+"C'est quoi le truc qu'on fait ensemble et qui te ressource vraiment ?",
+"La chose qu'on pourrait faire pour se surprendre plus souvent ?",
+"C'est quoi ta définition d'un couple solide ?",
+"Comment tu vois le partage des responsabilités dans notre avenir ?",
+"C'est quoi la chose la plus belle de tomber amoureux(se) pour toi ?",
+"Comment tu sens quand quelqu'un t'aime vraiment ?",
+"C'est quoi ton rapport à la passion dans le temps — elle dure ou elle évolue ?",
+"La chose que tu voudrais qu'on décide ensemble plus souvent ?",
+"C'est quoi ce qui te fait sourire bêtement quand tu penses à moi ?",
+"Comment tu imagines nos prochaines vacances idéales ?",
+"C'est quoi la chose que tu ne ferais jamais par amour et pourquoi ?",
+"La façon dont tu aimerais qu'on se dispute moins souvent ?",
+"C'est quoi ton plus beau souvenir de nous deux depuis le début ?",
+"Comment tu exprimes ton amour quand tu n'as pas les mots ?",
+"C'est quoi la chose que tu me dis rarement mais que tu ressens souvent ?",
+"Comment tu vois notre vie ensemble dans 5 ans exactement ?",
+"C'est quoi le truc qui nous rend uniques comme couple selon toi ?",
+"La chose que tu voudrais qu'on crée ensemble — une tradition, un projet ?",
+"C'est quoi ton rapport à la fidélité — comment tu la définis ?",
+"Comment tu sais qu'on est faits l'un pour l'autre ?",
+"C'est quoi le message que tu m'enverrais si tu n'avais qu'un seul message à m'envoyer ?",
+"La chose que tu apprécies que j'accepte de toi sans question ?",
+"C'est quoi ton amour language — les mots, les actes, le temps, les cadeaux, le toucher ?",
+"Comment tu te sens quand je fais un effort pour toi ?",
+"C'est quoi la chose que tu t'es promis de faire pour moi un jour ?",
+"La façon dont tu aimerais qu'on vieillit ensemble ?",
+"C'est quoi la chose que tu voudrais me dire là maintenant ?",
+"Comment tu décrirais nos débuts à quelqu'un qui ne nous connaît pas ?",
+"C'est quoi le truc qui te rend le plus jaloux(se) — pas d'une personne, d'une situation ?",
+"La chose que tu assumes complètement dans notre relation ?",
+"C'est quoi ce que tu me donnes et que tu n'as jamais donné à quelqu'un d'autre ?",
+"Comment tu imagines notre quotidien quand on vivra ensemble ?",
+"C'est quoi la chose qu'on devrait se dire plus souvent ?",
+
+// ── RÊVES & PROJETS (80)
+"C'est quoi ton rêve que tu n'as jamais dit à personne ?",
+"Si tu pouvais créer ta journée parfaite de A à Z, elle ressemblerait à quoi ?",
+"C'est quoi le projet que tu voudrais lancer mais que tu n'oses pas encore ?",
+"Dans 10 ans, tu veux être qui et pas juste où ?",
+"C'est quoi la chose que tu voudrais accomplir avant tes 35 ans ?",
+"Si l'argent n'était pas un problème, comment tu passerais ta semaine type ?",
+"C'est quoi ton rêve de maison — où, comment, avec qui ?",
+"Si tu pouvais changer de métier demain sans risque, tu ferais quoi ?",
+"C'est quoi le voyage que tu rêves de faire et que tu n'as pas encore fait ?",
+"Si tu pouvais apprendre n'importe quoi en 6 mois, ce serait quoi ?",
+"C'est quoi ton projet créatif que tu repousses depuis trop longtemps ?",
+"Si tu pouvais avoir un impact sur le monde, ce serait dans quel domaine ?",
+"C'est quoi la compétence que tu veux absolument développer cette année ?",
+"Si tu pouvais choisir ta retraite idéale, elle ressemblerait à quoi ?",
+"C'est quoi ton rêve de famille — grand, petit, comment ?",
+"Si tu pouvais rencontrer quelqu'un qui a réussi ce que tu veux faire, qui ce serait ?",
+"C'est quoi le risque que tu voudrais prendre mais qui te fait peur ?",
+"Si tu écrivais un livre, il parlerait de quoi ?",
+"C'est quoi l'héritage que tu veux laisser derrière toi ?",
+"Si tu pouvais créer une association ou une entreprise, elle ferait quoi ?",
+"C'est quoi le truc que tu veux apprendre à cuisiner absolument ?",
+"Si tu avais 3 mois de congé payé maintenant, tu ferais quoi exactement ?",
+"C'est quoi ton rêve de vie que les autres trouveraient peut-être bizarre ?",
+"Si tu pouvais vivre une expérience unique une fois dans ta vie, ce serait laquelle ?",
+"C'est quoi ton objectif financier pour les 3 prochaines années ?",
+"Si tu pouvais collaborer avec une marque ou une personnalité, ce serait qui ?",
+"C'est quoi le truc que tu repousses depuis trop longtemps mais que tu sais que tu dois faire ?",
+"Si tu pouvais déménager dans une autre ville demain, ce serait où ?",
+"C'est quoi ton plan B si ton plan A ne marche pas ?",
+"Si tu pouvais avoir un mentor, ce serait qui et dans quel domaine ?",
+"C'est quoi la chose que tu veux vivre avec moi qu'on n'a pas encore faite ?",
+"Si tu pouvais créer ton propre job, il ressemblerait à quoi exactement ?",
+"C'est quoi le défi physique que tu aimerais relever ?",
+"Si tu pouvais voyager pendant 1 an avec un budget illimité, tu irais où ?",
+"C'est quoi ton rêve d'anniversaire parfait ?",
+"Si tu pouvais maîtriser un sport, ce serait lequel ?",
+"C'est quoi l'investissement que tu voudrais faire dans ta vie — pas forcément financier ?",
+"Si tu pouvais avoir un autre diplôme ou certification, ce serait dans quoi ?",
+"C'est quoi la chose que tu veux que nos enfants apprennent de nous si on en a ?",
+"Si tu devais résumer ton rêve de vie en une phrase, ce serait quoi ?",
+"C'est quoi le truc que tu t'es fixé comme objectif secret que tu n'as dit à personne ?",
+"Si tu pouvais rencontrer ton futur toi dans 20 ans, tu lui demanderais quoi ?",
+"C'est quoi ton rêve de voyage avec moi — le plus précis possible ?",
+"Si tu pouvais avoir une routine matinale parfaite, elle ferait quoi ?",
+"C'est quoi la personne que tu veux être dans 5 ans — pas ce que tu veux avoir ?",
+"Si tu pouvais changer ton rapport à quelque chose dans ta vie, ce serait quoi ?",
+"C'est quoi le projet qu'on devrait lancer ensemble toi et moi ?",
+"Si tu pouvais participer à une émission de téléréalité, ce serait laquelle ?",
+"C'est quoi ton rêve de mariage si tu devais en avoir un ?",
+"Si tu pouvais avoir un documentaire sur ta vie, il s'appellerait comment ?",
+"C'est quoi la chose que tu veux apprendre à faire de tes mains ?",
+"Si tu pouvais changer une chose dans ton quartier ou ta ville, ce serait quoi ?",
+"C'est quoi ton projet de vie pour les 2 prochaines années en concret ?",
+"Si tu pouvais créer ton propre rituel quotidien parfait, il ressemblerait à quoi ?",
+"C'est quoi la chose que tu as faite qui t'a le plus surpris(e) de toi-même ?",
+"Si tu pouvais avoir un assistant personnel qui fait une chose, ce serait quoi ?",
+"C'est quoi la destination que tu voudrais absolument voir avant de mourir ?",
+"Si tu pouvais offrir quelque chose à quelqu'un sans limites, à qui et quoi ?",
+"C'est quoi ton rêve de soirée parfaite avec moi ?",
+"Si tu pouvais créer ta propre fête ou tradition, ce serait laquelle ?",
+"C'est quoi l'expérience culinaire que tu voudrais absolument avoir ?",
+"Si tu pouvais avoir une conversation avec quelqu'un du passé, ce serait qui et pourquoi ?",
+"C'est quoi la chose que tu veux absolument réaliser en couple cette année ?",
+"Si tu pouvais changer une chose dans le monde pour les générations futures, ce serait quoi ?",
+"C'est quoi le rêve que tu avais enfant et que tu as abandonné ?",
+"Si tu pouvais revivre une période de ta vie, ce serait laquelle ?",
+"C'est quoi la chose que tu aimerais qu'on planifie ensemble maintenant ?",
+"Si tu pouvais avoir une maison secondaire quelque part, c'est où ?",
+"C'est quoi ton rapport à l'ambition — tu l'assumes ou tu la caches ?",
+"Si tu pouvais écrire une chanson, elle parlerait de quoi ?",
+"C'est quoi le truc que tu veux faire avant la fin de cette année sans faute ?",
+"Si tu pouvais avoir un pouvoir de transformation dans la société, ce serait lequel ?",
+"C'est quoi ton rêve de vacances avec toute ta famille ?",
+"Si tu pouvais recommencer ta carrière, tu ferais quoi différemment ?",
+"C'est quoi la chose dont tu veux être capable d'ici 3 ans ?",
+"Si tu pouvais choisir comment vieillir, tu voudrais comment ?",
+"C'est quoi ton rêve de vie simple si tu simplifiait tout ?",
+"Si tu pouvais n'avoir qu'une seule ambition dans ta vie, ce serait laquelle ?",
+
+// ── ENFANCE & SOUVENIRS (80)
+"C'est quoi ton meilleur souvenir d'enfance ?",
+"Le jouet ou jeu dont tu ne voulais pas te séparer enfant ?",
+"C'est quoi le repas de ton enfance que tu voudrais retrouver ?",
+"La chanson ou comptine que tu chantais enfant ?",
+"C'est quoi la chose que tu n'avais pas le droit de faire enfant mais que tu faisais quand même ?",
+"Ton personnage préféré de dessin animé ou film quand tu étais petit(e) ?",
+"C'est quoi le souvenir de vacances que tu n'oublieras jamais ?",
+"La peur que tu avais enfant et qui semble ridicule maintenant ?",
+"C'est quoi la bêtise la plus mémorable que tu aies faite étant petit(e) ?",
+"Ton meilleur ami(e) d'enfance et ce qu'il/elle t'a appris ?",
+"C'est quoi la chose que tu disais vouloir être enfant quand tu seras grand(e) ?",
+"Le truc dont tu avais honte enfant mais qui maintenant te fait rire ?",
+"C'est quoi l'objet qui te ramène immédiatement à ton enfance ?",
+"Ta matière préférée et celle que tu détestais à l'école ?",
+"C'est quoi le souvenir avec un membre de ta famille qui t'a le plus marqué(e) ?",
+"Le moment où tu as compris que tu avais grandi ?",
+"C'est quoi la chose que tu faisais seul(e) enfant et qui te rendait heureux(se) ?",
+"Ton premier souvenir vraiment clair dans ta vie ?",
+"C'est quoi la phrase que tes parents répétaient tout le temps ?",
+"Le jeu vidéo, le jeu de société ou l'activité qui occupait tes week-ends enfant ?",
+"C'est quoi la chose que tu aurais voulu dire à tes parents et que tu ne leur as pas dite ?",
+"Ton prof préféré et pourquoi il/elle t'a marqué(e) ?",
+"C'est quoi le moment où tu as été le plus fier(e) de toi étant enfant ?",
+"La mode ou le look que tu portais enfant et qui te fait rire maintenant ?",
+"C'est quoi la chose dont tu avais vraiment peur la nuit ?",
+"Ton souvenir de Noël ou Aïd le plus mémorable ?",
+"C'est quoi la chose que tu as faite enfant que tu regrettes ?",
+"Le livre ou l'histoire qui t'a le plus marqué(e) jeune ?",
+"C'est quoi l'odeur ou le goût qui te ramène immédiatement à ton enfance ?",
+"Le sport ou activité que tu faisais enfant et que tu aimerais reprendre ?",
+"C'est quoi le moment le plus triste de ton enfance ?",
+"Ton meilleur souvenir d'école primaire ?",
+"C'est quoi la chose que tu as apprise de la rue ou de tes amis et pas à l'école ?",
+"Le moment où tu as réalisé que le monde n'était pas toujours juste ?",
+"C'est quoi la première vraie déception que tu aies vécue ?",
+"Ton souvenir le plus drôle avec tes frères/sœurs ou cousins ?",
+"C'est quoi la chose dont tu es nostalgique dans ton enfance ?",
+"Le cadeau d'anniversaire qui t'a le plus marqué(e) enfant ?",
+"C'est quoi la chose que tu voulais absolument avoir enfant et que tu n'as pas eue ?",
+"Ton souvenir de premier amour ou premier coup de cœur enfant ?",
+"C'est quoi la chanson de ton adolescence qui résume cette période ?",
+"Le moment où tu t'es senti(e) vraiment libre pour la première fois ?",
+"C'est quoi la chose qui t'a construit(e) dans ton adolescence ?",
+"Le groupe d'amis de ton adolescence — vous étiez comment ?",
+"C'est quoi la mode ou les tendances de tes années collège/lycée ?",
+"Ton premier concert, premier film au cinéma ou première grande sortie ?",
+"C'est quoi la chose que tu n'aurais jamais cru faire enfant et que tu fais maintenant ?",
+"Le souvenir avec ta mère ou ton père qui compte le plus pour toi ?",
+"C'est quoi la leçon que ton enfance t'a apprise sans le faire exprès ?",
+"Le moment où tu as compris le sens de l'amour familial ?",
+"C'est quoi la chose que tu aimais dans ta ville ou ton quartier d'enfance ?",
+"Ton souvenir de premier jour d'école ou de rentrée ?",
+"C'est quoi la blague ou running joke de famille qui dure depuis des années ?",
+"Le moment de ton enfance dont tu voudrais garder une photo si tu n'en as pas ?",
+"C'est quoi la chose que tu faisais enfant que personne ne savait ?",
+"Ton souvenir de premier voyage ou première aventure loin de chez toi ?",
+"C'est quoi la chose que tu t'es promis(e) enfant et que tu as tenue ?",
+"Et celle que tu n'as pas tenue ?",
+"Le personnage historique ou réel qui t'impressionnait enfant ?",
+"C'est quoi la chose qui aurait changé ta vie si elle avait été différente dans ton enfance ?",
+"Ton souvenir de premier ami(e) — comment vous vous êtes rencontrés ?",
+"C'est quoi la chose que tu reproduis de ton éducation sans t'en rendre compte ?",
+"Et celle que tu refuses de reproduire ?",
+"Ton souvenir de premier mensonge à tes parents ?",
+"C'est quoi la chose que tu aurais voulu que tes parents fassent différemment ?",
+"Le moment où tu as arrêté de croire aux contes de fées ou aux mensonges d'enfant ?",
+"C'est quoi le truc de ton enfance qui te manque vraiment ?",
+"Ton souvenir de premier travail ou première vraie responsabilité ?",
+"C'est quoi la chose que ton enfance t'a donnée et que tu veux garder toute ta vie ?",
+"Le moment où tu as su que tu étais devenu(e) adulte vraiment ?",
+"C'est quoi la chose que tu ferais revivre à tes enfants de ton enfance ?",
+"Ton souvenir le plus embarrassant de toute ta scolarité ?",
+"C'est quoi la première chose que tu achetais avec ton propre argent ?",
+"Le moment de ton adolescence dont tu es le plus fier(e) ?",
+"C'est quoi la chose que tu n'as jamais dite à tes parents et que tu leur dirais maintenant ?",
+"Ton souvenir de première grande rupture d'amitié ou de relation ?",
+"C'est quoi la chose qui a changé pour toujours dans ta façon de voir le monde enfant ?",
+"Et dans ton adolescence ?",
+"C'est quoi la chose que tu gardes de ton enfance dans ta façon d'aimer aujourd'hui ?",
+
+// ── INTIMES & SENSIBLES (25)
+"C'est quoi ce qui t'attire physiquement chez moi en premier ?",
+"La chose que je fais qui te donne envie de moi sans que je le sache forcément ?",
+"C'est quoi ton fantasme qu'on n'a pas encore réalisé ?",
+"Comment tu aimes qu'on se retrouve après une longue séparation ?",
+"C'est quoi le geste ou le toucher qui te met tout de suite à l'aise avec moi ?",
+"La chose que tu aimerais qu'on essaie ensemble qu'on n'a pas encore osé ?",
+"C'est quoi ce qui te rend vraiment vulnérable avec moi ?",
+"Comment tu exprimes le désir — tu l'assumes ou tu l'attends qu'on vienne vers toi ?",
+"C'est quoi la chose que tu aimes dans notre intimité et que tu n'as jamais dite ?",
+"La façon dont tu aimerais qu'on se retrouve après une dispute ?",
+"C'est quoi ce qui te rend le plus proche de moi — pas physiquement, émotionnellement ?",
+"La chose dont tu as besoin pour te sentir vraiment désiré(e) ?",
+"C'est quoi ton rapport à la tendresse vs la passion — tu préfères lequel ?",
+"La chose que tu aimerais que je sache sur ce que tu ressens quand on est ensemble ?",
+"C'est quoi ce que tu n'oserais jamais me demander mais que tu voudrais ?",
+"Comment tu vis le fait d'être séparés — ça te pèse vraiment ou tu t'y fais ?",
+"C'est quoi la chose qui te manque physiquement de moi quand on est loin ?",
+"La façon dont tu aimerais qu'on communique sur nos besoins intimes sans gêne ?",
+"C'est quoi ce qui te rend le plus confiant(e) avec moi physiquement ?",
+"La chose que tu trouves la plus séduisante chez moi — pas forcément physique ?",
+"C'est quoi ton rapport aux mots dans l'intimité — tu aimes en dire, en entendre, les deux ?",
+"La chose que tu aimerais qu'on vive ensemble qu'on n'a pas encore imaginée ?",
+"C'est quoi ce que tu ressens quand je te dis que tu es beau/belle ?",
+"La façon dont tu sais que quelqu'un t'aime vraiment — pas les mots, les actes ?",
+"C'est quoi la chose la plus intime que tu pourrais partager avec moi et que tu n'as jamais dite ?",
+
+// ── CONNAISSANCE DE L'AUTRE (75)
+"C'est quoi la chose que tu penses que je ne sais pas encore sur toi ?",
+"La chose que tu penses que je pense de toi et qui est fausse ?",
+"C'est quoi ce que je fais qui te montre que je t'aime sans le dire ?",
+"La chose que tu aimerais que je comprenne mieux de toi ?",
+"C'est quoi ce que tu observes chez moi que tu n'as jamais mentionné ?",
+"La chose qui te rend le plus fier(e) de moi ?",
+"C'est quoi ce que tu penses que je cache parfois ?",
+"La chose que tu ferais pour moi sans que je te le demande ?",
+"C'est quoi ma qualité préférée selon toi ?",
+"Et mon défaut que tu as appris à aimer ?",
+"C'est quoi ce que je fais qui te touche le plus dans les petits gestes ?",
+"La chose que tu aimerais qu'on explore ensemble — une passion, un sujet ?",
+"C'est quoi ce que tu penses que je n'ai pas encore osé te dire ?",
+"La chose que tu as découverte sur moi qui t'a surpris(e) en bien ?",
+"C'est quoi ce que tu penses que je veux mais que je n'ose pas demander ?",
+"La chose que tu ferais différemment dans notre relation si tu pouvais ?",
+"C'est quoi ce que tu admires chez moi que tu n'as pas encore dit ?",
+"La chose que tu penses que je devrais travailler sur moi-même ?",
+"C'est quoi ce qui m'empêche d'être pleinement heureux(se) selon toi ?",
+"La chose que tu changerais dans notre façon d'être ensemble ?",
+"C'est quoi ce que tu sais de moi que je ne sais même pas de moi-même ?",
+"La chose qui te fait penser à moi automatiquement ?",
+"C'est quoi ce que tu penses quand tu me regardes sans que je le sache ?",
+"La chose que tu garderais de moi si tu devais tout oublier sauf une ?",
+"C'est quoi ce que tu trouves unique chez moi par rapport aux autres ?",
+"La chose que tu aimerais qu'on se dise plus souvent ?",
+"C'est quoi ce que tu aimes dans notre façon de communiquer ?",
+"La chose que tu aimerais changer dans notre façon de communiquer ?",
+"C'est quoi ma phrase ou expression qui te colle en tête ?",
+"La chose que tu aimes faire pour moi et pourquoi ?",
+"C'est quoi ce qui te rend fier(e) de notre relation ?",
+"La chose que tu penses qu'on devrait décider ensemble plus souvent ?",
+"C'est quoi ce que tu penses de la façon dont je gère mes émotions ?",
+"La chose que tu trouves que je devrais m'accorder plus souvent ?",
+"C'est quoi ce que tu penses de mon rapport à ma famille ?",
+"La chose que tu voudrais me voir réaliser dans ta vie ?",
+"C'est quoi ce qui te rend le plus nostalgique de nos débuts ?",
+"La chose que tu penses qu'on a appris l'un de l'autre depuis le début ?",
+"C'est quoi la façon dont tu sais que je ne vais pas bien sans que je le dise ?",
+"La chose qui, selon toi, nous rend vraiment différents des autres couples ?",
+"C'est quoi ce que tu penses que je ne me permets pas assez dans la vie ?",
+"La chose que tu ferais pour me redonner le sourire si j'étais vraiment au fond ?",
+"C'est quoi ce que tu penses de ma relation avec mon travail ?",
+"La chose que tu aimerais qu'on partage plus — une activité, un rituel ?",
+"C'est quoi ce que tu penses que je cherche dans notre relation sans toujours le trouver ?",
+"La chose que tu penses que je devrais arrêter de faire par peur ?",
+"C'est quoi ce qui te manquerait le plus de moi si je n'étais plus là ?",
+"La chose que tu penses que je ne m'accorde pas assez ?",
+"C'est quoi ce que tu penses de mon rapport à l'argent ?",
+"La chose que tu penses que je dois apprendre à lâcher ?",
+"C'est quoi ce qui te fait dire que tu m'as bien choisi(e) ?",
+"La chose que tu aimerais qu'on règle entre nous maintenant ?",
+"C'est quoi ce que tu penses que je pense de moi-même et qui est faux ?",
+"La chose que tu penses que je n'ose pas encore croire de moi ?",
+"C'est quoi ce que tu penses être ta meilleure contribution dans notre relation ?",
+"La chose que tu penses que je t'apporte que je ne réalise pas ?",
+"C'est quoi la façon dont tu aimerais qu'on vieillisse ensemble ?",
+"La chose que tu penses que je dois encore apprendre sur l'amour ?",
+"C'est quoi ce que tu imagines quand tu penses à notre avenir ?",
+"La chose que tu voudrais construire avec moi au-delà du couple ?",
+"C'est quoi ce que tu penses que je cherche encore dans la vie ?",
+"La chose que tu penses que je t'ai donné que personne d'autre ne m'avait donné ?",
+"C'est quoi ce qui te rend le plus confiant(e) en nous ?",
+"La chose que tu penses que notre relation a changé en toi ?",
+"C'est quoi ce que tu imagines comme notre plus beau chapitre encore à écrire ?",
+"La chose que tu veux absolument qu'on vive ensemble avant qu'on soit vieux ?",
+"C'est quoi ce que tu penses que je ne me permets pas de rêver encore ?",
+"La chose que tu penses que je mérite et que tu veux me donner ?",
+"C'est quoi ce que tu penses qu'on fera ensemble et dont on sera fiers ?",
+"La chose que tu penses être notre plus grande force comme couple ?",
+"C'est quoi ce que tu ressentirais si tu devais me présenter à quelqu'un comme la personne la plus importante de ta vie ?",
+"La phrase que tu aimerais me dire ce soir mais que tu gardes peut-être pour toi ?",
+"C'est quoi le truc que tu sais sur moi et qui te rend amoureux(se) chaque fois que tu y penses ?",
+];
+
+// ════════════════════════════════════════════════════════════
+// FONCTIONS QUIZ SUR SOI
+// ════════════════════════════════════════════════════════════
+function renderQuiz(){
+  const el = document.getElementById("quiz-zone");
+  if(!el) return;
+
+  const myAnswers = (S.quizSelfAnswers||{})[S.profile] || {};
+  const otherProfile = S.profile==="raphy"?"mehdi":"raphy";
+  const otherAnswers = (S.quizSelfAnswers||{})[otherProfile] || {};
+  const totalQ = QUIZ_SELF_QUESTIONS.length;
+  const myCount = Object.keys(myAnswers).length;
+  const otherCount = Object.keys(otherAnswers).length;
+
+  // Phase 1: remplir ses propres réponses
+  if(myCount < totalQ){
+    const nextIdx = parseInt(Object.keys(myAnswers).length);
+    const prog = Math.round((myCount/totalQ)*100);
+    el.innerHTML=`
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">
+          Phase 1 — Tes réponses sur toi-même
+        </div>
+        <div style="background:var(--surface);border-radius:6px;height:6px;overflow:hidden;margin-bottom:4px">
+          <div style="height:100%;width:${prog}%;background:linear-gradient(90deg,var(--gold),var(--rose));border-radius:6px;transition:width .4s"></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted)">${myCount}/${totalQ} réponses</div>
+      </div>
+      <div class="card" style="border-color:var(--gold-border)">
+        <div style="font-size:10px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Question ${myCount+1}/${totalQ}</div>
+        <div style="font-family:var(--font-d);font-size:16px;font-weight:800;margin-bottom:16px;line-height:1.5">${QUIZ_SELF_QUESTIONS[nextIdx]}</div>
+        <textarea class="input" id="quiz-self-answer" placeholder="Ta réponse..." rows="3" style="margin-bottom:12px"></textarea>
+        <button class="btn" onclick="saveQuizSelfAnswer(${nextIdx})">Enregistrer →</button>
+      </div>
+`;
+    if(myCount>0){
+      el.innerHTML += `<button class="btn btn-outline" style="margin-top:8px" onclick="reviewQuizAnswers()">Voir mes réponses (${myCount})</button>`;
+    }
+    return;
+  }
+
+  // Phase 2: deviner les réponses de l'autre
+  const myGuesses = (S.quizGuesses||{})[S.profile] || {};
+  const guessCount = Object.keys(myGuesses).length;
+
+  if(guessCount < totalQ){
+    const nextIdx = guessCount;
+    const prog = Math.round((guessCount/totalQ)*100);
+    el.innerHTML=`
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">
+          Phase 2 — Tu devines les réponses de ${otherProfile==="raphy"?"💗 Raphy":"💙 Mehdi"}
+        </div>
+        <div style="background:var(--surface);border-radius:6px;height:6px;overflow:hidden;margin-bottom:4px">
+          <div style="height:100%;width:${prog}%;background:linear-gradient(90deg,var(--rose),var(--purple,#8B6FD4));border-radius:6px;transition:width .4s"></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted)">${guessCount}/${totalQ} devinés</div>
+      </div>
+      <div class="card" style="border-color:var(--rose-border)">
+        <div style="font-size:10px;color:var(--rose);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
+          Tu devines pour ${otherProfile==="raphy"?"💗 Raphy":"💙 Mehdi"} — Question ${guessCount+1}/${totalQ}
+        </div>
+        <div style="font-family:var(--font-d);font-size:16px;font-weight:800;margin-bottom:16px;line-height:1.5">${QUIZ_SELF_QUESTIONS[nextIdx]}</div>
+        <textarea class="input" id="quiz-guess-answer" placeholder="Sa réponse selon toi..." rows="3" style="margin-bottom:12px"></textarea>
+        <button class="btn btn-rose" onclick="saveQuizGuess(${nextIdx})">Valider ma réponse →</button>
+      </div>`;
+    return;
+  }
+
+  // Phase 3: résultats
+  renderQuizResults();
+}
+
+function saveQuizSelfAnswer(idx){
+  const val = document.getElementById("quiz-self-answer")?.value.trim();
+  if(!val){toast("Écris une réponse !");return}
+  if(!S.quizSelfAnswers) S.quizSelfAnswers={};
+  if(!S.quizSelfAnswers[S.profile]) S.quizSelfAnswers[S.profile]={};
+  S.quizSelfAnswers[S.profile][idx]=val;
+  dbSave("quizSelfAnswers", S.quizSelfAnswers);
+  renderQuiz();
+  if(idx===QUIZ_SELF_QUESTIONS.length-1) toast("Toutes tes réponses sont enregistrées ! 🎉");
+}
+
+function saveQuizGuess(idx){
+  const val = document.getElementById("quiz-guess-answer")?.value.trim();
+  if(!val){toast("Écris ta réponse !");return}
+  if(!S.quizGuesses) S.quizGuesses={};
+  if(!S.quizGuesses[S.profile]) S.quizGuesses[S.profile]={};
+  S.quizGuesses[S.profile][idx]=val;
+  dbSave("quizGuesses", S.quizGuesses);
+  renderQuiz();
+}
+
+function reviewQuizAnswers(){
+  const el = document.getElementById("quiz-zone");
+  const answers = (S.quizSelfAnswers||{})[S.profile]||{};
+  el.innerHTML=`
+    <div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-family:var(--font-d);font-size:18px;font-weight:800">Mes réponses</div>
+      <button onclick="renderQuiz()" style="color:var(--gold);font-size:13px;font-weight:700;background:none;border:none;cursor:pointer">← Continuer</button>
+    </div>
+    ${QUIZ_SELF_QUESTIONS.map((q,i)=>answers[i]?`
+      <div class="card" style="margin-bottom:8px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Q${i+1}</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:6px">${q}</div>
+        <div style="font-size:13px;color:var(--text);font-style:italic">"${answers[i]}"</div>
+      </div>`:"").join("")}`;
+}
+
+function renderQuizResults(){
+  const el = document.getElementById("quiz-zone");
+  const other = S.profile==="raphy"?"mehdi":"raphy";
+  const otherAnswers = (S.quizSelfAnswers||{})[other]||{};
+  const myGuesses = (S.quizGuesses||{})[S.profile]||{};
+  const theirGuesses = (S.quizGuesses||{})[other]||{};
+  const myAnswers = (S.quizSelfAnswers||{})[S.profile]||{};
+
+  if(!Object.keys(otherAnswers).length){
+    el.innerHTML=`<div class="empty-state">
+      <div class="empty-icon">⏳</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:6px">En attente de ${other==="raphy"?"💗 Raphy":"💙 Mehdi"}</div>
+      <div style="font-size:12px;color:var(--muted)">${other==="raphy"?"Elle":"Il"} doit d'abord remplir ses réponses pour qu'on puisse comparer !</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML=`
+    <div style="text-align:center;margin-bottom:16px;padding:16px;background:linear-gradient(135deg,var(--gold-soft),var(--rose-soft));border:1px solid var(--gold-border);border-radius:16px">
+      <div style="font-size:32px;margin-bottom:8px">🏆</div>
+      <div style="font-family:var(--font-d);font-size:18px;font-weight:900;color:var(--gold)">Résultats du Quiz</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">Comparez vos réponses !</div>
+    </div>
+    <div id="quiz-mahmoud-comment" style="margin-bottom:14px"></div>
+    ${QUIZ_SELF_QUESTIONS.map((q,i)=>`
+      <div class="card" style="margin-bottom:10px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px">Question ${i+1}</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;line-height:1.4">${q}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:var(--rose-soft);border:1px solid var(--rose-border);border-radius:10px;padding:10px">
+            <div style="font-size:9px;color:var(--rose);font-weight:700;margin-bottom:4px">💗 Raphy dit</div>
+            <div style="font-size:12px">${(S.quizSelfAnswers?.raphy||{})[i]||"—"}</div>
+            ${theirGuesses[i]&&S.profile==="raphy"?`<div style="font-size:9px;color:var(--muted);margin-top:4px">Mehdi pensait : "${theirGuesses[i]}"</div>`:""}
+          </div>
+          <div style="background:var(--blue-soft);border:1px solid var(--blue-border);border-radius:10px;padding:10px">
+            <div style="font-size:9px;color:var(--blue);font-weight:700;margin-bottom:4px">💙 Mehdi dit</div>
+            <div style="font-size:12px">${(S.quizSelfAnswers?.mehdi||{})[i]||"—"}</div>
+            ${myGuesses[i]&&S.profile==="mehdi"?`<div style="font-size:9px;color:var(--muted);margin-top:4px">Tu pensais : "${myGuesses[i]}"</div>`:""}
+          </div>
+        </div>
+      </div>`).join("")}
+    <button class="btn btn-outline" onclick="resetQuiz()" style="margin-top:8px">Recommencer 🔄</button>`;
+  genQuizComment();
+}
+
+function resetQuiz(){
+  if(!confirm("Effacer toutes les réponses et recommencer ?")) return;
+  S.quizSelfAnswers={};S.quizGuesses={};
+  dbSave("quizSelfAnswers",{});dbSave("quizGuesses",{});
+  renderQuiz();
+}
+
+// ════════════════════════════════════════════════════════════
+// FONCTIONS DIS-MOI TOUT
+// ════════════════════════════════════════════════════════════
+function renderDisMoi(){
+  const el = document.getElementById("dismoi-zone");
+  if(!el) return;
+
+  const state = S.dismoiFB || {};
+  const batchIdx = state.batchIdx || 0;
+  const batchStart = batchIdx * 10;
+  const batchEnd = Math.min(batchStart + 10, DISMOI_QUESTIONS.length);
+  const currentBatch = DISMOI_QUESTIONS.slice(batchStart, batchEnd);
+  const batchAnswers = state.answers || {};
+  const myBatchAnswers = batchAnswers[S.profile] || {};
+  const otherProfile = S.profile==="raphy"?"mehdi":"raphy";
+  const otherBatchAnswers = batchAnswers[otherProfile] || {};
+
+  const myDone = Object.keys(myBatchAnswers).length >= currentBatch.length;
+  const otherDone = Object.keys(otherBatchAnswers).length >= currentBatch.length;
+
+  // Label progression
+  const progEl = document.getElementById("dismoi-progress-label");
+  if(progEl) progEl.textContent = `Batch ${batchIdx+1} — Q${batchStart+1} à Q${batchEnd}/${DISMOI_QUESTIONS.length}`;
+
+  // Les deux ont fini → révélation + prochain batch
+  if(myDone && otherDone && !state.revealed){
+    renderDisMoiReveal(currentBatch, batchStart, batchAnswers, otherProfile);
+    return;
+  }
+
+  // J'ai fini mais l'autre non
+  if(myDone && !otherDone){
+    const otherName = otherProfile==="raphy"?"💗 Raphy":"💙 Mehdi";
+    const taquinMsgs = [
+      `Déjà fini ? On attendait que ça... 👀 ${otherName} prend son temps apparemment. Classique.`,
+      `Rapide toi ! ${otherName} est encore en train de réfléchir à sa réponse... ou à autre chose. 😏`,
+      `T'as fini ! Maintenant on attend ${otherName}... Y'en a un qui traîne, on dit pas qui. 😄`,
+      `Bravo tu es rapide ! ${otherName} est sûrement occupé(e) à se préparer... ça prend du temps. ⏰`,
+    ];
+    const msg = taquinMsgs[batchIdx % taquinMsgs.length];
+    el.innerHTML=`
+      <div class="card" style="text-align:center;border-color:var(--gold-border);margin-bottom:12px">
+        <div style="font-size:36px;margin-bottom:10px">⏳</div>
+        <div style="font-family:var(--font-d);font-size:16px;font-weight:800;margin-bottom:8px;color:var(--gold)">Tes réponses sont enregistrées !</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6">${msg}</div>
+        <div style="margin-top:12px;font-size:11px;color:var(--dim)">Les réponses se révèleront quand ${otherName} aura fini 💫</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${currentBatch.map((q,i)=>`
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Q${batchStart+i+1}</div>
+            <div style="font-size:12px;color:var(--text)">${q}</div>
+            <div style="font-size:12px;color:var(--gold);margin-top:4px;font-style:italic">"${myBatchAnswers[i]||""}"</div>
+          </div>`).join("")}
+      </div>`;
+    return;
+  }
+
+  // Répondre aux questions du batch
+  const nextQ = Object.keys(myBatchAnswers).length;
+  if(nextQ < currentBatch.length){
+    const prog = Math.round((nextQ/currentBatch.length)*100);
+    el.innerHTML=`
+      <div style="margin-bottom:14px">
+        <div style="background:var(--surface);border-radius:6px;height:5px;overflow:hidden;margin-bottom:6px">
+          <div style="height:100%;width:${prog}%;background:linear-gradient(90deg,var(--gold),var(--rose));border-radius:6px;transition:width .4s"></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted)">${nextQ}/${currentBatch.length} réponses dans ce batch</div>
+      </div>
+      <div class="card" style="border-color:var(--gold-border)">
+        <div style="font-size:10px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
+          Question ${batchStart+nextQ+1} / ${DISMOI_QUESTIONS.length}
+        </div>
+        <div style="font-family:var(--font-d);font-size:17px;font-weight:800;margin-bottom:16px;line-height:1.5">
+          ${currentBatch[nextQ]}
+        </div>
+        <textarea class="input" id="dismoi-answer" placeholder="Ta réponse..." rows="3" style="margin-bottom:12px"></textarea>
+        <button class="btn" onclick="saveDisMoiAnswer(${nextQ})">Suivant →</button>
+      </div>`;
+    return;
+  }
+}
+
+function saveDisMoiAnswer(qIdx){
+  const val = document.getElementById("dismoi-answer")?.value.trim();
+  if(!val){toast("Écris une réponse !");return}
+  if(!S.dismoiFB) S.dismoiFB={batchIdx:0,answers:{},revealed:false};
+  if(!S.dismoiFB.answers) S.dismoiFB.answers={};
+  if(!S.dismoiFB.answers[S.profile]) S.dismoiFB.answers[S.profile]={};
+  S.dismoiFB.answers[S.profile][qIdx]=val;
+  dbSave("dismoi_state", S.dismoiFB);
+  renderDisMoi();
+}
+
+function renderDisMoiReveal(batch, batchStart, answers, otherProfile){
+  const el = document.getElementById("dismoi-zone");
+  const rAns = answers.raphy||{};
+  const mAns = answers.mehdi||{};
+  el.innerHTML=`
+    <div style="text-align:center;padding:16px;background:linear-gradient(135deg,var(--gold-soft),var(--rose-soft));border:1px solid var(--gold-border);border-radius:16px;margin-bottom:14px">
+      <div style="font-size:28px;margin-bottom:8px">💫</div>
+      <div style="font-family:var(--font-d);font-size:18px;font-weight:900;color:var(--gold)">Révélation !</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">Découvrez vos réponses</div>
+    </div>
+    ${batch.map((q,i)=>`
+      <div class="card" style="margin-bottom:10px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px">Q${batchStart+i+1}</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;line-height:1.4">${q}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:var(--rose-soft);border:1px solid var(--rose-border);border-radius:10px;padding:10px">
+            <div style="font-size:9px;color:var(--rose);font-weight:700;margin-bottom:4px">💗 Raphy</div>
+            <div style="font-size:13px;font-style:italic">"${rAns[i]||"—"}"</div>
+          </div>
+          <div style="background:var(--blue-soft);border:1px solid var(--blue-border);border-radius:10px;padding:10px">
+            <div style="font-size:9px;color:var(--blue);font-weight:700;margin-bottom:4px">💙 Mehdi</div>
+            <div style="font-size:13px;font-style:italic">"${mAns[i]||"—"}"</div>
+          </div>
+        </div>
+      </div>`).join("")}
+    <button class="btn" style="margin-top:8px" onclick="nextDisMoiBatch()">10 prochaines questions →</button>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="genBonusQuestion().then(q=>{if(q)alert('Question bonus: '+q)})">✨ Question bonus par Mahmoud</button>`;
+}
+
+function nextDisMoiBatch(){
+  if(!S.dismoiFB) S.dismoiFB={};
+  S.dismoiFB.batchIdx=(S.dismoiFB.batchIdx||0)+1;
+  S.dismoiFB.answers={};
+  S.dismoiFB.revealed=false;
+  dbSave("dismoi_state", S.dismoiFB);
+  renderDisMoi();
+}
+
+// ════════════════════════════════════════════════════════════
+// STATUT SUR L'ACCUEIL
+// ════════════════════════════════════════════════════════════
+function initHomeStatut(){
+  const opts = document.getElementById("home-statut-opts");
+  if(!opts) return;
+  opts.innerHTML=STATUT_OPTS.map(s=>`
+    <div id="hso-${s.id}" onclick="selectHomeStatut('${s.id}')"
+      style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;transition:all .2s">
+      <div style="font-size:20px">${s.icon}</div>
+      <div style="font-size:8px;font-weight:700;color:var(--muted);margin-top:2px">${s.label}</div>
+    </div>`).join("");
+  renderHomeStatutCards();
+}
+
+function selectHomeStatut(id){
+  S.selectedStatut=id;
+  STATUT_OPTS.forEach(s=>{
+    const el=document.getElementById(`hso-${s.id}`);
+    if(el){el.style.borderColor=s.id===id?s.color:"var(--border)";el.style.background=s.id===id?`${s.color}22`:"var(--surface)";}
+  });
+}
+
+function saveStatutHome(){
+  const opt=STATUT_OPTS.find(s=>s.id===S.selectedStatut)||{icon:"⚡",label:"",color:"#8B90A0"};
+  const custom=document.getElementById("home-statut-custom")?.value.trim();
+  const who=S.profile||"raphy";
+  S.statuts[who]={id:S.selectedStatut,icon:opt.icon,label:custom||opt.label,color:opt.color};
+  dbSave("statuts",S.statuts);
+  renderHomeStatutCards();
+  addNotif(`⚡ ${who==="raphy"?"Raphy":"Mehdi"} : ${custom||opt.label}`);
+  onStatutChange(S.selectedStatut);
+  toast("Statut mis à jour ⚡");
+  if(document.getElementById("home-statut-custom")) document.getElementById("home-statut-custom").value="";
+}
+
+function renderHomeStatutCards(){
+  const el=document.getElementById("home-statut-cards");
+  if(!el)return;
+  el.innerHTML=["raphy","mehdi"].map(who=>{
+    const st=S.statuts?.[who];
+    const color=who==="raphy"?"var(--rose)":"var(--blue)";
+    const name=who==="raphy"?"💗 Raphy":"💙 Mehdi";
+    return`<div style="background:var(--surface);border:1px solid ${color};border-radius:12px;padding:10px;text-align:center">
+      <div style="font-size:24px;margin-bottom:4px">${st?st.icon:"❓"}</div>
+      <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:2px">${name}</div>
+      <div style="font-size:11px;color:var(--muted)">${st?st.label:"Aucun statut"}</div>
+    </div>`;
+  }).join("");
+}
+</script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// HELPER GEMINI CENTRAL (réutilisable partout)
+// ════════════════════════════════════════════════════════════
+async function callGemini(prompt, maxTokens){
+  const key = lsGet("gemini_key") || GEMINI_KEY;
+  if(!key) return null;
+  try{
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        contents:[{role:"user",parts:[{text:prompt}]}],
+        generationConfig:{maxOutputTokens:maxTokens||300,temperature:0.95}
+      })
+    });
+    const data = await res.json();
+    if(data.error){console.error("Gemini error:",data.error);return null;}
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+  }catch(e){console.error("callGemini error:",e);return null;}
+}
+
+// Contexte court réutilisable pour les prompts
+function shortContext(){
+  const slots = S.schedule[todayStr()]||{};
+  const who = S.profile==="raphy"?"Raphy":"Mehdi";
+  return `Couple Raphy (romantique, douce, taquine, en retard tout le temps, va en Algérie, 29 ans) & Mehdi (drôle, chambreur). Ensemble depuis ${daysSince(COUPLE_DATE)} jours. Truc préféré: la plage. Habitent séparément. Humeur Raphy: ${S.humeurs?.raphy?.e||"?"}. Humeur Mehdi: ${S.humeurs?.mehdi?.e||"?"}. C'est ${who} qui utilise l'app là.`;
+}
+
+// ════════════════════════════════════════════════════════════
+// 1. MESSAGE DU MATIN INTELLIGENT
+// ════════════════════════════════════════════════════════════
+async function injectSmartMorning(){
+  const el = document.getElementById("morning-text");
+  if(!el) return;
+  const key = lsGet("gemini_key") || GEMINI_KEY;
+  if(!key) return; // garde le message fixe si pas de clé
+
+  // Une fois par ouverture de page home
+  if(S._morningInjected) return;
+  S._morningInjected = true;
+
+  const h = new Date().getHours();
+  const moment = h<12?"le matin":h<18?"l'après-midi":"le soir";
+  const who = S.profile==="raphy"?"Raphy":"Mehdi";
+  const myMood = S.humeurs?.[S.profile]?.e || "";
+  const slots = S.schedule[todayStr()]||{};
+  const myShift = slots[S.profile];
+  const shiftArr = Array.isArray(myShift)?myShift:(myShift?.type?[myShift]:[]);
+  const shiftStr = shiftArr.length ? (shiftArr[0].type==="travail"?"travaille aujourd'hui":"est en repos aujourd'hui") : "";
+
+  const prompt = `${shortContext()}
+On est ${moment}. ${who} vient d'ouvrir l'app couple. ${myMood?`Son humeur: ${myMood}.`:""} ${shiftStr?`${who} ${shiftStr}.`:""}
+
+Écris UNE phrase courte (max 2 lignes) douce, romantique ou taquine pour accueillir ${who}, adaptée au moment de la journée et à son humeur. Pas de surnom forcé. EN FRANÇAIS, max 1 emoji, pas de guillemets, donne directement la phrase.`;
+
+  const reply = await callGemini(prompt, 100);
+  if(reply){
+    el.textContent = reply.trim();
+    const authEl = document.getElementById("morning-author");
+    if(authEl) authEl.textContent = "✨ Mahmoud";
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// 2. PALIERS FESTIFS (milestones)
+// ════════════════════════════════════════════════════════════
+const MILESTONES = [50,100,150,200,250,300,365,500,600,700,730,1000];
+function checkMilestone(){
+  const d = daysSince(COUPLE_DATE);
+  const seen = lsGet("milestones_seen") || [];
+  const hit = MILESTONES.find(m=>m===d && !seen.includes(m));
+  if(hit){
+    seen.push(hit);
+    lsSet("milestones_seen", seen);
+    const labels = {50:"50 jours",100:"100 jours 💯",150:"150 jours",200:"200 jours",250:"250 jours",300:"300 jours",365:"1 AN ensemble 🎉",500:"500 jours",600:"600 jours",700:"700 jours",730:"2 ANS ❤️",1000:"1000 JOURS 🤯"};
+    showMilestoneBanner(labels[hit]||`${hit} jours`);
+    celebrate();
+  }
+}
+function showMilestoneBanner(label){
+  const b = document.createElement("div");
+  b.style.cssText="position:fixed;top:0;left:0;right:0;z-index:2000;background:linear-gradient(135deg,var(--gold),var(--rose));color:#0D0F14;padding:16px;text-align:center;font-family:var(--font-d);font-weight:900;font-size:16px;animation:slideDown .5s ease";
+  b.innerHTML=`🎉 ${label} ensemble ! 🎉<div style="font-size:11px;font-weight:600;margin-top:4px">Appuie pour fermer</div>`;
+  b.onclick=()=>b.remove();
+  document.body.appendChild(b);
+  setTimeout(()=>{if(b.parentElement)b.remove()},6000);
+}
+
+// ════════════════════════════════════════════════════════════
+// 3. RÉACTIONS BULLE DE PENSÉE
+// ════════════════════════════════════════════════════════════
+function reactPensee(who){
+  const other = S.profile==="raphy"?"raphy":"mehdi"; // celui qui réagit = moi
+  const reactions = ["❤️","😍","😂","🥰","👀","🔥"];
+  // Petit menu de réactions
+  const existing = document.getElementById("pensee-react-menu");
+  if(existing){existing.remove();return;}
+  const menu = document.createElement("div");
+  menu.id="pensee-react-menu";
+  menu.style.cssText="position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:1500;background:var(--card);border:1px solid var(--gold-border);border-radius:30px;padding:10px 14px;display:flex;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.4)";
+  reactions.forEach(r=>{
+    const b=document.createElement("button");
+    b.textContent=r;
+    b.style.cssText="font-size:24px;background:none;border:none;cursor:pointer;transition:transform .15s";
+    b.onclick=()=>{sendPenseeReaction(who,r);menu.remove();};
+    menu.appendChild(b);
+  });
+  document.body.appendChild(menu);
+  setTimeout(()=>{if(menu.parentElement)menu.remove()},5000);
+}
+function sendPenseeReaction(who,emoji){
+  if(!S.penseeReactions) S.penseeReactions={};
+  S.penseeReactions[who]={emoji,by:S.profile,ts:Date.now()};
+  dbSave("penseeReactions");
+  const name = who==="raphy"?"Raphy":"Mehdi";
+  addNotif(`${emoji} ${S.profile==="raphy"?"Raphy":"Mehdi"} a réagi à la pensée de ${name}`);
+  toast(`Réaction ${emoji} envoyée !`);
+  renderPenseeReactions();
+}
+function renderPenseeReactions(){
+  ["raphy","mehdi"].forEach(who=>{
+    const r = S.penseeReactions?.[who];
+    const el = document.getElementById(`pensee-react-${who}`);
+    if(el) el.textContent = r ? r.emoji : "";
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// 4. MODE ANNIVERSAIRE (11 mai)
+// ════════════════════════════════════════════════════════════
+function checkAnniversaryMode(){
+  const today = todayStr().slice(5); // MM-DD
+  if(today==="05-11"){
+    document.body.classList.add("anniv-mode");
+    const seen = lsGet("anniv_seen_"+new Date().getFullYear());
+    if(!seen){
+      lsSet("anniv_seen_"+new Date().getFullYear(), true);
+      celebrate();
+      setTimeout(()=>injectAnnivMessage(), 1000);
+    }
+  }
+}
+async function injectAnnivMessage(){
+  const years = new Date().getFullYear() - 2026;
+  const prompt = `${shortContext()}
+C'est AUJOURD'HUI l'anniversaire du couple Raphy & Mehdi (le 11 mai, ${years>=1?years+" an(s)":"premier anniversaire"}) ! Écris un message spécial, émouvant et un peu taquin pour célébrer leur amour. 3-4 phrases. EN FRANÇAIS, max 2 emojis.`;
+  const reply = await callGemini(prompt, 250);
+  const modal = document.createElement("div");
+  modal.style.cssText="position:fixed;inset:0;background:rgba(9,11,16,.95);z-index:2500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center";
+  modal.innerHTML=`
+    <div style="font-size:64px;margin-bottom:16px">🎂</div>
+    <div style="font-family:var(--font-d);font-size:26px;font-weight:900;background:linear-gradient(135deg,var(--gold),var(--rose));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px">Joyeux Anniversaire !</div>
+    <div style="font-size:15px;line-height:1.7;color:var(--text);max-width:340px;margin-bottom:28px">${(reply||"Aujourd'hui on célèbre votre amour. Chaque jour avec vous deux est une histoire qui continue de s'écrire ❤️").split("\n").join("<br>")}</div>
+    <button onclick="this.closest('[style]').remove()" style="padding:16px 40px;border-radius:30px;background:linear-gradient(135deg,var(--rose),var(--gold));color:#0D0F14;font-size:15px;font-weight:800;font-family:var(--font-d);border:none;cursor:pointer">Merci Mahmoud 💗</button>`;
+  document.body.appendChild(modal);
+}
+
+// ════════════════════════════════════════════════════════════
+// 5. PAGE "NOUS" (stats du couple)
+// ════════════════════════════════════════════════════════════
+function renderNous(){
+  const el = document.getElementById("nous-zone");
+  if(!el) return;
+  const d = daysSince(COUPLE_DATE);
+  const msgs = S.messages.length;
+  const defis = S.defiHistory.length;
+  const pts = S.points||0;
+  const photos = (S.photos||[]).length;
+  const goalsDone = (S.goals||[]).filter(g=>g.done).length;
+  const notes = (S.notes||[]).length;
+
+  // Jour le plus actif (compter messages par jour)
+  const msgByDay = {};
+  S.messages.forEach(m=>{
+    const day = new Date(m.ts).toLocaleDateString("fr-FR",{weekday:"long"});
+    msgByDay[day]=(msgByDay[day]||0)+1;
+  });
+  let topDay="—", topCount=0;
+  Object.entries(msgByDay).forEach(([day,c])=>{if(c>topCount){topCount=c;topDay=day;}});
+
+  const stats = [
+    {icon:"📅",val:d.toLocaleString("fr-FR"),label:"jours ensemble",color:"var(--gold)"},
+    {icon:"💌",val:msgs,label:"mots doux échangés",color:"var(--rose)"},
+    {icon:"🎮",val:defis,label:"défis accomplis",color:"var(--blue)"},
+    {icon:"🏆",val:pts,label:"points couple",color:"var(--purple,#8B6FD4)"},
+    {icon:"📸",val:photos,label:"photos partagées",color:"var(--gold)"},
+    {icon:"🎯",val:goalsDone,label:"objectifs atteints",color:"var(--green,#3A9E6A)"},
+  ];
+
+  el.innerHTML=`
+    <div style="text-align:center;padding:20px;background:linear-gradient(135deg,var(--gold-soft),var(--rose-soft));border:1px solid var(--gold-border);border-radius:20px;margin-bottom:16px">
+      <div style="font-size:40px;margin-bottom:8px">💑</div>
+      <div style="font-family:var(--font-d);font-size:22px;font-weight:900">Raphy & Mehdi</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">Depuis le 11 mai 2026</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      ${stats.map(s=>`
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center">
+          <div style="font-size:28px;margin-bottom:6px">${s.icon}</div>
+          <div style="font-family:var(--font-d);font-size:24px;font-weight:900;color:${s.color}">${s.val}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">${s.label}</div>
+        </div>`).join("")}
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">📊 Nos records</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Jour le plus bavard</span><span style="font-weight:700">${topDay}${topCount>0?` (${topCount} msg)`:""}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Notes créées</span><span style="font-weight:700">${notes}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Prochain jour off ensemble</span><span style="font-weight:700">${nextOffLabel()}</span></div>
+      </div>
+    </div>
+    <button class="btn btn-outline" onclick="showWeeklySummary()" style="border-color:var(--purple,#8B6FD4);color:var(--purple,#8B6FD4)">✨ Résumé de la semaine par Mahmoud</button>`;
+}
+
+function nextOffLabel(){
+  for(let i=0;i<30;i++){
+    const dt=new Date();dt.setDate(dt.getDate()+i);
+    const s=S.schedule[fmt(dt)]||{};
+    const rOff = checkOff(s.raphy);
+    const mOff = checkOff(s.mehdi);
+    if(rOff && mOff) return i===0?"aujourd'hui 🎉":i===1?"demain":`dans ${i} jours`;
+  }
+  return "pas encore planifié";
+}
+function checkOff(slot){
+  if(!slot) return false;
+  const arr = Array.isArray(slot)?slot:(slot.type?[slot]:[]);
+  return arr.some(e=>e.type==="repos"||e.type==="conge");
+}
+
+// ════════════════════════════════════════════════════════════
+// 6. STATUT INTELLIGENT ("Je rentre" → message auto)
+// ════════════════════════════════════════════════════════════
+async function onStatutChange(statutId){
+  // Si quelqu'un met "je rentre" ou "en route", Mahmoud notifie l'autre
+  if(statutId==="rentre"||statutId==="route"||statutId==="chemin"){
+    const me = S.profile==="raphy"?"Raphy":"Mehdi";
+    const other = S.profile==="raphy"?"Mehdi":"Raphy";
+    addNotif(`🚗 ${me} est en route !`);
+    const prompt = `${shortContext()}
+${me} vient de mettre son statut sur "je rentre / en route". Écris un court message taquin et mignon pour prévenir ${other} que ${me} arrive. 1-2 phrases. EN FRANÇAIS, max 1 emoji.`;
+    const reply = await callGemini(prompt, 80);
+    if(reply){
+      // Ajouter à l'historique Mahmoud
+      if(!S.iaHistory) S.iaHistory=[];
+      S.iaHistory.push({role:"model",content:"🚗 "+reply.trim(),ts:Date.now()});
+      dbSave("iaHistory");
+      addNotif(`✨ Mahmoud: ${reply.trim().slice(0,40)}...`);
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// 7. RAPPELS ANNIVERSAIRES (J-7, J-1)
+// ════════════════════════════════════════════════════════════
+function checkBirthdayReminders(){
+  const events = [
+    {md:"05-11",label:"votre anniversaire de couple 💑",who:"couple"},
+    {md:"06-11",label:"l'anniversaire de Raphy 💗",who:"raphy"},
+    {md:"02-11",label:"l'anniversaire de Mehdi 💙",who:"mehdi"},
+  ];
+  const reminded = lsGet("bday_reminded") || {};
+  const yr = new Date().getFullYear();
+
+  events.forEach(ev=>{
+    const target = new Date(`${yr}-${ev.md}`);
+    if(target < new Date()) target.setFullYear(yr+1);
+    const daysUntil = Math.ceil((target - new Date())/86400000);
+    const key7 = `${ev.md}-${target.getFullYear()}-7`;
+    const key1 = `${ev.md}-${target.getFullYear()}-1`;
+
+    if(daysUntil===7 && !reminded[key7]){
+      reminded[key7]=true;
+      addNotif(`⏰ J-7 avant ${ev.label} !`);
+      if(ev.who!=="couple" && ev.who!==S.profile){
+        // Mahmoud propose des idées cadeaux à l'autre
+        suggestGiftIdeas(ev.who);
+      }
+    }
+    if(daysUntil===1 && !reminded[key1]){
+      reminded[key1]=true;
+      addNotif(`🎁 DEMAIN c'est ${ev.label} ! T'as prévu quelque chose ? 😏`);
+    }
+  });
+  lsSet("bday_reminded", reminded);
+}
+async function suggestGiftIdeas(forWho){
+  const name = forWho==="raphy"?"Raphy":"Mehdi";
+  const prompt = `${shortContext()}
+C'est bientôt l'anniversaire de ${name}. Propose 3 idées cadeaux originales et personnalisées (en tenant compte de sa personnalité). Format court: une ligne par idée. EN FRANÇAIS.`;
+  const reply = await callGemini(prompt, 200);
+  if(reply){
+    if(!S.iaHistory) S.iaHistory=[];
+    S.iaHistory.push({role:"model",content:`🎁 J-7 avant l'anniv de ${name} ! Quelques idées:\n${reply.trim()}`,ts:Date.now()});
+    dbSave("iaHistory");
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// 8. MOTS DOUX — SUGGESTIONS PAR MAHMOUD
+// ════════════════════════════════════════════════════════════
+async function genMotSuggestion(){
+  const btn = document.getElementById("mot-sugg-btn");
+  if(btn){btn.textContent="✨ Mahmoud réfléchit...";btn.disabled=true;}
+  const other = S.profile==="raphy"?"Mehdi":"Raphy";
+  const prompt = `${shortContext()}
+Propose UN message doux/mignon/taquin que ${S.profile==="raphy"?"Raphy":"Mehdi"} pourrait envoyer à ${other} maintenant. Court, naturel, romantique ou taquin. EN FRANÇAIS, max 1 emoji, pas de guillemets, donne juste le message.`;
+  const reply = await callGemini(prompt, 100);
+  if(btn){btn.textContent="✨ Suggérer un mot doux";btn.disabled=false;}
+  if(reply){
+    const inp = document.getElementById("chat-input");
+    if(inp){inp.value=reply.trim();inp.focus();}
+    toast("Suggestion prête — modifie ou envoie !");
+  } else {
+    toast("Active Mahmoud dans les Paramètres 🔑");
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// 9. DÉFIS GÉNÉRÉS PAR MAHMOUD
+// ════════════════════════════════════════════════════════════
+async function genSmartDefi(){
+  const btn = document.getElementById("smart-defi-btn");
+  if(btn){btn.textContent="✨ Génération...";btn.disabled=true;}
+  const slots = S.schedule[todayStr()]||{};
+  const prompt = `${shortContext()}
+Génère UN défi de couple pour aujourd'hui, fun et adapté au fait qu'ils habitent séparément et bossent dans le commerce. Court (1 phrase). EN FRANÇAIS, max 1 emoji, donne juste le défi.`;
+  const reply = await callGemini(prompt, 80);
+  if(btn){btn.textContent="✨ Défi du jour par Mahmoud";btn.disabled=false;}
+  if(reply){
+    S.currentDefi = reply.trim();
+    S.lastDefiDate = new Date().toDateString();
+    renderDefis();
+    toast("Nouveau défi généré ! 🎯");
+  } else {
+    toast("Active Mahmoud dans les Paramètres 🔑");
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// 10. ROUE — DÉTAILS PAR MAHMOUD
+// ════════════════════════════════════════════════════════════
+async function genRoueDetails(activity){
+  const modal = document.createElement("div");
+  modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:600;display:flex;align-items:flex-end";
+  modal.innerHTML=`<div style="background:var(--card);border-radius:24px 24px 0 0;border-top:1px solid var(--gold-border);padding:24px 20px 44px;width:100%">
+    <div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px"></div>
+    <div style="font-family:var(--font-d);font-size:18px;font-weight:800;margin-bottom:4px;color:var(--gold)">${activity}</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Mahmoud vous organise ça</div>
+    <div id="roue-details-text" style="font-size:14px;line-height:1.7;color:var(--text)"><div style="display:flex;gap:6px;align-items:center"><div class="spin">✨</div> Mahmoud prépare les détails...</div></div>
+    <button onclick="this.closest('[style]').remove()" style="margin-top:20px;width:100%;padding:14px;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--rose));color:#0D0F14;font-size:14px;font-weight:700;font-family:var(--font-b);border:none;cursor:pointer">Parfait ✓</button>
+  </div>`;
+  document.body.appendChild(modal);
+  const prompt = `${shortContext()}
+La roue des activités est tombée sur: "${activity}". Donne des détails concrets et fun pour organiser cette activité ensemble: une suggestion d'heure, ce qu'il faut prévoir/amener, et une petite touche romantique. 3-4 lignes max. EN FRANÇAIS, max 2 emojis.`;
+  const reply = await callGemini(prompt, 200);
+  const el = document.getElementById("roue-details-text");
+  if(el) el.innerHTML = (reply||"Passez juste un bon moment ensemble, c'est ça l'essentiel 💗").split("\n").join("<br>");
+}
+
+// ════════════════════════════════════════════════════════════
+// 11. QUESTIONS COUPLE GÉNÉRÉES
+// ════════════════════════════════════════════════════════════
+async function genCoupleQuestion(){
+  const btn = document.getElementById("gen-question-btn");
+  if(btn){btn.textContent="✨ Génération...";btn.disabled=true;}
+  const prompt = `${shortContext()}
+Génère UNE question profonde et intime pour un couple, pour mieux se connaître. Originale, pas banale. EN FRANÇAIS, donne juste la question.`;
+  const reply = await callGemini(prompt, 100);
+  if(btn){btn.textContent="✨ Nouvelle question par Mahmoud";btn.disabled=false;}
+  if(reply){
+    const el = document.getElementById("q-text");
+    if(el) el.textContent = reply.trim();
+    S.currentQuestion = {text:reply.trim(),idx:-1,date:todayStr()};
+    toast("Nouvelle question ! 💭");
+  } else {
+    toast("Active Mahmoud dans les Paramètres 🔑");
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// 12. QUIZ COMMENTÉ PAR MAHMOUD
+// ════════════════════════════════════════════════════════════
+async function genQuizComment(){
+  const el = document.getElementById("quiz-mahmoud-comment");
+  if(!el) return;
+  const rAns = (S.quizSelfAnswers||{}).raphy||{};
+  const mAns = (S.quizSelfAnswers||{}).mehdi||{};
+  if(!Object.keys(rAns).length || !Object.keys(mAns).length) return;
+
+  // Construire un échantillon des réponses
+  let sample = "";
+  for(let i=0;i<Math.min(8,QUIZ_SELF_QUESTIONS.length);i++){
+    if(rAns[i]&&mAns[i]) sample += `Q: ${QUIZ_SELF_QUESTIONS[i]} | Raphy: ${rAns[i]} | Mehdi: ${mAns[i]}\n`;
+  }
+  el.innerHTML=`<div style="display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)"><div class="spin">✨</div> Mahmoud analyse vos réponses...</div>`;
+  const prompt = `${shortContext()}
+Voici les réponses de Raphy et Mehdi au quiz "se connaître":
+${sample}
+Fais un commentaire fun et taquin sur leurs différences et points communs (3-4 phrases). EN FRANÇAIS, max 2 emojis.`;
+  const reply = await callGemini(prompt, 200);
+  if(reply){
+    el.innerHTML=`<div class="card" style="border-color:var(--gold-border);background:var(--gold-soft)">
+      <div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px">✨ Le mot de Mahmoud</div>
+      <div style="font-size:13px;line-height:1.6">${reply.split("\n").join("<br>")}</div>
+    </div>`;
+  } else {
+    el.innerHTML="";
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// 13. DIS-MOI TOUT — QUESTIONS BONUS GÉNÉRÉES
+// ════════════════════════════════════════════════════════════
+async function genBonusQuestion(){
+  const prompt = `${shortContext()}
+Génère UNE question intime et originale pour un couple qui apprend à se connaître. Pas banale. EN FRANÇAIS, donne juste la question.`;
+  const reply = await callGemini(prompt, 100);
+  if(reply){
+    if(!S.dismoiBonus) S.dismoiBonus=[];
+    S.dismoiBonus.push(reply.trim());
+    toast("Question bonus ajoutée ! 💬");
+    return reply.trim();
+  } else {
+    toast("Active Mahmoud dans les Paramètres 🔑");
+    return null;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// 14. BADGES SURPRISES
+// ════════════════════════════════════════════════════════════
+const SURPRISE_BADGES = [
+  {id:"night_owl",icon:"🦉",label:"Oiseau de nuit",cond:()=>S.messages.some(m=>{const h=new Date(m.ts).getHours();return h>=0&&h<5;})},
+  {id:"early_bird",icon:"🐦",label:"Lève-tôt",cond:()=>S.messages.some(m=>{const h=new Date(m.ts).getHours();return h>=5&&h<7;})},
+  {id:"chatty",icon:"💬",label:"Pipelette",cond:()=>S.messages.length>=50},
+  {id:"super_chatty",icon:"🗣️",label:"Moulin à paroles",cond:()=>S.messages.length>=200},
+  {id:"defi_master",icon:"🏆",label:"Maître des défis",cond:()=>S.defiHistory.length>=10},
+  {id:"romantic",icon:"💐",label:"Grand romantique",cond:()=>S.messages.filter(m=>(m.text||"").length>100).length>=5},
+  {id:"photographer",icon:"📸",label:"Photographe",cond:()=>(S.photos||[]).length>=10},
+  {id:"planner",icon:"🗓️",label:"Organisé",cond:()=>Object.keys(S.schedule||{}).length>=20},
+];
+function checkSurpriseBadges(){
+  const earned = lsGet("surprise_badges") || [];
+  let newOne = null;
+  SURPRISE_BADGES.forEach(b=>{
+    if(!earned.includes(b.id) && b.cond()){
+      earned.push(b.id);
+      newOne = b;
+    }
+  });
+  if(newOne){
+    lsSet("surprise_badges", earned);
+    showBadgeUnlock(newOne);
+  }
+}
+function showBadgeUnlock(badge){
+  const b = document.createElement("div");
+  b.style.cssText="position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:1800;background:var(--card);border:1.5px solid var(--gold);border-radius:18px;padding:16px 24px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:fadeIn .4s ease";
+  b.innerHTML=`<div style="font-size:36px;margin-bottom:6px">${badge.icon}</div><div style="font-size:10px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px">Badge surprise débloqué !</div><div style="font-family:var(--font-d);font-size:15px;font-weight:800;margin-top:2px">${badge.label}</div>`;
+  b.onclick=()=>b.remove();
+  document.body.appendChild(b);
+  celebrate();
+  setTimeout(()=>{if(b.parentElement)b.remove()},5000);
+}
+function getEarnedSurpriseBadges(){
+  const earned = lsGet("surprise_badges") || [];
+  return SURPRISE_BADGES.filter(b=>earned.includes(b.id));
+}
+</script>
+
 </body>
 </html>
