@@ -235,7 +235,7 @@ textarea.input{resize:vertical;min-height:80px}
 .free-banner{background:rgba(58,158,106,.15);border:1px solid rgba(58,158,106,.4);border-radius:10px;padding:7px 12px;color:#3A9E6A;font-size:11px;font-weight:700;text-align:center;margin-bottom:8px}
 
 /* CHAT */
-.chat-wrap{display:flex;flex-direction:column;gap:10px;padding-bottom:140px}
+.chat-wrap{display:flex;flex-direction:column;gap:10px;padding-bottom:14px}
 .bubble-outer{display:flex;flex-direction:column}
 .bubble-outer.me{align-items:flex-end}
 .bubble-outer.other{align-items:flex-start}
@@ -246,7 +246,12 @@ textarea.input{resize:vertical;min-height:80px}
 .bubble-time{font-size:9px;color:var(--muted);margin-top:3px}
 .react-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2px 7px;font-size:11px;cursor:pointer;color:var(--muted);transition:all .15s}
 .react-btn:active{background:var(--gold-soft);border-color:var(--gold)}
-.chat-input-sticky{position:sticky;bottom:calc(var(--nav-h));background:rgba(9,11,16,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:10px 16px 12px;margin:0 -16px}
+.chat-input-sticky{position:relative;background:rgba(9,11,16,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:10px 16px 12px;margin:0 -16px;flex-shrink:0}
+/* Page Chat en layout flex : messages scrollables + barre toujours en bas */
+#page-mots{display:flex;flex-direction:column;overflow:hidden;padding-bottom:calc(var(--nav-h))}
+#page-mots>.section-header,#page-mots>#capsules-unlocked,#page-mots>.mots-toprow{flex-shrink:0}
+#mots-content{flex:1 1 auto;overflow-y:auto;min-height:0;margin:0 -16px;padding:0 16px}
+#ia-history-content{flex:1 1 auto;overflow-y:auto;min-height:0}
 .claude-input-box{display:flex;align-items:flex-end;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:24px;padding:6px 6px 6px 16px;transition:border-color .2s}
 .claude-input-box:focus-within{border-color:var(--gold)}
 .claude-input-box textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:15px;font-family:var(--font-b);resize:none;max-height:120px;line-height:1.4;padding:9px 0;min-height:20px}
@@ -552,14 +557,11 @@ document.dispatchEvent(new Event("firebaseReady"));
       <!-- CRÉNEAUX COMMUNS -->
       <div id="home-block-slots"><div id="common-slots" style="margin-bottom:12px"></div></div>
 
-      <!-- MÉTÉO ÉMOTIONNELLE -->
-      <div id="home-block-weather" class="card" style="margin-bottom:12px">
-        <div class="card-title">🌤️ Météo du couple</div>
-        <div id="mood-weather"></div>
-      </div>
+
 
       <!-- CE JOUR-LÀ -->
       <div id="home-block-onthisday"><div id="on-this-day" style="margin-bottom:12px"></div></div>
+      <div id="home-after-blocks"></div>
 
       <div class="card" style="margin-bottom:12px;border-color:rgba(74,158,232,.3)">
         <div class="card-title">⚡ En ce moment</div>
@@ -602,16 +604,16 @@ document.dispatchEvent(new Event("firebaseReady"));
     <!-- MOTS DOUX -->
     <div class="page" id="page-mots">
       <div class="section-header">
-        <div class="section-title">💌 Mots Doux</div>
+        <div class="section-title">💬 Chat</div>
         <button class="btn btn-sm btn-outline" style="width:auto" onclick="openModal('modal-capsule')">⏳ Capsule</button>
       </div>
       <div id="capsules-unlocked"></div>
       <!-- Recherche -->
-      <div style="position:relative;margin-bottom:10px">
+      <div class="mots-toprow" style="position:relative;margin-bottom:10px">
         <input class="input" id="mots-search" placeholder="🔍 Rechercher dans les messages..." oninput="renderMots()" style="font-size:13px">
       </div>
       <!-- Tabs historique -->
-      <div style="display:flex;gap:6px;margin-bottom:12px">
+      <div class="mots-toprow" style="display:flex;gap:6px;margin-bottom:12px">
         <button class="plan-tab active" id="tab-mots" onclick="switchMotsTab('mots',this)">💌 Messages</button>
         <button class="plan-tab" id="tab-ia-history" onclick="switchMotsTab('ia',this)">✨ Historique Mahmoud</button>
       </div>
@@ -844,11 +846,6 @@ document.dispatchEvent(new Event("firebaseReady"));
           <div><div style="font-size:14px;font-weight:600">Je suis</div><div style="font-size:11px;color:var(--muted);margin-top:2px" id="profile-label">—</div></div>
           <button class="btn btn-sm btn-outline" style="width:auto" onclick="changeProfile()">Changer</button>
         </div>
-        <div class="settings-row">
-          <div style="font-size:14px;font-weight:600">Photo du couple</div>
-          <button class="btn btn-sm btn-outline" style="width:auto" onclick="document.getElementById('couple-photo-input').click()">📸</button>
-        </div>
-        <input type="file" id="couple-photo-input" accept="image/*" style="display:none" onchange="saveCouplePhoto(this)">
       </div>
       <div class="card">
         <div class="card-title">Thème (personnel)</div>
@@ -982,14 +979,9 @@ document.dispatchEvent(new Event("firebaseReady"));
 
       <!-- ACCUEIL PERSONNALISABLE -->
       <div class="card">
-        <div class="card-title">🏠 Blocs de l'accueil</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Choisis ce qui s'affiche sur ta page d'accueil</div>
-        <div class="settings-row"><div style="font-size:13px">🟢 Présence en direct</div><label class="switch"><input type="checkbox" id="hb-presence" onchange="toggleHomeBlock('presence',this.checked)"><span class="slider-sw"></span></label></div>
-        <div class="settings-row"><div style="font-size:13px">💗 Boutons "Je pense à toi"</div><label class="switch"><input type="checkbox" id="hb-connexion" onchange="toggleHomeBlock('connexion',this.checked)"><span class="slider-sw"></span></label></div>
-        <div class="settings-row"><div style="font-size:13px">🌅 Rituel matin/soir</div><label class="switch"><input type="checkbox" id="hb-ritual" onchange="toggleHomeBlock('ritual',this.checked)"><span class="slider-sw"></span></label></div>
-        <div class="settings-row"><div style="font-size:13px">🎉 Créneaux communs</div><label class="switch"><input type="checkbox" id="hb-slots" onchange="toggleHomeBlock('slots',this.checked)"><span class="slider-sw"></span></label></div>
-        <div class="settings-row"><div style="font-size:13px">🌤️ Météo du couple</div><label class="switch"><input type="checkbox" id="hb-weather" onchange="toggleHomeBlock('weather',this.checked)"><span class="slider-sw"></span></label></div>
-        <div class="settings-row"><div style="font-size:13px">📅 Ce jour-là</div><label class="switch"><input type="checkbox" id="hb-onthisday" onchange="toggleHomeBlock('onthisday',this.checked)"><span class="slider-sw"></span></label></div>
+        <div class="card-title">🏠 Accueil — organise tes blocs</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Active/désactive et réordonne avec les flèches ▲▼</div>
+        <div id="home-blocks-settings"></div>
       </div>
 
       <!-- NOTIFICATIONS FINES -->
@@ -1075,7 +1067,7 @@ document.dispatchEvent(new Event("firebaseReady"));
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <button class="nav-btn active" onclick="goTo('home',this)"><span class="nav-icon">🏠</span><span class="nav-label">Accueil</span></button>
-    <button class="nav-btn" onclick="goTo('mots',this)"><span class="nav-icon">💌</span><span class="nav-label">Mots</span></button>
+    <button class="nav-btn" onclick="goTo('mots',this)"><span class="nav-icon">💬</span><span class="nav-label">Chat</span></button>
     <button class="nav-btn" onclick="goTo('planning',this)"><span class="nav-icon">📅</span><span class="nav-label">Planning</span></button>
     <button class="nav-btn" onclick="goTo('ia',this)"><span class="nav-icon">✨</span><span class="nav-label">Mahmoud</span></button>
     <button class="nav-btn" onclick="goTo('plus',this)"><span class="nav-icon">⊕</span><span class="nav-label">Menu</span></button>
@@ -1855,12 +1847,6 @@ function renderPage(p){
 function renderHome(){
   const d=daysSince(COUPLE_DATE);
   document.getElementById("days-num").textContent=d.toLocaleString("fr-FR");
-  if(S.couplePhoto){
-    ["av-raphy","av-mehdi"].forEach(id=>{
-      const el=document.getElementById(id);
-      if(el)el.outerHTML=`<img id="${id}" class="home-av" src="${S.couplePhoto}" alt="Nous">`;
-    });
-  }
   const anniv=new Date(`${new Date().getFullYear()}-05-11`);
   if(anniv<new Date())anniv.setFullYear(anniv.getFullYear()+1);
   const dA=Math.ceil((anniv-new Date())/86400000);
@@ -1880,7 +1866,7 @@ function renderHome(){
   document.getElementById("hum-p-mehdi").textContent=S.humeurs.mehdi?.phrase||"Comment tu vas ?";
   renderPenseeReactions();
   injectSmartMorning();
-  renderMoodWeather();renderPresence();renderCommonSlots();renderOnThisDay();renderRitual();
+  renderPresence();renderCommonSlots();renderOnThisDay();renderRitual();
   renderTodaySchedule();renderNextOff();
   document.getElementById("stat-msgs").textContent=S.messages.length;
   document.getElementById("stat-off").textContent=countWeekOff();
@@ -1913,12 +1899,15 @@ function renderTodaySchedule(){
   document.getElementById("today-content").innerHTML=html;
 }
 function countWeekOff(){const days=getWeekDates();let c=0;days.forEach(d=>{const s=S.schedule[fmt(d)]||{};const rO=s.raphy?.type==="repos"||s.raphy?.type==="conge";const mO=s.mehdi?.type==="repos"||s.mehdi?.type==="conge";if(rO&&mO)c++;});return c}
+function isPersonOff(slot){
+  const arr=Array.isArray(slot)?slot:(slot&&slot.type?[slot]:[]);
+  return arr.some(s=>s.type==="repos"||s.type==="conge");
+}
 function renderNextOff(){
   const t=new Date();t.setHours(0,0,0,0);
   for(let i=0;i<60;i++){
     const d=new Date(t);d.setDate(t.getDate()+i);const str=fmt(d);const s=S.schedule[str]||{};
-    const rO=s.raphy?.type==="repos"||s.raphy?.type==="conge";const mO=s.mehdi?.type==="repos"||s.mehdi?.type==="conge";
-    if(rO&&mO){document.getElementById("off-num").textContent=i===0?"Aujourd'hui ! 🎉":`Dans ${i} jour${i>=2?"s":""}`;document.getElementById("off-date").textContent=d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});return;}
+    if(isPersonOff(s.raphy)&&isPersonOff(s.mehdi)){document.getElementById("off-num").textContent=i===0?"Aujourd'hui ! 🎉":`Dans ${i} jour${i>=2?"s":""}`;document.getElementById("off-date").textContent=d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});return;}
   }
   document.getElementById("off-num").textContent="—";document.getElementById("off-date").textContent="Remplissez votre planning !";
 }
@@ -2106,16 +2095,23 @@ function msgMenu(id){
   menu.innerHTML=`<div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px"></div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Message de ${m.who==="raphy"?"💗 Raphy":"💙 Mehdi"}</div>
     <div style="font-size:14px;font-style:italic;margin-bottom:16px;color:var(--text)">"${m.text.length>60?m.text.slice(0,60)+"...":m.text}"</div>
-    <button class="btn" onclick="editMsg(${id})" style="margin-bottom:8px">✏️ Modifier</button>
+    ${canEditMsg(m)?`<button class="btn" onclick="editMsg(${id})" style="margin-bottom:8px">✏️ Modifier</button>`:`<div style="font-size:11px;color:var(--dim);text-align:center;margin-bottom:8px">⏱️ Modification possible seulement 5 min après l'envoi</div>`}
     <button class="btn btn-outline" onclick="delMsg(${id})" style="border-color:var(--rose);color:var(--rose);margin-bottom:8px">🗑️ Supprimer</button>
     <button class="btn btn-outline" onclick="document.getElementById('msg-action-menu').remove()">Annuler</button>`;
   document.body.appendChild(menu);
 }
+function canEditMsg(m){
+  // Modifiable seulement dans les 5 minutes après l'envoi
+  const t=m.ts||m.id||0;
+  return (Date.now()-t)<5*60*1000;
+}
 function editMsg(id){
   const m=S.messages.find(m=>m.id===id);if(!m)return;
   document.getElementById("msg-action-menu")?.remove();
+  if(!canEditMsg(m)){toast("Trop tard pour modifier (5 min dépassées) ⏱️");return;}
   const newText=prompt("Modifier le message :",m.text);
   if(newText!==null && newText.trim()){
+    if(!canEditMsg(m)){toast("Trop tard pour modifier ⏱️");return;}
     m.text=newText.trim();m.edited=true;
     dbSave("messages");renderMots();toast("Message modifié ✏️");
   }
@@ -2172,6 +2168,8 @@ function renderMots(){
   chatSuggDiv.style.cssText="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px";
   suggs.forEach(s=>{const b=document.createElement("button");b.className="react-btn";b.textContent=s;b.onclick=()=>{const inp=document.getElementById("chat-input");if(inp)inp.value=s};chatSuggDiv.appendChild(b)});
   el.appendChild(chatSuggDiv);
+  // Auto-scroll vers le bas (comme un vrai chat) sauf si on est en train de chercher
+  if(!q){const mc=document.getElementById("mots-content");if(mc)setTimeout(()=>{mc.scrollTop=mc.scrollHeight;},50);}
 }
 function setCapsWho(w){S.currentCapsWho=w;document.getElementById("caps-r").className="who-btn"+(w==="raphy"?" active-r":"");document.getElementById("caps-m").className="who-btn"+(w==="mehdi"?" active-m":"")}
 function saveCapsule(){
@@ -5312,32 +5310,23 @@ function renderRitual(){
 // HUB "PLUS" — navigation interne
 // ════════════════════════════════════════════════════════════
 const PLUS_FEATURES=[
-  {id:"bocal",icon:"💌",label:"Bocal à amour",color:"#E8637A",desc:"Raisons je t'aime + pioche"},
-  {id:"bucket",icon:"🪣",label:"Bucket list",color:"#4A9EE8",desc:"Vos rêves à réaliser"},
-  {id:"songs",icon:"🎵",label:"Nos chansons",color:"#8B6FD4",desc:"Votre playlist"},
   {id:"places",icon:"🗺️",label:"Nos lieux",color:"#3A9E6A",desc:"Où on est allés / nos rêves"},
   {id:"liste",icon:"🛒",label:"Liste partagée",color:"#C9A84C",desc:"Courses & à-faire"},
   {id:"budget",icon:"💰",label:"Budget commun",color:"#3A9E6A",desc:"Projets & économies"},
-  {id:"quiplus",icon:"🏆",label:"Qui est le plus...?",color:"#E8637A",desc:"Comparez-vous"},
   {id:"roulette",icon:"🎰",label:"Roulette décisions",color:"#C9A84C",desc:"Mahmoud tranche"},
-  {id:"ensemble",icon:"💑",label:"Mode Ensemble",color:"#E8637A",desc:"Quand vous êtes réunis"},
-  {id:"wrapped",icon:"🎁",label:"Notre Wrapped",color:"#8B6FD4",desc:"Votre rétro"},
   {id:"histoire",icon:"📖",label:"Notre histoire",color:"#C9A84C",desc:"La frise du couple"},
   {id:"lettre",icon:"✉️",label:"Lettre du mois",color:"#E8637A",desc:"Par Mahmoud"},
   {id:"mediateur",icon:"🕊️",label:"Médiateur",color:"#4A9EE8",desc:"Mahmoud vous aide"},
-  {id:"photochallenge",icon:"📷",label:"Photo challenge",color:"#8B6FD4",desc:"Thème du jour"},
   {id:"watchlist",icon:"🍿",label:"À regarder",color:"#E8637A",desc:"Films & séries"},
-  {id:"jokes",icon:"😂",label:"Nos inside jokes",color:"#3A9E6A",desc:"Vos blagues privées"},
 ];
 function renderPlus(){
   const el=document.getElementById("plus-zone");
   if(!el)return;
   if(S._plusView){renderPlusFeature(S._plusView);return;}
   const shortcuts=[
-    {p:"mots",i:"💌",l:"Mots doux"},{p:"ia",i:"✨",l:"Mahmoud"},{p:"planning",i:"📅",l:"Planning"},
-    {p:"defis",i:"🎮",l:"Défis"},{p:"objectifs",i:"🎯",l:"Objectifs"},{p:"notes",i:"📝",l:"Notes"},
-    {p:"roue",i:"🎡",l:"Roue"},{p:"question",i:"❓",l:"Questions"},{p:"quiz",i:"🧠",l:"Quiz"},
-    {p:"dismoi",i:"💬",l:"Dis-moi tout"},{p:"statut",i:"⚡",l:"Statut"},{p:"dates",i:"🎂",l:"Dates"},
+    {p:"mots",i:"💬",l:"Chat"},{p:"ia",i:"✨",l:"Mahmoud"},{p:"planning",i:"📅",l:"Planning"},
+    {p:"objectifs",i:"🎯",l:"Objectifs"},{p:"notes",i:"📝",l:"Notes"},{p:"question",i:"❓",l:"Questions"},
+    {p:"quiz",i:"🧠",l:"Quiz"},{p:"dismoi",i:"📖",l:"Dis-moi tout"},{p:"dates",i:"🎂",l:"Dates"},
     {p:"nous",i:"💑",l:"Nous"},{p:"jeux",i:"🎮",l:"Jeux"},{p:"settings",i:"⚙️",l:"Réglages"}
   ];
   el.innerHTML=`
@@ -5364,22 +5353,14 @@ function renderPlusFeature(id){
   const f=PLUS_FEATURES.find(x=>x.id===id);
   let body="";
   switch(id){
-    case"bocal":body=renderBocal();break;
-    case"bucket":body=renderBucket();break;
-    case"songs":body=renderSongs();break;
     case"places":body=renderPlaces();break;
     case"liste":body=renderListe();break;
     case"budget":body=renderBudget();break;
-    case"quiplus":body=renderQuiPlus();break;
     case"roulette":body=renderRoulette();break;
-    case"ensemble":body=renderEnsemble();break;
-    case"wrapped":body=renderWrapped();break;
     case"histoire":body=renderHistoire2();break;
     case"lettre":body=renderLettre();break;
     case"mediateur":body=renderMediateur();break;
-    case"photochallenge":body=renderPhotoChallenge();break;
     case"watchlist":body=renderWatchlist();break;
-    case"jokes":body=renderJokes();break;
   }
   el.innerHTML=`<button onclick="closePlusFeature()" style="background:none;border:none;color:var(--gold);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px">← Retour</button>
     <div style="font-family:var(--font-d);font-size:20px;font-weight:800;margin-bottom:4px">${f.icon} ${f.label}</div>
@@ -5853,23 +5834,63 @@ function applyAllCustomizations(){
   // Mode compact
   if(lsGet("compact_mode"))document.body.classList.add("compact");
   else document.body.classList.remove("compact");
-  // Visibilité des blocs accueil
+  // Disposition + visibilité des blocs accueil
+  applyHomeLayout();
+}
+const HOME_BLOCKS_ALL=["presence","connexion","ritual","slots","onthisday"];
+const HOME_BLOCKS_DEFAULT_HIDDEN=["slots","onthisday"];
+function getHomeOrder(){
+  let order=lsGet("home_order")||HOME_BLOCKS_ALL.slice();
+  HOME_BLOCKS_ALL.forEach(b=>{if(!order.includes(b))order.push(b);});
+  order=order.filter(b=>HOME_BLOCKS_ALL.includes(b));
+  return order;
+}
+function applyHomeLayout(){
+  const order=getHomeOrder();
+  const anchor=document.getElementById("home-after-blocks");
+  if(anchor&&anchor.parentNode){
+    order.forEach(b=>{const el=document.getElementById("home-block-"+b);if(el)anchor.parentNode.insertBefore(el,anchor);});
+  }
   applyHomeVisibility();
 }
 function applyHomeVisibility(){
-  // Par défaut on garde l'accueil épuré : seuls présence + connexion + rituel sont visibles.
-  // Météo, créneaux et "ce jour-là" sont cachés par défaut (réactivables dans Paramètres).
-  const defaultHidden=["weather","slots","onthisday"];
-  const blocks=["presence","connexion","ritual","slots","weather","onthisday"];
-  blocks.forEach(b=>{
+  HOME_BLOCKS_ALL.forEach(b=>{
     const el=document.getElementById("home-block-"+b);
     if(!el)return;
     const pref=lsGet("hide_"+b);
     let hidden;
-    if(pref===null||pref===undefined) hidden=defaultHidden.includes(b); // valeur par défaut
-    else hidden=pref; // choix explicite de l'utilisateur
+    if(pref===null||pref===undefined) hidden=HOME_BLOCKS_DEFAULT_HIDDEN.includes(b);
+    else hidden=pref;
     el.style.display=hidden?"none":"";
   });
+}
+function moveHomeBlock(block,dir){
+  const order=getHomeOrder();
+  const i=order.indexOf(block);
+  const j=i+dir;
+  if(i<0||j<0||j>=order.length)return;
+  [order[i],order[j]]=[order[j],order[i]];
+  lsSet("home_order",order);
+  applyHomeLayout();
+  renderHomeBlocksSettings();
+}
+function renderHomeBlocksSettings(){
+  const el=document.getElementById("home-blocks-settings");
+  if(!el)return;
+  const order=getHomeOrder();
+  const labels={presence:"🟢 Présence en direct",connexion:'💗 Boutons "Je pense à toi"',ritual:"🌅 Rituel matin/soir",slots:"🎉 Créneaux communs",onthisday:"📅 Ce jour-là"};
+  el.innerHTML=order.map((b,idx)=>{
+    const pref=lsGet("hide_"+b);
+    const visible=(pref===null||pref===undefined)?!HOME_BLOCKS_DEFAULT_HIDDEN.includes(b):!pref;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <button onclick="moveHomeBlock('${b}',-1)" ${idx===0?'disabled':''} style="background:var(--surface);border:1px solid var(--border);border-radius:6px;width:26px;height:20px;cursor:pointer;color:var(--text);opacity:${idx===0?.3:1};font-size:11px">▲</button>
+        <button onclick="moveHomeBlock('${b}',1)" ${idx===order.length-1?'disabled':''} style="background:var(--surface);border:1px solid var(--border);border-radius:6px;width:26px;height:20px;cursor:pointer;color:var(--text);opacity:${idx===order.length-1?.3:1};font-size:11px">▼</button>
+      </div>
+      <div style="flex:1;font-size:13px">${labels[b]}</div>
+      <label class="switch"><input type="checkbox" ${visible?'checked':''} onchange="toggleHomeBlock('${b}',this.checked)"><span class="slider-sw"></span></label>
+    </div>`;
+  }).join("");
 }
 
 // ── Couleurs ──
@@ -5888,7 +5909,7 @@ function toggleAnim(on){lsSet("anim_off",!on);applyAllCustomizations();toast(on?
 function toggleCompact(on){lsSet("compact_mode",on);applyAllCustomizations();toast(on?"Mode compact":"Mode aéré");}
 
 // ── Accueil personnalisable ──
-function toggleHomeBlock(block,show){lsSet("hide_"+block,!show);applyHomeVisibility();}
+function toggleHomeBlock(block,show){lsSet("hide_"+block,!show);applyHomeLayout();}
 
 // ── Notifications fines ──
 function toggleNotifType(type,on){lsSet("notif_"+type,on);}
@@ -5981,8 +6002,7 @@ function loadAdvancedSettings(){
   chk("anim-toggle",!lsGet("anim_off"));
   chk("compact-toggle",!!lsGet("compact_mode"));
   chk("proactif-toggle",!!lsGet("mahmoud_proactif"));
-  const defHidden=["weather","slots","onthisday"];
-  ["presence","connexion","ritual","slots","weather","onthisday"].forEach(b=>{const pref=lsGet("hide_"+b);const hidden=(pref===null||pref===undefined)?defHidden.includes(b):pref;chk("hb-"+b,!hidden);});
+  renderHomeBlocksSettings();
   ["motsdoux","defis","mahmoud","anniv","statut"].forEach(n=>chk("nt-"+n,lsGet("notif_"+n)!==false));
   updateFontBtns();updateVoiceGenderBtns();updateLangBtns();updateWeekStartBtns();
 }
