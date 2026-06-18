@@ -294,6 +294,29 @@ input,textarea{font-family:var(--font-b)}
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
+    <div class="page" id="page-p4">
+      <div class="game-header">
+        <button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button>
+        <span class="game-title">🔴 Puissance 4</span>
+      </div>
+      <div id="p4-zone"></div>
+    </div>
+
+    <div class="page" id="page-morpion">
+      <div class="game-header">
+        <button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button>
+        <span class="game-title">⭕ Morpion</span>
+      </div>
+      <div id="morpion-zone"></div>
+    </div>
+
+    <div class="page" id="page-thisorthat"><div class="game-header"><button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button><span class="game-title">⚡ Ça ou ça</span></div><div id="tot-zone"></div></div>
+    <div class="page" id="page-prefere"><div class="game-header"><button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button><span class="game-title">🤔 Tu préfères ?</span></div><div id="pref-zone"></div></div>
+    <div class="page" id="page-pendu"><div class="game-header"><button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button><span class="game-title">🪢 Le Pendu</span></div><div id="pendu-zone"></div></div>
+    <div class="page" id="page-naval"><div class="game-header"><button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button><span class="game-title">🚢 Bataille navale</span></div><div id="naval-zone"></div></div>
+    <div class="page" id="page-dessine"><div class="game-header"><button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button><span class="game-title">🎨 Devine & dessine</span></div><div id="dessine-zone"></div></div>
+    <div class="page" id="page-uno"><div class="game-header"><button onclick="goTo('home')" style="color:var(--muted);font-size:20px">←</button><span class="game-title">🃏 Uno</span></div><div id="uno-zone"></div></div>
+
     <button class="nav-btn active" onclick="goTo('home',this)" id="nav-home">
       <span class="nav-icon">🏠</span><span class="nav-label">Accueil</span>
     </button>
@@ -317,6 +340,18 @@ input,textarea{font-family:var(--font-b)}
       <span class="nav-icon">🔤</span><span class="nav-label">Bac</span>
       <div class="nav-turn" id="turn-bac"></div>
     </button>
+    <button class="nav-btn" onclick="goTo('p4',this)">
+      <span class="nav-icon">🔴</span><span class="nav-label">P4</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('morpion',this)">
+      <span class="nav-icon">⭕</span><span class="nav-label">Morpion</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('thisorthat',this)"><span class="nav-icon">⚡</span><span class="nav-label">Ça ou ça</span></button>
+    <button class="nav-btn" onclick="goTo('prefere',this)"><span class="nav-icon">🤔</span><span class="nav-label">Tu préfères</span></button>
+    <button class="nav-btn" onclick="goTo('pendu',this)"><span class="nav-icon">🪢</span><span class="nav-label">Pendu</span></button>
+    <button class="nav-btn" onclick="goTo('naval',this)"><span class="nav-icon">🚢</span><span class="nav-label">Navale</span></button>
+    <button class="nav-btn" onclick="goTo('dessine',this)"><span class="nav-icon">🎨</span><span class="nav-label">Dessine</span></button>
+    <button class="nav-btn" onclick="goTo('uno',this)"><span class="nav-icon">🃏</span><span class="nav-label">Uno</span></button>
     <button class="nav-btn" onclick="goTo('vingt',this)">
       <span class="nav-icon">🎯</span><span class="nav-label">20 Q</span>
       <div class="nav-turn" id="turn-vingt"></div>
@@ -508,6 +543,14 @@ function goTo(page, btn){
     case"quiz":renderQuiz();break;
     case"devine":renderDevine();break;
     case"vf":renderVF();break;
+    case"p4":renderP4();break;
+    case"morpion":renderMorpion();break;
+    case"thisorthat":renderTOT();break;
+    case"prefere":renderPref();break;
+    case"pendu":renderPendu();break;
+    case"naval":renderNaval();break;
+    case"dessine":renderDessine();break;
+    case"uno":renderUno();break;
     case"complic":renderComplic();break;
     case"bac":renderBac();break;
     case"vingt":renderVingt();break;
@@ -527,6 +570,14 @@ function initApp(){
   dbListen("complic_state", val=>{if(val)S.complicFB=val;if(S.currentPage==="complic")renderComplic();checkTurns();});
   dbListen("bac_state", val=>{if(val)S.bacFB=val;if(S.currentPage==="bac")renderBac();checkTurns();});
   dbListen("vingt_state", val=>{if(val)S.vingtFB=val;if(S.currentPage==="vingt")renderVingt();checkTurns();});
+  dbListen("p4_state", val=>{if(val)S.p4FB=val;if(S.currentPage==="p4")renderP4();if(S.currentPage==="home")renderHome();});
+  dbListen("morpion_state", val=>{if(val)S.morpionFB=val;if(S.currentPage==="morpion")renderMorpion();if(S.currentPage==="home")renderHome();});
+  dbListen("tot_state", val=>{if(val)S.totFB=val;if(S.currentPage==="thisorthat")renderTOT();});
+  dbListen("pref_state", val=>{if(val)S.prefFB=val;if(S.currentPage==="prefere")renderPref();});
+  dbListen("pendu_state", val=>{if(val)S.penduFB=val;if(S.currentPage==="pendu")renderPendu();if(S.currentPage==="home")renderHome();});
+  dbListen("naval_state", val=>{if(val)S.navalFB=val;if(S.currentPage==="naval")renderNaval();if(S.currentPage==="home")renderHome();});
+  dbListen("dessine_state", val=>{if(val)S.dessineFB=val;if(S.currentPage==="dessine")renderDessine();if(S.currentPage==="home")renderHome();});
+  dbListen("uno_state", val=>{if(val)S.unoFB=val;if(S.currentPage==="uno")renderUno();if(S.currentPage==="home")renderHome();});
   renderHome();
   updateHeaderScores();
   const profileEl = document.getElementById("jeux-profile-label");
@@ -575,6 +626,14 @@ function renderHome(){
     {id:"complic",icon:"💑",name:"Niveau de complicité",desc:"Même question, comparez vos réponses",color:"var(--rose)",turn:!!(S.complicFB?.answers?.[other]&&!S.complicFB?.answers?.[S.profile])},
     {id:"bac",icon:"🔤",name:"Bac à deux",desc:"Même lettre, mêmes catégories — qui est le plus rapide ?",color:"var(--blue)",turn:false},
     {id:"vingt",icon:"🎯",name:"20 Questions",desc:"Devine à quoi pense l'autre en 20 questions",color:"#FF7A45",turn:S.vingtFB?.guesser===S.profile&&S.vingtFB?.phase==="asking"},
+    {id:"p4",icon:"🔴",name:"Puissance 4",desc:"Aligne 4 jetons avant l'autre — en temps réel !",color:"#E8637A",turn:S.p4FB&&S.p4FB.turn===S.profile&&!S.p4FB.winner},
+    {id:"morpion",icon:"⭕",name:"Morpion",desc:"Le classique 3-en-ligne, à deux",color:"var(--blue)",turn:S.morpionFB&&S.morpionFB.turn===S.profile&&!S.morpionFB.winner},
+    {id:"thisorthat",icon:"⚡",name:"Ça ou ça",desc:"Choix rapides — découvrez votre compatibilité",color:"#FF7A45",turn:false},
+    {id:"prefere",icon:"🤔",name:"Tu préfères ?",desc:"Des dilemmes, vous répondez chacun votre tour",color:"var(--purple)",turn:false},
+    {id:"pendu",icon:"🪢",name:"Le Pendu",desc:"L'un cache un mot, l'autre devine les lettres",color:"var(--gold)",turn:!!(S.penduFB&&S.penduFB.setter&&S.penduFB.setter!==S.profile&&!S.penduFB.over)},
+    {id:"naval",icon:"🚢",name:"Bataille navale",desc:"Placez vos bateaux, tirez chacun votre tour",color:"var(--blue)",turn:!!(S.navalFB&&S.navalFB.phase==="playing"&&S.navalFB.turn===S.profile)},
+    {id:"dessine",icon:"🎨",name:"Devine & dessine",desc:"L'un dessine, l'autre devine quand il veut",color:"var(--rose)",turn:!!(S.dessineFB&&S.dessineFB.drawer&&S.dessineFB.drawer!==S.profile&&!S.dessineFB.found)},
+    {id:"uno",icon:"🃏",name:"Uno",desc:"Le célèbre jeu de cartes, à deux",color:"var(--green)",turn:!!(S.unoFB&&S.unoFB.turn===S.profile&&!S.unoFB.winner)},
   ];
   const scores = S.scores;
   document.getElementById("games-grid").innerHTML = GAMES.map(g=>`
@@ -1302,3 +1361,646 @@ document.addEventListener("DOMContentLoaded",()=>{
   if(window.firebaseReady) initApp();
 });
 </script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// ÇA OU ÇA (This or That) — compatibilité
+// ════════════════════════════════════════════════════════════
+const TOT_PAIRS=[
+  ["🏖️ Plage","🏔️ Montagne"],["☕ Café","🍵 Thé"],["🐕 Chien","🐈 Chat"],["🌅 Matin","🌙 Soir"],
+  ["🍕 Pizza","🍔 Burger"],["🎬 Cinéma","📺 Netflix maison"],["🏙️ Ville","🌳 Campagne"],["🍫 Sucré","🧀 Salé"],
+  ["✈️ Voyage lointain","🚗 Road trip"],["💃 Sortir","🛋️ Rester au calme"],["📚 Livre","🎮 Jeu vidéo"],["🌊 Mer","🏊 Piscine"],
+  ["🥐 Petit-déj salé","🥞 Petit-déj sucré","🥐 Croissant","🥞 Pancakes"][0]&&["🥐 Croissant","🥞 Pancakes"],
+  ["😂 Comédie","😱 Film d'horreur"],["🎵 Musique forte","🤫 Calme"],["🛍️ Shopping","🏡 Bricolage"],
+  ["🌞 Été","❄️ Hiver"],["🍦 Glace","🍰 Gâteau"],["🚿 Douche matin","🛁 Bain soir"],["📱 Texto","📞 Appel"],
+];
+function renderTOT(){
+  const zone=document.getElementById("tot-zone");if(!zone)return;
+  const st=S.totFB||{answers:{raphy:{},mehdi:{}}};
+  const my=st.answers?.[S.profile]||{};
+  const other=S.profile==="raphy"?"mehdi":"raphy";
+  const their=st.answers?.[other]||{};
+  const total=TOT_PAIRS.length;
+  const myCount=Object.keys(my).length;
+  // Page de jeu : répondre aux paires
+  const idx=myCount; // prochaine non répondue
+  if(idx<total){
+    const pair=TOT_PAIRS[idx];
+    zone.innerHTML=`
+      <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:16px">${idx+1} / ${total}</div>
+      <div style="display:flex;flex-direction:column;gap:14px;max-width:340px;margin:0 auto">
+        <button onclick="answerTOT(0)" style="padding:28px;border-radius:20px;border:2px solid var(--rose-border);background:var(--rose-soft);color:var(--text);font-size:20px;font-weight:700;cursor:pointer">${pair[0]}</button>
+        <div style="text-align:center;font-size:13px;color:var(--gold);font-weight:700">OU</div>
+        <button onclick="answerTOT(1)" style="padding:28px;border-radius:20px;border:2px solid var(--blue-border);background:var(--blue-soft);color:var(--text);font-size:20px;font-weight:700;cursor:pointer">${pair[1]}</button>
+      </div>`;
+    return;
+  }
+  // Tous répondus de mon côté — comparer
+  const theirCount=Object.keys(their).length;
+  let html=`<div style="text-align:center;padding:10px 0 20px"><div style="font-size:40px">⚡</div><div style="font-size:16px;font-weight:700;margin-top:8px">Tu as tout répondu !</div></div>`;
+  if(theirCount<total){
+    html+=`<div style="text-align:center;color:var(--muted);font-size:14px;padding:20px;background:var(--card);border-radius:14px">En attente que ${other==="raphy"?"Raphy 💗":"Mehdi 💙"} réponde aussi... (${theirCount}/${total})</div>`;
+  } else {
+    let same=0;
+    TOT_PAIRS.forEach((p,i)=>{if(my[i]===their[i])same++;});
+    const pct=Math.round(same/total*100);
+    html+=`<div style="text-align:center;background:linear-gradient(135deg,var(--gold-soft),var(--rose-soft));border:1px solid var(--gold-border);border-radius:18px;padding:24px;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--gold);font-weight:700">VOTRE COMPATIBILITÉ</div>
+      <div style="font-family:var(--font-d);font-size:44px;font-weight:900;color:var(--gold)">${pct}%</div>
+      <div style="font-size:13px;color:var(--muted)">${same}/${total} réponses identiques</div>
+    </div>`;
+    html+=TOT_PAIRS.map((p,i)=>{
+      const m=my[i],t=their[i];const match=m===t;
+      return `<div style="background:var(--card);border:1px solid ${match?"rgba(58,158,106,.3)":"var(--border)"};border-radius:12px;padding:10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px">💗 ${p[m]||"?"}</span>
+        <span style="font-size:14px">${match?"✅":"↔️"}</span>
+        <span style="font-size:12px">💙 ${p[t]||"?"}</span>
+      </div>`;
+    }).join("");
+  }
+  html+=`<button class="btn btn-outline" style="margin-top:14px" onclick="resetTOT()">↻ Recommencer</button>`;
+  zone.innerHTML=html;
+}
+function answerTOT(choice){
+  const st=S.totFB||{answers:{raphy:{},mehdi:{}}};
+  if(!st.answers)st.answers={raphy:{},mehdi:{}};
+  if(!st.answers[S.profile])st.answers[S.profile]={};
+  const idx=Object.keys(st.answers[S.profile]).length;
+  st.answers[S.profile][idx]=choice;
+  S.totFB=st;dbSave("tot_state",st);renderTOT();
+}
+function resetTOT(){const st={answers:{raphy:{},mehdi:{}}};S.totFB=st;dbSave("tot_state",st);renderTOT();}
+
+// ════════════════════════════════════════════════════════════
+// TU PRÉFÈRES ?
+// ════════════════════════════════════════════════════════════
+const PREF_QS=[
+  ["Vivre sans musique","Vivre sans films"],["Pouvoir voler","Être invisible"],["Lire dans les pensées","Voir le futur"],
+  ["Ne plus jamais manger de sucré","Ne plus jamais manger salé"],["Vacances à la mer chaque année","Découvrir un nouveau pays chaque année"],
+  ["Gagner au loto","Trouver l'amour parfait (déjà fait 😏)"],["Être célèbre","Être riche mais inconnu"],
+  ["Voyager dans le passé","Voyager dans le futur"],["Vivre à la montagne","Vivre sur une île"],
+  ["Ne plus jamais avoir froid","Ne plus jamais avoir chaud"],["Parler toutes les langues","Jouer de tous les instruments"],
+  ["Un dîner gastronomique","Un pique-nique romantique"],["Avoir un majordome","Avoir un chef cuisinier"],
+  ["Toujours dire la vérité","Toujours devoir mentir"],["Une soirée Netflix","Une soirée resto"],
+];
+function renderPref(){
+  const zone=document.getElementById("pref-zone");if(!zone)return;
+  const st=S.prefFB||{answers:{raphy:{},mehdi:{}}};
+  const my=st.answers?.[S.profile]||{};
+  const other=S.profile==="raphy"?"mehdi":"raphy";
+  const their=st.answers?.[other]||{};
+  const idx=Object.keys(my).length;
+  if(idx<PREF_QS.length){
+    const q=PREF_QS[idx];
+    zone.innerHTML=`<div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:8px">${idx+1} / ${PREF_QS.length}</div>
+      <div style="text-align:center;font-family:var(--font-d);font-size:18px;font-weight:700;margin-bottom:20px">Tu préfères...</div>
+      <div style="display:flex;flex-direction:column;gap:14px;max-width:340px;margin:0 auto">
+        <button onclick="answerPref(0)" style="padding:24px;border-radius:18px;border:2px solid var(--purple);background:rgba(139,111,212,.12);color:var(--text);font-size:16px;font-weight:600;cursor:pointer">${q[0]}</button>
+        <div style="text-align:center;font-size:12px;color:var(--gold);font-weight:700">OU</div>
+        <button onclick="answerPref(1)" style="padding:24px;border-radius:18px;border:2px solid var(--gold-border);background:var(--gold-soft);color:var(--text);font-size:16px;font-weight:600;cursor:pointer">${q[1]}</button>
+      </div>`;
+    return;
+  }
+  let html=`<div style="text-align:center;padding:10px 0 16px"><div style="font-size:40px">🤔</div><div style="font-size:16px;font-weight:700;margin-top:6px">Tu as tout répondu !</div></div>`;
+  const theirCount=Object.keys(their).length;
+  if(theirCount<PREF_QS.length){
+    html+=`<div style="text-align:center;color:var(--muted);font-size:14px;padding:20px;background:var(--card);border-radius:14px">En attente de ${other==="raphy"?"Raphy 💗":"Mehdi 💙"}... (${theirCount}/${PREF_QS.length})</div>`;
+  } else {
+    let same=0;PREF_QS.forEach((q,i)=>{if(my[i]===their[i])same++;});
+    html+=`<div style="text-align:center;font-size:14px;color:var(--gold);font-weight:700;margin-bottom:14px">Vous êtes d'accord sur ${same}/${PREF_QS.length} !</div>`;
+    html+=PREF_QS.map((q,i)=>{const match=my[i]===their[i];return `<div style="background:var(--card);border:1px solid ${match?"rgba(58,158,106,.3)":"var(--border)"};border-radius:12px;padding:12px;margin-bottom:6px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${q[0]} / ${q[1]}</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px"><span>💗 ${q[my[i]]||"?"}</span><span>${match?"✅":"↔️"}</span><span>💙 ${q[their[i]]||"?"}</span></div>
+    </div>`;}).join("");
+  }
+  html+=`<button class="btn btn-outline" style="margin-top:14px" onclick="resetPref()">↻ Recommencer</button>`;
+  zone.innerHTML=html;
+}
+function answerPref(c){
+  const st=S.prefFB||{answers:{raphy:{},mehdi:{}}};
+  if(!st.answers)st.answers={raphy:{},mehdi:{}};if(!st.answers[S.profile])st.answers[S.profile]={};
+  st.answers[S.profile][Object.keys(st.answers[S.profile]).length]=c;
+  S.prefFB=st;dbSave("pref_state",st);renderPref();
+}
+function resetPref(){const st={answers:{raphy:{},mehdi:{}}};S.prefFB=st;dbSave("pref_state",st);renderPref();}
+
+// ════════════════════════════════════════════════════════════
+// LE PENDU
+// ════════════════════════════════════════════════════════════
+const PENDU_STAGES=["😀","😅","😬","😰","😱","🥵","💀"]; // 6 erreurs max
+function renderPendu(){
+  const zone=document.getElementById("pendu-zone");if(!zone)return;
+  const st=S.penduFB;
+  // Pas de partie ou terminée -> proposer de cacher un mot (si pas mon tour de deviner)
+  if(!st||!st.word){
+    zone.innerHTML=penduSetupHTML();return;
+  }
+  const iAmSetter=st.setter===S.profile;
+  if(iAmSetter&&!st.over){
+    // J'ai posé le mot, j'attends que l'autre devine
+    const found=st.word.toUpperCase().split("").filter(l=>l===" "||st.guessed.includes(l)).length;
+    zone.innerHTML=`<div style="text-align:center;padding:20px">
+      <div style="font-size:44px;margin-bottom:12px">🪢</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px">Tu as caché : "${st.word}"</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px">En attente que ${S.profile==="raphy"?"Mehdi 💙":"Raphy 💗"} devine...<br>Erreurs : ${st.wrong}/6 · Lettres trouvées : ${found}/${st.word.replace(/ /g,"").length}</div>
+      <button class="btn btn-outline" onclick="resetPendu()">Annuler / Nouveau mot</button>
+    </div>`;
+    return;
+  }
+  // Je devine (ou partie finie)
+  const display=st.word.split("").map(l=>l===" "?"&nbsp;&nbsp;":(st.guessed.includes(l.toUpperCase())?l:"_")).join(" ");
+  const won=st.word.toUpperCase().split("").every(l=>l===" "||st.guessed.includes(l));
+  const lost=st.wrong>=6;
+  let html=`<div style="text-align:center">
+    <div style="font-size:64px;margin-bottom:8px">${PENDU_STAGES[Math.min(st.wrong,6)]}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Erreurs : ${st.wrong}/6</div>
+    <div style="font-family:var(--font-d);font-size:28px;font-weight:900;letter-spacing:3px;margin-bottom:20px;word-break:break-word">${display}</div>`;
+  if(won){
+    html+=`<div style="font-size:18px;font-weight:700;color:var(--green)">🎉 Gagné ! Le mot était "${st.word}"</div>`;
+  } else if(lost){
+    html+=`<div style="font-size:18px;font-weight:700;color:var(--rose)">💀 Perdu ! Le mot était "${st.word.toUpperCase()}"</div>`;
+  } else {
+    // Clavier
+    const letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    html+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;max-width:340px;margin:0 auto">`;
+    letters.forEach(l=>{
+      const used=st.guessed.includes(l);
+      const inWord=st.word.toUpperCase().includes(l);
+      html+=`<button onclick="${used?"":`guessPendu('${l}')`}" style="aspect-ratio:1;border-radius:8px;border:none;background:${used?(inWord?"rgba(58,158,106,.3)":"rgba(232,99,122,.25)"):"var(--surface)"};color:${used?"var(--muted)":"var(--text)"};font-size:14px;font-weight:700;cursor:${used?"default":"pointer"}">${l}</button>`;
+    });
+    html+=`</div>`;
+  }
+  if(won||lost)html+=`<button class="btn btn-rose" style="margin-top:20px" onclick="resetPendu()">Nouvelle partie 🎮</button>`;
+  html+=`</div>`;
+  zone.innerHTML=html;
+}
+function penduSetupHTML(){
+  return `<div style="text-align:center;padding:20px 10px">
+    <div style="font-size:50px;margin-bottom:12px">🪢</div>
+    <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:20px">Cache un mot (ou une courte phrase), l'autre devra le deviner lettre par lettre quand il/elle veut !</div>
+    <input class="input" id="pendu-word" placeholder="Ton mot secret..." style="margin-bottom:12px;text-align:center" maxlength="30">
+    <button class="btn btn-rose" onclick="setPenduWord()">Cacher ce mot 🔒</button>
+  </div>`;
+}
+function setPenduWord(){
+  const w=document.getElementById("pendu-word")?.value.trim();
+  if(!w||w.length<2){toast("Mot trop court !");return;}
+  const st={word:w,setter:S.profile,guessed:[],wrong:0,over:false,ts:Date.now()};
+  S.penduFB=st;dbSave("pendu_state",st);renderPendu();
+  toast("Mot caché ! À l'autre de deviner 🪢");
+}
+function guessPendu(letter){
+  const st=S.penduFB;if(!st||st.over)return;
+  if(st.setter===S.profile)return; // le poseur ne devine pas
+  if(st.guessed.includes(letter))return;
+  st.guessed.push(letter);
+  if(!st.word.toUpperCase().includes(letter))st.wrong++;
+  const won=st.word.split("").every(l=>l===" "||st.guessed.includes(l)||st.guessed.includes(l.toUpperCase()));
+  // normaliser : on stocke les lettres en majuscule, comparer en majuscule
+  const wonReal=st.word.toUpperCase().split("").every(l=>l===" "||st.guessed.includes(l));
+  if(wonReal){st.over=true;}
+  if(st.wrong>=6){st.over=true;}
+  st.ts=Date.now();
+  S.penduFB=st;dbSave("pendu_state",st);renderPendu();
+  if(wonReal){celebrate();addPoints(S.profile,2);}
+}
+function resetPendu(){const st={word:null,setter:null,guessed:[],wrong:0,over:false};S.penduFB=st;dbSave("pendu_state",st);renderPendu();}
+</script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// BATAILLE NAVALE (grille 8×8, en différé)
+// ════════════════════════════════════════════════════════════
+// Bateaux : 1×4, 1×3, 2×2, 1×1 (5 bateaux, 12 cases)
+const NAVAL_SIZE=8;
+const NAVAL_SHIPS=[4,3,2,2,1];
+function renderNaval(){
+  const zone=document.getElementById("naval-zone");if(!zone)return;
+  const st=S.navalFB;
+  if(!st||!st.phase){
+    zone.innerHTML=`<div style="text-align:center;padding:24px 10px">
+      <div style="font-size:50px;margin-bottom:12px">🚢</div>
+      <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:22px">Placez vos bateaux, puis tirez chacun votre tour pour couler la flotte de l'autre !<br>Flotte : 1×4, 1×3, 2×2, 1×1</div>
+      <button class="btn btn-rose" onclick="newNaval()">Nouvelle partie 🎮</button>
+    </div>`;
+    return;
+  }
+  const me=S.profile, other=me==="raphy"?"mehdi":"raphy";
+  const myBoard=st.boards?.[me]||[];
+  const myReady=st.ready?.[me];
+  const otherReady=st.ready?.[other];
+
+  // PHASE PLACEMENT
+  if(st.phase==="placing"){
+    if(!myReady){
+      zone.innerHTML=renderNavalPlacement(st);
+      return;
+    }
+    zone.innerHTML=`<div style="text-align:center;padding:24px"><div style="font-size:44px">⏳</div><div style="font-size:15px;font-weight:700;margin-top:10px">Ta flotte est prête !</div><div style="font-size:13px;color:var(--muted);margin-top:6px">${otherReady?"Lancement...":`En attente que ${other==="raphy"?"Raphy 💗":"Mehdi 💙"} place ses bateaux...`}</div><button class="btn btn-outline" style="margin-top:18px" onclick="resetNaval()">Annuler</button></div>`;
+    // Si les deux prêts, passer en playing
+    if(myReady&&otherReady&&st.phase==="placing"){
+      st.phase="playing";st.turn="raphy";st.shots={raphy:[],mehdi:[]};
+      S.navalFB=st;dbSave("naval_state",st);setTimeout(renderNaval,300);
+    }
+    return;
+  }
+
+  // PHASE JEU
+  if(st.phase==="playing"){
+    const myShots=st.shots?.[me]||[];      // mes tirs sur la grille adverse
+    const theirShots=st.shots?.[other]||[]; // leurs tirs sur ma grille
+    const enemyBoard=st.boards?.[other]||[];
+    // Victoire ? toutes les cases bateau adverses touchées
+    const enemyShipCells=enemyBoard.filter(c=>c===1).length;
+    const myHits=myShots.filter(i=>enemyBoard[i]===1).length;
+    const myShipCells=myBoard.filter(c=>c===1).length;
+    const theirHits=theirShots.filter(i=>myBoard[i]===1).length;
+    if(myHits>=enemyShipCells&&enemyShipCells>0){st.winner=me;}
+    else if(theirHits>=myShipCells&&myShipCells>0){st.winner=other;}
+    if(st.winner&&!st._done){st._done=true;S.navalFB=st;dbSave("naval_state",st);if(st.winner===me){celebrate();addPoints(me,5);}}
+
+    const myTurn=st.turn===me&&!st.winner;
+    let status;
+    if(st.winner)status=st.winner===me?"🎉 Victoire ! Tu as coulé sa flotte !":"💥 Tu as perdu ta flotte...";
+    else status=myTurn?"🎯 À toi de tirer !":`Au tour de ${st.turn==="raphy"?"Raphy 💗":"Mehdi 💙"}...`;
+
+    let html=`<div style="text-align:center;font-size:15px;font-weight:700;margin-bottom:6px;color:${st.winner?"var(--gold)":(myTurn?"var(--rose)":"var(--muted)")}">${status}</div>`;
+    html+=`<div style="text-align:center;font-size:11px;color:var(--muted);margin-bottom:12px">Touchés : toi ${myHits}/${enemyShipCells} · adversaire ${theirHits}/${myShipCells}</div>`;
+
+    // Grille ennemie (où je tire)
+    html+=`<div style="font-size:12px;font-weight:700;color:var(--rose);margin-bottom:6px;text-align:center">🎯 Grille adverse (tire ici)</div>`;
+    html+=`<div style="display:grid;grid-template-columns:repeat(${NAVAL_SIZE},1fr);gap:3px;max-width:320px;margin:0 auto 18px">`;
+    for(let i=0;i<NAVAL_SIZE*NAVAL_SIZE;i++){
+      const shot=myShots.includes(i);
+      const hit=shot&&enemyBoard[i]===1;
+      const bg=hit?"#E8637A":shot?"#2a3550":"#0d1626";
+      const canShoot=myTurn&&!shot;
+      html+=`<button onclick="${canShoot?`fireNaval(${i})`:""}" style="aspect-ratio:1;border-radius:5px;border:none;background:${bg};cursor:${canShoot?"pointer":"default"};font-size:11px;display:flex;align-items:center;justify-content:center">${hit?"💥":shot?"·":""}</button>`;
+    }
+    html+=`</div>`;
+    // Ma grille (défense)
+    html+=`<div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px;text-align:center">🛡️ Ta flotte</div>`;
+    html+=`<div style="display:grid;grid-template-columns:repeat(${NAVAL_SIZE},1fr);gap:3px;max-width:260px;margin:0 auto">`;
+    for(let i=0;i<NAVAL_SIZE*NAVAL_SIZE;i++){
+      const ship=myBoard[i]===1;
+      const shotHere=theirShots.includes(i);
+      const bg=shotHere&&ship?"#E8637A":shotHere?"#2a3550":ship?"#4A9EE8":"#0d1626";
+      html+=`<div style="aspect-ratio:1;border-radius:4px;background:${bg};font-size:9px;display:flex;align-items:center;justify-content:center">${shotHere&&ship?"💥":shotHere?"·":""}</div>`;
+    }
+    html+=`</div>`;
+    if(st.winner)html+=`<div style="text-align:center"><button class="btn btn-rose" style="margin-top:18px;width:auto" onclick="resetNaval()">Rejouer 🎮</button></div>`;
+    zone.innerHTML=html;
+    return;
+  }
+}
+function renderNavalPlacement(st){
+  const me=S.profile;
+  const board=(S._navalDraft&&S._navalDraft.length)?S._navalDraft:(st.boards?.[me]||Array(NAVAL_SIZE*NAVAL_SIZE).fill(0));
+  S._navalDraft=board;
+  if(S._navalShipIdx===undefined)S._navalShipIdx=0;
+  if(S._navalHoriz===undefined)S._navalHoriz=true;
+  const placed=S._navalShipIdx;
+  const allPlaced=placed>=NAVAL_SHIPS.length;
+  let html=`<div style="text-align:center;font-size:14px;font-weight:700;margin-bottom:6px">Place tes bateaux</div>`;
+  if(!allPlaced){
+    html+=`<div style="text-align:center;font-size:13px;color:var(--gold);margin-bottom:4px">Bateau ${placed+1}/${NAVAL_SHIPS.length} — taille ${NAVAL_SHIPS[placed]}</div>`;
+    html+=`<div style="text-align:center;margin-bottom:10px"><button class="btn btn-sm btn-outline" style="width:auto" onclick="toggleNavalDir()">↻ ${S._navalHoriz?"Horizontal":"Vertical"}</button></div>`;
+  } else {
+    html+=`<div style="text-align:center;font-size:13px;color:var(--green);margin-bottom:10px">✅ Tous placés ! Prêt ?</div>`;
+  }
+  html+=`<div style="display:grid;grid-template-columns:repeat(${NAVAL_SIZE},1fr);gap:3px;max-width:320px;margin:0 auto">`;
+  for(let i=0;i<NAVAL_SIZE*NAVAL_SIZE;i++){
+    const ship=board[i]===1;
+    html+=`<button onclick="${allPlaced?"":`placeNavalShip(${i})`}" style="aspect-ratio:1;border-radius:5px;border:none;background:${ship?"#4A9EE8":"#0d1626"};cursor:${allPlaced?"default":"pointer"}"></button>`;
+  }
+  html+=`</div>`;
+  html+=`<div style="display:flex;gap:8px;margin-top:16px;max-width:320px;margin-left:auto;margin-right:auto">`;
+  html+=`<button class="btn btn-outline" style="flex:1" onclick="resetNavalDraft()">↻ Replacer</button>`;
+  if(allPlaced)html+=`<button class="btn btn-rose" style="flex:1" onclick="confirmNaval()">Valider ma flotte ✓</button>`;
+  html+=`</div>`;
+  return html;
+}
+function toggleNavalDir(){S._navalHoriz=!S._navalHoriz;renderNaval();}
+function placeNavalShip(i){
+  const size=NAVAL_SHIPS[S._navalShipIdx];
+  const board=S._navalDraft;
+  const row=Math.floor(i/NAVAL_SIZE), col=i%NAVAL_SIZE;
+  // Vérifier que ça rentre
+  const cells=[];
+  for(let k=0;k<size;k++){
+    const r=S._navalHoriz?row:row+k;
+    const c=S._navalHoriz?col+k:col;
+    if(r>=NAVAL_SIZE||c>=NAVAL_SIZE){toast("Le bateau dépasse !");return;}
+    const idx=r*NAVAL_SIZE+c;
+    if(board[idx]===1){toast("Bateaux qui se touchent !");return;}
+    cells.push(idx);
+  }
+  cells.forEach(idx=>board[idx]=1);
+  S._navalShipIdx++;
+  renderNaval();
+}
+function resetNavalDraft(){S._navalDraft=Array(NAVAL_SIZE*NAVAL_SIZE).fill(0);S._navalShipIdx=0;renderNaval();}
+function confirmNaval(){
+  const st=S.navalFB||{phase:"placing",boards:{},ready:{}};
+  if(!st.boards)st.boards={};if(!st.ready)st.ready={};
+  st.boards[S.profile]=S._navalDraft.slice();
+  st.ready[S.profile]=true;
+  S._navalDraft=null;S._navalShipIdx=0;
+  S.navalFB=st;dbSave("naval_state",st);renderNaval();
+  toast("Flotte validée ! 🚢");
+}
+function newNaval(){
+  const st={phase:"placing",boards:{},ready:{},shots:{raphy:[],mehdi:[]},turn:"raphy",winner:null,ts:Date.now()};
+  S.navalFB=st;S._navalDraft=null;S._navalShipIdx=0;dbSave("naval_state",st);renderNaval();
+}
+function resetNaval(){newNaval();}
+function fireNaval(i){
+  const st=S.navalFB;if(!st||st.winner||st.phase!=="playing")return;
+  if(st.turn!==S.profile)return;
+  if(!st.shots)st.shots={raphy:[],mehdi:[]};
+  if(!st.shots[S.profile])st.shots[S.profile]=[];
+  if(st.shots[S.profile].includes(i))return;
+  st.shots[S.profile].push(i);
+  const other=S.profile==="raphy"?"mehdi":"raphy";
+  const hit=st.boards[other][i]===1;
+  // Si touché on rejoue, sinon on passe la main
+  if(!hit)st.turn=other;
+  st.ts=Date.now();
+  S.navalFB=st;dbSave("naval_state",st);renderNaval();
+  if(hit)toast("💥 Touché !");else toast("💧 Dans l'eau");
+}
+</script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// DEVINE & DESSINE (canvas, en différé)
+// ════════════════════════════════════════════════════════════
+const DESSINE_WORDS=["chat","maison","soleil","voiture","arbre","cœur","fleur","poisson","étoile","pizza","avion","bateau","chien","lune","montagne","parapluie","glace","ballon","clé","tasse","lunettes","guitare","robot","fantôme","cadeau","gâteau","vélo","fusée","chaussure","téléphone"];
+let _dessineCanvas=null,_dessineCtx=null,_dessineDrawing=false;
+function renderDessine(){
+  const zone=document.getElementById("dessine-zone");if(!zone)return;
+  const st=S.dessineFB;
+  if(!st||!st.drawer){
+    zone.innerHTML=`<div style="text-align:center;padding:24px 10px">
+      <div style="font-size:50px;margin-bottom:12px">🎨</div>
+      <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:22px">Un mot t'est donné, tu le dessines, et l'autre devine quand il/elle veut !</div>
+      <button class="btn btn-rose" onclick="startDessine()">Je dessine 🖌️</button>
+    </div>`;
+    return;
+  }
+  const iAmDrawer=st.drawer===S.profile;
+  // Le dessinateur dessine
+  if(iAmDrawer&&!st.sent){
+    zone.innerHTML=`
+      <div style="text-align:center;margin-bottom:10px">
+        <div style="font-size:12px;color:var(--muted)">Dessine :</div>
+        <div style="font-family:var(--font-d);font-size:22px;font-weight:900;color:var(--gold)">${st.word}</div>
+      </div>
+      <canvas id="dessine-canvas" width="300" height="300" style="background:#fff;border-radius:14px;display:block;margin:0 auto;touch-action:none;max-width:100%"></canvas>
+      <div style="display:flex;gap:8px;margin-top:12px;max-width:320px;margin-left:auto;margin-right:auto">
+        <button class="btn btn-outline" style="flex:1" onclick="clearDessine()">🧽 Effacer</button>
+        <button class="btn btn-rose" style="flex:1" onclick="sendDessine()">Envoyer ✓</button>
+      </div>
+      <div style="text-align:center;margin-top:8px"><button class="btn btn-sm btn-outline" style="width:auto" onclick="newDessineWord()">🎲 Autre mot</button></div>`;
+    setTimeout(initDessineCanvas,50);
+    return;
+  }
+  if(iAmDrawer&&st.sent){
+    zone.innerHTML=`<div style="text-align:center;padding:24px">
+      <div style="font-size:44px">⏳</div>
+      <div style="font-size:15px;font-weight:700;margin-top:10px">Dessin envoyé !</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">${st.found?`🎉 ${S.profile==="raphy"?"Mehdi":"Raphy"} a trouvé "${st.word}" !`:`En attente que l'autre devine...`}</div>
+      ${st.found?`<button class="btn btn-rose" style="margin-top:18px" onclick="startDessine()">Rejouer 🎨</button>`:`<button class="btn btn-outline" style="margin-top:18px" onclick="resetDessine()">Annuler</button>`}
+    </div>`;
+    return;
+  }
+  // Le devineur
+  if(!st.sent){
+    zone.innerHTML=`<div style="text-align:center;padding:24px"><div style="font-size:44px">🖌️</div><div style="font-size:15px;font-weight:700;margin-top:10px">${st.drawer==="raphy"?"Raphy 💗":"Mehdi 💙"} est en train de dessiner...</div><div style="font-size:13px;color:var(--muted);margin-top:6px">Reviens quand le dessin est prêt !</div></div>`;
+    return;
+  }
+  // Dessin reçu — deviner
+  let html=`<div style="text-align:center;font-size:14px;font-weight:700;margin-bottom:10px">Qu'est-ce que c'est ? 🤔</div>`;
+  html+=`<img src="${st.drawing}" style="background:#fff;border-radius:14px;display:block;margin:0 auto;max-width:100%;width:300px">`;
+  if(st.found){
+    html+=`<div style="text-align:center;margin-top:16px"><div style="font-size:18px;font-weight:700;color:var(--green)">🎉 C'était bien "${st.word}" !</div><button class="btn btn-rose" style="margin-top:14px" onclick="startDessine()">À moi de dessiner 🎨</button></div>`;
+  } else {
+    html+=`<div style="margin-top:14px;max-width:340px;margin-left:auto;margin-right:auto">
+      <input class="input" id="dessine-guess" placeholder="Ta réponse..." style="margin-bottom:10px;text-align:center">
+      <button class="btn btn-rose" onclick="guessDessine()">Deviner !</button>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px">Indice : ${st.word.length} lettres${st.tries?` · ${st.tries} essai(s)`:""}</div>
+    </div>`;
+  }
+  zone.innerHTML=html;
+}
+function initDessineCanvas(){
+  _dessineCanvas=document.getElementById("dessine-canvas");if(!_dessineCanvas)return;
+  _dessineCtx=_dessineCanvas.getContext("2d");
+  _dessineCtx.lineWidth=4;_dessineCtx.lineCap="round";_dessineCtx.strokeStyle="#1a1a2e";
+  const pos=e=>{const r=_dessineCanvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;const sx=_dessineCanvas.width/r.width,sy=_dessineCanvas.height/r.height;return{x:(t.clientX-r.left)*sx,y:(t.clientY-r.top)*sy};};
+  const start=e=>{e.preventDefault();_dessineDrawing=true;const p=pos(e);_dessineCtx.beginPath();_dessineCtx.moveTo(p.x,p.y);};
+  const move=e=>{if(!_dessineDrawing)return;e.preventDefault();const p=pos(e);_dessineCtx.lineTo(p.x,p.y);_dessineCtx.stroke();};
+  const end=()=>{_dessineDrawing=false;};
+  _dessineCanvas.onmousedown=start;_dessineCanvas.onmousemove=move;_dessineCanvas.onmouseup=end;_dessineCanvas.onmouseleave=end;
+  _dessineCanvas.ontouchstart=start;_dessineCanvas.ontouchmove=move;_dessineCanvas.ontouchend=end;
+}
+function clearDessine(){if(_dessineCtx)_dessineCtx.clearRect(0,0,300,300);}
+function startDessine(){
+  const word=DESSINE_WORDS[Math.floor(Math.random()*DESSINE_WORDS.length)];
+  const st={drawer:S.profile,word,drawing:null,sent:false,found:false,tries:0,ts:Date.now()};
+  S.dessineFB=st;dbSave("dessine_state",st);renderDessine();
+}
+function newDessineWord(){
+  const word=DESSINE_WORDS[Math.floor(Math.random()*DESSINE_WORDS.length)];
+  S.dessineFB.word=word;dbSave("dessine_state",S.dessineFB);renderDessine();
+  toast("Nouveau mot : "+word);
+}
+function sendDessine(){
+  if(!_dessineCanvas){toast("Dessine d'abord !");return;}
+  // Compresser le dessin en JPEG basse qualité pour Firebase
+  const data=_dessineCanvas.toDataURL("image/jpeg",0.5);
+  const st=S.dessineFB;st.drawing=data;st.sent=true;st.ts=Date.now();
+  S.dessineFB=st;dbSave("dessine_state",st);renderDessine();
+  toast("Dessin envoyé ! 🎨");
+}
+function guessDessine(){
+  const g=document.getElementById("dessine-guess")?.value.trim().toLowerCase();if(!g)return;
+  const st=S.dessineFB;
+  st.tries=(st.tries||0)+1;
+  if(g===st.word.toLowerCase()||st.word.toLowerCase().includes(g)&&g.length>=st.word.length-1){
+    st.found=true;dbSave("dessine_state",st);S.dessineFB=st;renderDessine();celebrate();addPoints(S.profile,2);
+  } else {
+    dbSave("dessine_state",st);S.dessineFB=st;
+    toast("Non, essaie encore ! 🤔");renderDessine();
+  }
+}
+function resetDessine(){const st={drawer:null,word:null,drawing:null,sent:false,found:false};S.dessineFB=st;dbSave("dessine_state",st);renderDessine();}
+</script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// UNO (2 joueurs, en différé, synchronisé Firebase)
+// ════════════════════════════════════════════════════════════
+const UNO_COLORS=["R","J","V","B"]; // Rouge, Jaune, Vert, Bleu
+const UNO_COLOR_HEX={R:"#E8637A",J:"#F0C040",V:"#3A9E6A",B:"#4A9EE8",W:"#2a2a3a"};
+const UNO_COLOR_NAME={R:"Rouge",J:"Jaune",V:"Vert",B:"Bleu"};
+function unoBuildDeck(){
+  const deck=[];
+  UNO_COLORS.forEach(c=>{
+    deck.push({c,v:"0"});
+    for(let n=1;n<=9;n++){deck.push({c,v:""+n});deck.push({c,v:""+n});}
+    ["S","I","+2"].forEach(s=>{deck.push({c,v:s});deck.push({c,v:s});}); // Skip, Inverse, +2
+  });
+  for(let i=0;i<4;i++){deck.push({c:"W",v:"W"});deck.push({c:"W",v:"+4"});} // Joker, +4
+  return deck.sort(()=>Math.random()-.5);
+}
+function cardLabel(card){
+  const m={"S":"⊘","I":"⇄","+2":"+2","W":"🌈","+4":"+4"};
+  return m[card.v]||card.v;
+}
+function renderUno(){
+  const zone=document.getElementById("uno-zone");if(!zone)return;
+  const st=S.unoFB;
+  if(!st||!st.hands){
+    zone.innerHTML=`<div style="text-align:center;padding:24px 10px">
+      <div style="font-size:50px;margin-bottom:12px">🃏</div>
+      <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:22px">Le célèbre Uno à deux ! Pose une carte de même couleur ou même chiffre. Cartes spéciales : ⊘ Passer, ⇄ Inverse, +2, 🌈 Joker, +4.</div>
+      <button class="btn btn-rose" onclick="newUno()">Nouvelle partie 🃏</button>
+    </div>`;
+    return;
+  }
+  const me=S.profile, other=me==="raphy"?"mehdi":"raphy";
+  const myHand=st.hands[me]||[];
+  const theirHand=st.hands[other]||[];
+  const top=st.discard[st.discard.length-1];
+  const myTurn=st.turn===me&&!st.winner;
+
+  if(st.winner){
+    zone.innerHTML=`<div style="text-align:center;padding:30px"><div style="font-size:60px">${st.winner===me?"🎉":"😅"}</div><div style="font-size:20px;font-weight:800;margin-top:12px;color:var(--gold)">${st.winner===me?"Tu as gagné !":(st.winner==="raphy"?"Raphy 💗":"Mehdi 💙")+" a gagné !"}</div><button class="btn btn-rose" style="margin-top:20px" onclick="newUno()">Rejouer 🃏</button></div>`;
+    return;
+  }
+
+  let html=`<div style="text-align:center;margin-bottom:10px">
+    <div style="font-size:12px;color:var(--muted)">${other==="raphy"?"Raphy 💗":"Mehdi 💙"} : ${theirHand.length} cartes</div>
+    <div style="display:flex;gap:3px;justify-content:center;margin-top:6px">${theirHand.map(()=>`<div style="width:20px;height:30px;background:linear-gradient(135deg,#1a1a2e,#2a2a4a);border-radius:4px;border:1px solid #3a3a5a"></div>`).join("")}</div>
+  </div>`;
+
+  // Pioche + carte du dessus + couleur active
+  html+=`<div style="display:flex;align-items:center;justify-content:center;gap:20px;margin:18px 0">
+    <button onclick="${myTurn?"drawUno()":""}" style="width:54px;height:78px;background:linear-gradient(135deg,#1a1a2e,#2a2a4a);border-radius:8px;border:2px solid ${myTurn?"var(--gold)":"#3a3a5a"};color:#fff;font-size:11px;font-weight:700;cursor:${myTurn?"pointer":"default"}">PIOCHE<br>(${st.deck.length})</button>
+    <div style="text-align:center">
+      <div style="width:60px;height:86px;background:${UNO_COLOR_HEX[st.activeColor||top.c]};border-radius:10px;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.4)">${cardLabel(top)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px">Couleur : <b style="color:${UNO_COLOR_HEX[st.activeColor||top.c]}">${UNO_COLOR_NAME[st.activeColor||top.c]||"—"}</b></div>
+    </div>
+  </div>`;
+
+  html+=`<div style="text-align:center;font-size:14px;font-weight:700;margin-bottom:10px;color:${myTurn?"var(--rose)":"var(--muted)"}">${myTurn?"À toi de jouer !":"Au tour de l'autre..."}</div>`;
+
+  // Ma main
+  html+=`<div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:6px">Tes cartes (${myHand.length})</div>`;
+  html+=`<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding-bottom:10px">`;
+  myHand.forEach((card,i)=>{
+    const playable=myTurn&&unoCanPlay(card,top,st.activeColor);
+    html+=`<button onclick="${playable?`playUno(${i})`:""}" style="width:46px;height:66px;background:${UNO_COLOR_HEX[card.c]};border-radius:8px;border:2px solid ${playable?"#fff":"transparent"};color:#fff;font-size:18px;font-weight:900;cursor:${playable?"pointer":"default"};opacity:${myTurn&&!playable?0.45:1}">${cardLabel(card)}</button>`;
+  });
+  html+=`</div>`;
+  if(myHand.length===1)html+=`<div style="text-align:center;font-size:16px;font-weight:900;color:var(--gold);animation:pulse 1s infinite">UNO ! 🎉</div>`;
+  zone.innerHTML=html;
+}
+function unoCanPlay(card,top,activeColor){
+  if(card.c==="W")return true; // joker / +4 toujours jouables
+  const col=activeColor||top.c;
+  return card.c===col||card.v===top.v;
+}
+function newUno(){
+  const deck=unoBuildDeck();
+  const rHand=deck.splice(0,7), mHand=deck.splice(0,7);
+  // Première carte (pas un joker pour simplifier)
+  let first=deck.shift();
+  while(first.c==="W"){deck.push(first);first=deck.shift();}
+  const st={deck,hands:{raphy:rHand,mehdi:mHand},discard:[first],activeColor:first.c,turn:"raphy",winner:null,ts:Date.now()};
+  S.unoFB=st;dbSave("uno_state",st);renderUno();
+  toast("Nouvelle partie ! Raphy commence 🃏");
+}
+function playUno(i){
+  const st=S.unoFB;if(!st||st.winner||st.turn!==S.profile)return;
+  const me=S.profile, other=me==="raphy"?"mehdi":"raphy";
+  const card=st.hands[me][i];
+  const top=st.discard[st.discard.length-1];
+  if(!unoCanPlay(card,top,st.activeColor))return;
+  // Retirer de la main, poser
+  st.hands[me].splice(i,1);
+  st.discard.push(card);
+  // Gérer la couleur active
+  if(card.c==="W"){
+    // Choisir une couleur
+    chooseUnoColor(card,me,other);
+    return; // chooseUnoColor finalise
+  }
+  st.activeColor=card.c;
+  unoApplyEffect(card,st,me,other);
+  finishUnoTurn(st,me,other);
+}
+function chooseUnoColor(card,me,other){
+  const st=S.unoFB;
+  const modal=document.createElement("div");
+  modal.style.cssText="position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px";
+  modal.innerHTML=`<div style="color:#fff;font-size:18px;font-weight:700">Choisis une couleur</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    ${UNO_COLORS.map(c=>`<button onclick="confirmUnoColor('${c}','${card.v}','${me}','${other}')" style="width:90px;height:90px;background:${UNO_COLOR_HEX[c]};border:none;border-radius:16px;color:#fff;font-size:15px;font-weight:800;cursor:pointer">${UNO_COLOR_NAME[c]}</button>`).join("")}
+  </div>`;
+  modal.id="uno-color-modal";
+  document.body.appendChild(modal);
+}
+function confirmUnoColor(color,cardV,me,other){
+  document.getElementById("uno-color-modal")?.remove();
+  const st=S.unoFB;
+  st.activeColor=color;
+  const card={c:"W",v:cardV};
+  unoApplyEffect(card,st,me,other);
+  finishUnoTurn(st,me,other);
+}
+function unoApplyEffect(card,st,me,other){
+  st._skipNext=false;
+  if(card.v==="S"||card.v==="I"){st._skipNext=true;} // à 2 joueurs, Skip et Inverse = rejouer
+  if(card.v==="+2"){
+    for(let k=0;k<2;k++){if(st.deck.length===0)unoReshuffle(st);st.hands[other].push(st.deck.shift());}
+    st._skipNext=true;
+  }
+  if(card.v==="+4"){
+    for(let k=0;k<4;k++){if(st.deck.length===0)unoReshuffle(st);st.hands[other].push(st.deck.shift());}
+    st._skipNext=true;
+  }
+}
+function unoReshuffle(st){
+  // Remettre la défausse (sauf le dessus) dans la pioche
+  const top=st.discard.pop();
+  st.deck=st.discard.sort(()=>Math.random()-.5);
+  st.discard=[top];
+}
+function finishUnoTurn(st,me,other){
+  // Victoire ?
+  if(st.hands[me].length===0){st.winner=me;}
+  else {
+    // Skip = le même joueur rejoue (à 2 joueurs), sinon on passe la main
+    st.turn=st._skipNext?me:other;
+  }
+  st._skipNext=false;st.ts=Date.now();
+  S.unoFB=st;dbSave("uno_state",st);renderUno();
+  if(st.winner===me){celebrate();addPoints(me,5);}
+}
+function drawUno(){
+  const st=S.unoFB;if(!st||st.winner||st.turn!==S.profile)return;
+  const me=S.profile, other=me==="raphy"?"mehdi":"raphy";
+  if(st.deck.length===0)unoReshuffle(st);
+  if(st.deck.length===0)return;
+  const card=st.deck.shift();
+  st.hands[me].push(card);
+  // Si la carte piochée est jouable, on laisse le joueur la jouer ; sinon on passe
+  const top=st.discard[st.discard.length-1];
+  if(!unoCanPlay(card,top,st.activeColor)){st.turn=other;}
+  st.ts=Date.now();
+  S.unoFB=st;dbSave("uno_state",st);renderUno();
+  toast(unoCanPlay(card,top,st.activeColor)?"Tu peux jouer cette carte !":"Rien à jouer, au suivant");
+}
+</script>
+
