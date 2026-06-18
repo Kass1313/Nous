@@ -63,7 +63,10 @@ input,textarea{font-family:var(--font-b)}
 .page.active{opacity:1;pointer-events:all;transform:translateY(0)}
 
 /* NAV */
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;height:var(--nav-h);background:rgba(17,19,24,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:0 4px 8px;z-index:100}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;height:var(--nav-h);background:rgba(17,19,24,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 6px 8px;z-index:100;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+.bottom-nav::-webkit-scrollbar{display:none}
+.bottom-nav{scrollbar-width:none}
+.bottom-nav .nav-btn{flex:0 0 auto}
 .nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 10px;border-radius:12px;transition:all .2s;flex:1;position:relative}
 .nav-btn.active{background:var(--gold-soft)}
 .nav-icon{font-size:20px;line-height:1}
@@ -835,7 +838,8 @@ function renderComplic(){
         <div class="complic-q-text">${q.q}</div>
         ${q.opts.map((o,i)=>`<button onclick="answerComplicIdx(${i})" style="background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-size:14px;width:100%;margin-bottom:8px;text-align:left;cursor:pointer;font-family:var(--font-b);transition:all .2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
           <span style="color:var(--gold);font-weight:700;margin-right:8px">${String.fromCharCode(65+i)}.</span>${o}
-        </button>`).join("")}`;
+        </button>`).join("")}
+      </div>`;
     return;
   }
 
@@ -2001,6 +2005,169 @@ function drawUno(){
   st.ts=Date.now();
   S.unoFB=st;dbSave("uno_state",st);renderUno();
   toast(unoCanPlay(card,top,st.activeColor)?"Tu peux jouer cette carte !":"Rien à jouer, au suivant");
+}
+</script>
+<script>
+// ════════════════════════════════════════════════════════════
+// PUISSANCE 4 (temps réel, 2 joueurs)
+// ════════════════════════════════════════════════════════════
+// Raphy = rouge 🔴, Mehdi = jaune 🟡. Grille 7 colonnes × 6 lignes.
+function renderP4(){
+  const zone=document.getElementById("p4-zone");if(!zone)return;
+  const st=S.p4FB;
+  if(!st||!st.board){
+    zone.innerHTML=`<div style="text-align:center;padding:30px 10px">
+      <div style="font-size:50px;margin-bottom:14px">🔴🟡</div>
+      <div style="font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:24px">Aligne 4 jetons (horizontal, vertical ou diagonale) avant l'autre !<br>Raphy = 🔴 · Mehdi = 🟡</div>
+      <button class="btn btn-rose" onclick="newP4()">Nouvelle partie 🎮</button>
+    </div>`;
+    return;
+  }
+  const myTurn=st.turn===S.profile&&!st.winner;
+  const turnName=st.turn==="raphy"?"Raphy 🔴":"Mehdi 🟡";
+  let status;
+  if(st.winner){
+    status=st.winner==="nul"?"🤝 Match nul !":`🎉 ${st.winner==="raphy"?"Raphy 🔴":"Mehdi 🟡"} a gagné !`;
+  } else {
+    status=myTurn?"À toi de jouer !":`Au tour de ${turnName}...`;
+  }
+  let html=`<div style="text-align:center;margin-bottom:14px;font-size:15px;font-weight:700;color:${st.winner?"var(--gold)":(myTurn?"var(--rose)":"var(--muted)")}">${status}</div>`;
+  // Grille
+  html+=`<div style="background:#1a2942;border-radius:16px;padding:8px;max-width:340px;margin:0 auto">`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">`;
+  for(let c=0;c<7;c++){
+    const canPlay=myTurn&&st.board[c]==="";  // ligne du haut de la colonne libre
+    html+=`<button onclick="${canPlay?`playP4(${c})`:""}" style="aspect-ratio:1;border-radius:50%;border:none;background:${"#0d1626"};cursor:${canPlay?"pointer":"default"};padding:0;position:relative" data-col="${c}">`;
+    html+=`</button>`;
+  }
+  html+=`</div>`;
+  // Afficher les 42 cases
+  html+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:5px">`;
+  for(let r=0;r<6;r++){
+    for(let c=0;c<7;c++){
+      const v=st.board[r*7+c];
+      const bg=v==="raphy"?"#E8637A":v==="mehdi"?"#F0C040":"#0d1626";
+      const win=st.winCells&&st.winCells.includes(r*7+c);
+      html+=`<div style="aspect-ratio:1;border-radius:50%;background:${bg};${win?"box-shadow:0 0 0 3px #fff, 0 0 14px "+bg:""};transition:background .2s"></div>`;
+    }
+  }
+  html+=`</div></div>`;
+  // Boutons colonne (cliquables) au-dessus
+  html=`<div style="text-align:center;margin-bottom:14px;font-size:15px;font-weight:700;color:${st.winner?"var(--gold)":(myTurn?"var(--rose)":"var(--muted)")}">${status}</div>`;
+  html+=`<div style="background:#1a2942;border-radius:16px;padding:10px;max-width:350px;margin:0 auto">`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px">`;
+  for(let c=0;c<7;c++){
+    const colFull=st.board[c]!=="";
+    const canPlay=myTurn&&!colFull;
+    html+=`<button onclick="${canPlay?`playP4(${c})`:""}" style="aspect-ratio:1;border-radius:8px;border:none;background:${canPlay?"rgba(232,99,122,.25)":"transparent"};color:${canPlay?"#fff":"transparent"};cursor:${canPlay?"pointer":"default"};font-size:14px;font-weight:900">▼</button>`;
+  }
+  html+=`</div>`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">`;
+  for(let r=0;r<6;r++){
+    for(let c=0;c<7;c++){
+      const v=st.board[r*7+c];
+      const bg=v==="raphy"?"#E8637A":v==="mehdi"?"#F0C040":"#0d1626";
+      const win=st.winCells&&st.winCells.includes(r*7+c);
+      html+=`<div style="aspect-ratio:1;border-radius:50%;background:${bg};${win?"box-shadow:0 0 0 3px #fff,0 0 12px "+bg:""}"></div>`;
+    }
+  }
+  html+=`</div></div>`;
+  html+=`<div style="text-align:center;margin-top:18px"><button class="btn btn-outline" style="width:auto" onclick="newP4()">↻ Nouvelle partie</button></div>`;
+  zone.innerHTML=html;
+}
+function newP4(){
+  const st={board:Array(42).fill(""),turn:"raphy",winner:null,winCells:null,ts:Date.now()};
+  S.p4FB=st;dbSave("p4_state",st);renderP4();
+  toast("Nouvelle partie ! Raphy commence 🔴");
+}
+function playP4(col){
+  const st=S.p4FB;if(!st||st.winner)return;
+  if(st.turn!==S.profile)return;
+  // Trouver la ligne libre la plus basse dans la colonne
+  let row=-1;
+  for(let r=5;r>=0;r--){if(st.board[r*7+col]===""){row=r;break;}}
+  if(row<0)return; // colonne pleine
+  st.board[row*7+col]=S.profile;
+  // Vérifier victoire
+  const win=checkP4Win(st.board,row,col,S.profile);
+  if(win){st.winner=S.profile;st.winCells=win;}
+  else if(st.board.every(c=>c!=="")){st.winner="nul";}
+  else {st.turn=S.profile==="raphy"?"mehdi":"raphy";}
+  st.ts=Date.now();
+  S.p4FB=st;dbSave("p4_state",st);renderP4();
+  if(st.winner&&st.winner!=="nul"){
+    if(st.winner===S.profile){celebrate();addPoints(S.profile,3);}
+  }
+}
+function checkP4Win(b,row,col,who){
+  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  for(const [dr,dc] of dirs){
+    let cells=[row*7+col];
+    // sens +
+    for(let i=1;i<4;i++){const r=row+dr*i,c=col+dc*i;if(r<0||r>5||c<0||c>6||b[r*7+c]!==who)break;cells.push(r*7+c);}
+    // sens -
+    for(let i=1;i<4;i++){const r=row-dr*i,c=col-dc*i;if(r<0||r>5||c<0||c>6||b[r*7+c]!==who)break;cells.push(r*7+c);}
+    if(cells.length>=4)return cells;
+  }
+  return null;
+}
+
+// ════════════════════════════════════════════════════════════
+// MORPION / TIC-TAC-TOE (temps réel, 2 joueurs)
+// ════════════════════════════════════════════════════════════
+// Raphy = 💗, Mehdi = 💙. Grille 3×3.
+function renderMorpion(){
+  const zone=document.getElementById("morpion-zone");if(!zone)return;
+  const st=S.morpionFB;
+  if(!st||!st.board){
+    zone.innerHTML=`<div style="text-align:center;padding:30px 10px">
+      <div style="font-size:50px;margin-bottom:14px">💗 ⭕ 💙</div>
+      <div style="font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:24px">Le classique : aligne 3 symboles !<br>Raphy = 💗 · Mehdi = 💙</div>
+      <button class="btn btn-rose" onclick="newMorpion()">Nouvelle partie 🎮</button>
+    </div>`;
+    return;
+  }
+  const myTurn=st.turn===S.profile&&!st.winner;
+  let status;
+  if(st.winner){
+    status=st.winner==="nul"?"🤝 Match nul !":`🎉 ${st.winner==="raphy"?"Raphy 💗":"Mehdi 💙"} a gagné !`;
+  } else {
+    status=myTurn?"À toi de jouer !":`Au tour de ${st.turn==="raphy"?"Raphy 💗":"Mehdi 💙"}...`;
+  }
+  let html=`<div style="text-align:center;margin-bottom:18px;font-size:15px;font-weight:700;color:${st.winner?"var(--gold)":(myTurn?"var(--rose)":"var(--muted)")}">${status}</div>`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:280px;margin:0 auto">`;
+  for(let i=0;i<9;i++){
+    const v=st.board[i];
+    const sym=v==="raphy"?"💗":v==="mehdi"?"💙":"";
+    const canPlay=myTurn&&v==="";
+    const win=st.winCells&&st.winCells.includes(i);
+    html+=`<button onclick="${canPlay?`playMorpion(${i})`:""}" style="aspect-ratio:1;border-radius:16px;border:1.5px solid ${win?"var(--gold)":"var(--border)"};background:${win?"var(--gold-soft)":"var(--card)"};font-size:38px;cursor:${canPlay?"pointer":"default"};display:flex;align-items:center;justify-content:center">${sym}</button>`;
+  }
+  html+=`</div>`;
+  html+=`<div style="text-align:center;margin-top:20px"><button class="btn btn-outline" style="width:auto" onclick="newMorpion()">↻ Nouvelle partie</button></div>`;
+  zone.innerHTML=html;
+}
+function newMorpion(){
+  const st={board:Array(9).fill(""),turn:"raphy",winner:null,winCells:null,ts:Date.now()};
+  S.morpionFB=st;dbSave("morpion_state",st);renderMorpion();
+  toast("Nouvelle partie ! Raphy commence 💗");
+}
+function playMorpion(i){
+  const st=S.morpionFB;if(!st||st.winner)return;
+  if(st.turn!==S.profile||st.board[i]!=="")return;
+  st.board[i]=S.profile;
+  const win=checkMorpionWin(st.board,S.profile);
+  if(win){st.winner=S.profile;st.winCells=win;}
+  else if(st.board.every(c=>c!=="")){st.winner="nul";}
+  else {st.turn=S.profile==="raphy"?"mehdi":"raphy";}
+  st.ts=Date.now();
+  S.morpionFB=st;dbSave("morpion_state",st);renderMorpion();
+  if(st.winner===S.profile){celebrate();addPoints(S.profile,2);}
+}
+function checkMorpionWin(b,who){
+  const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  for(const l of lines){if(l.every(i=>b[i]===who))return l;}
+  return null;
 }
 </script>
 
