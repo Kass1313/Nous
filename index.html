@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Nous">
 <title>Nous 💑</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -128,6 +130,25 @@ input,textarea,select{font-family:var(--font-b)}
 .nav-label{font-size:8px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
 .nav-btn.active .nav-label{color:var(--gold)}
 .nav-dot{position:absolute;top:3px;right:5px;width:7px;height:7px;background:var(--rose);border-radius:50%;border:1.5px solid var(--bg);display:none}
+/* ── POLISH VISUEL ── */
+.nav-btn.active .nav-icon{transform:scale(1.12)}
+.nav-btn:active{transform:scale(.92)}
+.bottom-nav{scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+html{scroll-behavior:smooth}
+.card{transition:border-color .2s,transform .15s}
+.btn:active{transform:scale(.97)}
+.btn:hover{filter:brightness(1.05)}
+.btn-sm:active,.btn-outline:active{transform:scale(.97)}
+button{-webkit-tap-highlight-color:transparent}
+*{scrollbar-width:thin}
+/* Fondu sur les bords de la nav pour montrer qu'elle défile */
+.bottom-nav::before,.bottom-nav::after{content:"";position:fixed;bottom:0;width:18px;height:var(--nav-h);pointer-events:none;z-index:101}
+.bottom-nav::before{left:50%;transform:translateX(-250px);background:linear-gradient(90deg,var(--bg),transparent)}
+.bottom-nav::after{left:50%;transform:translateX(232px);background:linear-gradient(270deg,var(--bg),transparent)}
+@media(max-width:520px){.bottom-nav::before{left:0;transform:none}.bottom-nav::after{right:0;left:auto;transform:none}}
+/* Transitions de page plus douces */
+.page.active{animation:pageIn .3s ease}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .nav-dot.show{display:block}
 
 /* COMPONENTS */
@@ -254,6 +275,11 @@ textarea.input{resize:vertical;min-height:80px}
 .switch input:checked+.slider-sw:before{transform:translateX(20px)}
 body.font-small{font-size:13px}
 body.font-large{font-size:17px}
+.tone-btn{padding:12px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);color:var(--muted)}
+body.no-anim *{animation:none !important;transition:none !important}
+body.compact .card{padding:12px;margin-bottom:8px}
+body.compact .page{padding:10px 12px calc(var(--nav-h) + 16px)}
+body.compact .section-title{font-size:18px}
 
 /* IA */
 .ia-header{background:linear-gradient(135deg,var(--gold-soft),var(--rose-soft));border:1px solid var(--gold-border);border-radius:16px;padding:14px;margin-bottom:14px;text-align:center}
@@ -516,28 +542,28 @@ document.dispatchEvent(new Event("firebaseReady"));
       </div>
       <!-- STATUT EN DIRECT -->
       <!-- PRÉSENCE EN DIRECT -->
-      <div id="presence-indicator" style="margin-bottom:10px"></div>
+      <div id="home-block-presence"><div id="presence-indicator" style="margin-bottom:10px"></div></div>
 
       <!-- BOUTONS CONNEXION RAPIDE -->
-      <div style="display:flex;gap:8px;margin-bottom:12px">
+      <div id="home-block-connexion" style="display:flex;gap:8px;margin-bottom:12px">
         <button onclick="sendThinkingOfYou()" style="flex:1;padding:14px;border-radius:14px;border:1px solid var(--rose-border);background:var(--rose-soft);color:var(--text);font-size:13px;font-weight:700;cursor:pointer">💗 Je pense à toi</button>
         <button onclick="sendSOS()" style="flex:1;padding:14px;border-radius:14px;border:1px solid var(--gold-border);background:var(--gold-soft);color:var(--text);font-size:13px;font-weight:700;cursor:pointer">🆘 J'ai besoin de toi</button>
       </div>
 
       <!-- RITUEL MATIN/SOIR -->
-      <div id="ritual-zone" style="margin-bottom:12px"></div>
+      <div id="home-block-ritual"><div id="ritual-zone" style="margin-bottom:12px"></div></div>
 
       <!-- CRÉNEAUX COMMUNS -->
-      <div id="common-slots" style="margin-bottom:12px"></div>
+      <div id="home-block-slots"><div id="common-slots" style="margin-bottom:12px"></div></div>
 
       <!-- MÉTÉO ÉMOTIONNELLE -->
-      <div class="card" style="margin-bottom:12px">
+      <div id="home-block-weather" class="card" style="margin-bottom:12px">
         <div class="card-title">🌤️ Météo du couple</div>
         <div id="mood-weather"></div>
       </div>
 
       <!-- CE JOUR-LÀ -->
-      <div id="on-this-day" style="margin-bottom:12px"></div>
+      <div id="home-block-onthisday"><div id="on-this-day" style="margin-bottom:12px"></div></div>
 
       <div class="card" style="margin-bottom:12px;border-color:rgba(74,158,232,.3)">
         <div class="card-title">⚡ En ce moment</div>
@@ -843,6 +869,8 @@ document.dispatchEvent(new Event("firebaseReady"));
         <button class="btn" onclick="saveGeminiKey()">Sauvegarder 🔑</button>
         <button class="btn btn-outline" style="margin-top:8px" onclick="testGeminiKey()">Tester la connexion ⚡</button>
       </div>
+      <button id="install-btn" class="btn" style="display:none;margin-bottom:14px;background:linear-gradient(135deg,var(--gold),var(--rose));color:#0D0F14" onclick="installApp()">📲 Installer l'app sur mon téléphone</button>
+
       <div class="card" style="border-color:var(--gold-border)">
         <div class="card-title">👤 Profil connecté</div>
         <div id="current-profile-display" style="font-size:14px;font-weight:700;margin-bottom:10px"></div>
@@ -916,6 +944,110 @@ document.dispatchEvent(new Event("firebaseReady"));
         <div id="mahmoud-memory-list" style="margin-bottom:10px"></div>
         <button class="btn btn-outline" onclick="renderMahmoudMemory()">Voir la mémoire</button>
         <button class="btn btn-outline" style="margin-top:8px;border-color:var(--rose);color:var(--rose)" onclick="clearMahmoudMemory()">Effacer la mémoire</button>
+      </div>
+
+      <div class="card" style="border-color:var(--purple,#8B6FD4)">
+        <div class="card-title">🎭 Personnalité de Mahmoud</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Choisis son ton</div>
+        <div id="mahmoud-tone-btns" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+          <button onclick="setMahmoudTone('doux')" data-tone="doux" class="tone-btn">🫶 Doux</button>
+          <button onclick="setMahmoudTone('equilibre')" data-tone="equilibre" class="tone-btn">⚖️ Équilibré</button>
+          <button onclick="setMahmoudTone('drole')" data-tone="drole" class="tone-btn">😄 Drôle</button>
+          <button onclick="setMahmoudTone('direct')" data-tone="direct" class="tone-btn">⚡ Direct</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Consignes personnalisées (dis-lui comment être)</div>
+        <textarea class="input" id="mahmoud-perso-input" placeholder="Ex: Appelle-moi 'ma puce', évite les vannes sur l'Algérie, tutoie-nous, sois plus posé le soir..." rows="3" style="margin-bottom:10px"></textarea>
+        <button class="btn" onclick="saveMahmoudPerso()">Enregistrer la personnalité 🎭</button>
+      </div>
+
+      <!-- COULEURS PERSO -->
+      <div class="card">
+        <div class="card-title">🎨 Couleurs personnalisées</div>
+        <div class="settings-row"><div style="font-size:14px;font-weight:600">💗 Couleur de Raphy</div><input type="color" id="color-raphy-input" onchange="setCoupleColor('raphy',this.value)" style="width:44px;height:32px;border:none;border-radius:8px;cursor:pointer;background:none"></div>
+        <div class="settings-row"><div style="font-size:14px;font-weight:600">💙 Couleur de Mehdi</div><input type="color" id="color-mehdi-input" onchange="setCoupleColor('mehdi',this.value)" style="width:44px;height:32px;border:none;border-radius:8px;cursor:pointer;background:none"></div>
+        <div class="settings-row"><div style="font-size:14px;font-weight:600">✨ Couleur d'accent</div><input type="color" id="color-accent-input" onchange="setCoupleColor('accent',this.value)" style="width:44px;height:32px;border:none;border-radius:8px;cursor:pointer;background:none"></div>
+        <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="resetColors()">Réinitialiser les couleurs</button>
+      </div>
+
+      <!-- POLICE & AFFICHAGE AVANCÉ -->
+      <div class="card">
+        <div class="card-title">✍️ Police d'écriture</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <button class="font-btn" data-font="defaut" onclick="setFontFamily('defaut')" style="padding:10px;border-radius:10px;border:1.5px solid var(--gold);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer">Défaut</button>
+          <button class="font-btn" data-font="arrondi" onclick="setFontFamily('arrondi')" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer">Arrondi</button>
+          <button class="font-btn" data-font="classique" onclick="setFontFamily('classique')" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer">Classique</button>
+          <button class="font-btn" data-font="moderne" onclick="setFontFamily('moderne')" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer">Moderne</button>
+          <button class="font-btn" data-font="manuscrit" onclick="setFontFamily('manuscrit')" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer">Manuscrit</button>
+        </div>
+        <div class="settings-row" style="margin-top:12px"><div><div style="font-size:14px;font-weight:600">Animations</div></div><label class="switch"><input type="checkbox" id="anim-toggle" onchange="toggleAnim(this.checked)"><span class="slider-sw"></span></label></div>
+        <div class="settings-row"><div><div style="font-size:14px;font-weight:600">Mode compact</div><div style="font-size:11px;color:var(--muted)">Plus d'infos à l'écran</div></div><label class="switch"><input type="checkbox" id="compact-toggle" onchange="toggleCompact(this.checked)"><span class="slider-sw"></span></label></div>
+      </div>
+
+      <!-- ACCUEIL PERSONNALISABLE -->
+      <div class="card">
+        <div class="card-title">🏠 Blocs de l'accueil</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Choisis ce qui s'affiche sur ta page d'accueil</div>
+        <div class="settings-row"><div style="font-size:13px">🟢 Présence en direct</div><label class="switch"><input type="checkbox" id="hb-presence" onchange="toggleHomeBlock('presence',this.checked)"><span class="slider-sw"></span></label></div>
+        <div class="settings-row"><div style="font-size:13px">💗 Boutons "Je pense à toi"</div><label class="switch"><input type="checkbox" id="hb-connexion" onchange="toggleHomeBlock('connexion',this.checked)"><span class="slider-sw"></span></label></div>
+        <div class="settings-row"><div style="font-size:13px">🌅 Rituel matin/soir</div><label class="switch"><input type="checkbox" id="hb-ritual" onchange="toggleHomeBlock('ritual',this.checked)"><span class="slider-sw"></span></label></div>
+        <div class="settings-row"><div style="font-size:13px">🎉 Créneaux communs</div><label class="switch"><input type="checkbox" id="hb-slots" onchange="toggleHomeBlock('slots',this.checked)"><span class="slider-sw"></span></label></div>
+        <div class="settings-row"><div style="font-size:13px">🌤️ Météo du couple</div><label class="switch"><input type="checkbox" id="hb-weather" onchange="toggleHomeBlock('weather',this.checked)"><span class="slider-sw"></span></label></div>
+        <div class="settings-row"><div style="font-size:13px">📅 Ce jour-là</div><label class="switch"><input type="checkbox" id="hb-onthisday" onchange="toggleHomeBlock('onthisday',this.checked)"><span class="slider-sw"></span></label></div>
+      </div>
+
+      <!-- NOTIFICATIONS FINES -->
+      <div class="card">
+        <div class="card-title">🔔 Notifications détaillées</div>
+        <div class="settings-row"><div style="font-size:13px">💌 Mots doux</div><label class="switch"><input type="checkbox" id="nt-motsdoux" onchange="toggleNotifType('motsdoux',this.checked)"><span class="slider-sw"></span></label></div>
+        <div class="settings-row"><div style="font-size:13px">🎮 Défis</div><label class="switch"><input type="checkbox" id="nt-defis" onchange="toggleNotifType('defis',this.checked)"><span class="slider-sw"></span></label></div>
+        <div class="settings-row"><div style="font-size:13px">✨ Mahmoud</div><label class="switch"><input type="checkbox" id="nt-mahmoud" onchange="toggleNotifType('mahmoud',this.checked)"><span class="slider-sw"></span></label></div>
+        <div class="settings-row"><div style="font-size:13px">🎂 Anniversaires</div><label class="switch"><input type="checkbox" id="nt-anniv" onchange="toggleNotifType('anniv',this.checked)"><span class="slider-sw"></span></label></div>
+        <div class="settings-row"><div style="font-size:13px">⚡ Statuts</div><label class="switch"><input type="checkbox" id="nt-statut" onchange="toggleNotifType('statut',this.checked)"><span class="slider-sw"></span></label></div>
+        <div style="font-size:12px;color:var(--muted);margin:12px 0 6px">🌙 Heures de silence (ne pas déranger)</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="input" id="quiet-start" type="time" style="flex:1">
+          <span style="color:var(--muted)">→</span>
+          <input class="input" id="quiet-end" type="time" style="flex:1">
+          <button class="btn btn-sm" onclick="saveQuietHours()" style="width:auto;flex-shrink:0">OK</button>
+        </div>
+      </div>
+
+      <!-- MAHMOUD AVANCÉ -->
+      <div class="card" style="border-color:var(--purple,#8B6FD4)">
+        <div class="card-title">🎙️ Mahmoud — voix & langue</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Type de voix</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+          <button class="voice-g-btn" data-g="defaut" onclick="setVoiceGender('defaut')" style="padding:10px;border-radius:10px;border:1.5px solid var(--gold);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer">Auto</button>
+          <button class="voice-g-btn" data-g="femme" onclick="setVoiceGender('femme')" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer">👩 Femme</button>
+          <button class="voice-g-btn" data-g="homme" onclick="setVoiceGender('homme')" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer">👨 Homme</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Vitesse de la voix : <span id="voice-speed-val">1.05×</span></div>
+        <input type="range" id="voice-speed" min="0.7" max="1.5" step="0.05" oninput="setVoiceSpeed(this.value)" style="width:100%;margin-bottom:14px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Langue</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+          <button class="lang-btn" data-lang="fr" onclick="setMahmoudLang('fr')" style="padding:10px;border-radius:10px;border:1.5px solid var(--gold);background:var(--surface);color:var(--text);font-size:11px;cursor:pointer">🇫🇷 Français</button>
+          <button class="lang-btn" data-lang="arabe" onclick="setMahmoudLang('arabe')" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:11px;cursor:pointer">🇩🇿 Dialecte</button>
+          <button class="lang-btn" data-lang="mix" onclick="setMahmoudLang('mix')" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:11px;cursor:pointer">Mélange</button>
+        </div>
+        <div class="settings-row"><div><div style="font-size:14px;font-weight:600">💬 Mahmoud proactif</div><div style="font-size:11px;color:var(--muted)">Il envoie des messages spontanés</div></div><label class="switch"><input type="checkbox" id="proactif-toggle" onchange="toggleProactif(this.checked)"><span class="slider-sw"></span></label></div>
+      </div>
+
+      <!-- PLANNING -->
+      <div class="card">
+        <div class="card-title">📅 Planning</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">La semaine commence le</div>
+        <div style="display:flex;gap:8px">
+          <button class="week-btn" data-day="lundi" onclick="setWeekStart('lundi')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--gold);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer">Lundi</button>
+          <button class="week-btn" data-day="dimanche" onclick="setWeekStart('dimanche')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer">Dimanche</button>
+        </div>
+      </div>
+
+      <!-- DONNÉES AVANCÉ -->
+      <div class="card">
+        <div class="card-title">💾 Sauvegarde & données</div>
+        <button class="btn btn-outline" style="margin-bottom:8px" onclick="importData()">📥 Restaurer une sauvegarde</button>
+        <button class="btn btn-outline" style="margin-bottom:8px" onclick="showStorageStats()">📊 Voir le stockage utilisé</button>
+        <button class="btn btn-outline" style="border-color:var(--rose);color:var(--rose)" onclick="resetTotal()">🗑️ Réinitialiser TOUTE l'app</button>
       </div>
 
       <div class="card">
@@ -1391,8 +1523,25 @@ function dbListen(key,cb){
     if(v!==null){S[key]=v;lsSet(key,v);if(cb)cb(v);}
   });
 }
+let _renderDebounce=null;
+function scheduleRender(){
+  clearTimeout(_renderDebounce);
+  _renderDebounce=setTimeout(()=>{
+    if(typeof _iaSending!=="undefined" && _iaSending)return; // ne pas couper un envoi en cours
+    const inp=document.getElementById("chat-input");
+    if(inp&&document.activeElement===inp&&inp.value.trim())return; // ne pas perturber pendant la saisie
+    renderCurrent();updateNotifBadge();
+  },150);
+}
 function initFirebase(){
-  LS_KEYS.forEach(k=>dbListen(k,()=>{renderCurrent();updateNotifBadge();}));
+  LS_KEYS.forEach(k=>dbListen(k,()=>{
+    // Présence : ne rafraîchir QUE l'indicateur (pas toute la page) — évite le flicker toutes les 30s
+    if(k==="presence"){if(S.currentPage==="home")renderPresence();return;}
+    // Chat Mahmoud : ne rafraîchir QUE le chat si on est dessus
+    if(k==="iaHistory"){if(S.currentPage==="ia")renderIAHistory();updateNotifBadge();return;}
+    // Le reste : re-render groupé et différé (anti-flicker)
+    scheduleRender();
+  }));
   const el=document.getElementById("firebase-status");
   if(el)el.innerHTML='<span style="color:#3A9E6A">✅ Connecté — Synchro temps réel active</span>';
 }
@@ -1463,10 +1612,14 @@ function speakMahmoud(text){
     speechSynthesis.cancel();
     const clean=text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu,"");
     const u=new SpeechSynthesisUtterance(clean);
-    u.lang="fr-FR";u.rate=1.05;u.pitch=1;
+    u.lang="fr-FR";u.rate=parseFloat(lsGet("voice_speed")||"1.05");u.pitch=1;
     const voices=speechSynthesis.getVoices();
-    const frVoice=voices.find(v=>v.lang.startsWith("fr"));
-    if(frVoice)u.voice=frVoice;
+    const frVoices=voices.filter(v=>v.lang.startsWith("fr"));
+    const gender=lsGet("voice_gender")||"defaut";
+    let chosen=frVoices[0];
+    if(gender==="femme")chosen=frVoices.find(v=>/femal|femme|aurelie|amelie|audrey|julie|marie/i.test(v.name))||frVoices[0];
+    else if(gender==="homme")chosen=frVoices.find(v=>/male|homme|thomas|nicolas|paul|daniel/i.test(v.name))||frVoices[0];
+    if(chosen)u.voice=chosen;
     speechSynthesis.speak(u);
   }catch(e){}
 }
@@ -1502,6 +1655,29 @@ function saveSecurity(){
   if(pin&&pin.length===4){lsSet("custom_pin",pin);toast("Code PIN et noms enregistrés 🔒");}
   else if(names){toast("Noms enregistrés ✓");}
   else toast("Rien à enregistrer");
+}
+function setMahmoudTone(tone){
+  lsSet("mahmoud_tone",tone);
+  updateToneBtns();
+  const labels={doux:"🫶 Doux",equilibre:"⚖️ Équilibré",drole:"😄 Drôle",direct:"⚡ Direct"};
+  toast("Ton de Mahmoud : "+(labels[tone]||tone));
+}
+function updateToneBtns(){
+  const cur=lsGet("mahmoud_tone")||"equilibre";
+  document.querySelectorAll(".tone-btn").forEach(b=>{
+    const active=b.getAttribute("data-tone")===cur;
+    b.style.cssText=`padding:12px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid ${active?"var(--purple,#8B6FD4)":"var(--border)"};background:${active?"rgba(139,111,212,.15)":"var(--surface)"};color:${active?"var(--purple,#8B6FD4)":"var(--muted)"}`;
+  });
+}
+function saveMahmoudPerso(){
+  const v=document.getElementById("mahmoud-perso-input")?.value.trim()||"";
+  lsSet("mahmoud_perso",v);
+  toast(v?"Personnalité enregistrée 🎭":"Consignes effacées");
+}
+function loadMahmoudPerso(){
+  const el=document.getElementById("mahmoud-perso-input");
+  if(el)el.value=lsGet("mahmoud_perso")||"";
+  updateToneBtns();
 }
 function switchProfile(p){
   if(p===S.profile){toast("Tu es déjà "+(p==="raphy"?"Raphy":"Mehdi"));return;}
@@ -1623,7 +1799,11 @@ function initApp(){
   loadSettingsValues();
   const fs=lsGet("font_size");if(fs)setFontSize(fs);
   initPresence();
+  applyAllCustomizations();
+  updateOnlineStatus();
+  checkBackupReminder();
   trackHumeurHistory();
+  if(lsGet("mahmoud_proactif"))setTimeout(maybeProactiveMessage,5000);
   // Rafraîchir la présence toutes les 30s sur l'accueil
   setInterval(()=>{if(S.currentPage==="home")renderPresence();},30000);
   renderPage("home");
@@ -1645,7 +1825,7 @@ function goTo(page,btn){
   S.currentPage=page;
   if(page==="ia") S._welcomeInjected=false;
   if(page==="home") S._morningInjected=false;
-  if(page==="settings"){setTimeout(()=>{loadSettingsValues();renderMahmoudMemory();},50);}
+  if(page==="settings"){setTimeout(()=>{loadSettingsValues();renderMahmoudMemory();loadMahmoudPerso();loadAdvancedSettings();},50);}
   renderPage(page);
 }
 function renderCurrent(){if(S.currentPage)renderPage(S.currentPage)}
@@ -1740,7 +1920,9 @@ function renderNextOff(){
 
 // ═══════════════════════════ PLANNING ═══════════════════════════
 function getWeekDates(){
-  const t=new Date();t.setHours(0,0,0,0);const day=t.getDay();const diff=day===0?-6:1-day;
+  const t=new Date();t.setHours(0,0,0,0);const day=t.getDay();
+  const startSun=(lsGet("week_start")||"lundi")==="dimanche";
+  const diff=startSun?(-day):(day===0?-6:1-day);
   const mon=new Date(t);mon.setDate(t.getDate()+diff+S.weekOffset*7);
   return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d});
 }
@@ -2471,15 +2653,17 @@ function renderIAHistory(){
 }
 
 function buildIAContext(){
-  const t=todayStr();const slots=S.schedule[t]||{};const tom=fmt(new Date(Date.now()+86400000));const slotsT=S.schedule[tom]||{};
-  const getShift=(s,w)=>{const sl=s[w];if(!sl)return"non planifié";const sh=SHIFT_TYPES.find(t=>t.id===sl.type);return sh?`${sh.label}${sl.start?` (${sl.start}–${sl.end})`:""}`:sl.type};
-  const nextOff=()=>{for(let i=0;i<30;i++){const d=new Date();d.setDate(d.getDate()+i);const s=S.schedule[fmt(d)]||{};if((s.raphy?.type==="repos"||s.raphy?.type==="conge")&&(s.mehdi?.type==="repos"||s.mehdi?.type==="conge"))return i===0?"aujourd'hui":`dans ${i} jour${i>=2?"s":""}`;} return"non encore planifié"};
-  // Planning détaillé des 14 prochains jours pour les 2
+  const t=todayStr();const slots=S.schedule[t]||{};
+  // Normalise un créneau (tableau OU objet unique OU rien) en liste de slots
+  const asArr=(sl)=>!sl?[]:(Array.isArray(sl)?sl:(sl.type?[sl]:[]));
+  // Libellé lisible de tous les créneaux d'une personne pour un jour
+  const getShift=(s,w)=>{const arr=asArr(s[w]);if(!arr.length)return"non planifié";return arr.map(sl=>{const sh=SHIFT_TYPES.find(t=>t.id===sl.type);return sh?`${sh.label}${sl.start?` (${sl.start}–${sl.end})`:""}`:sl.type;}).join(" + ");};
+  // Est-ce que cette personne est en repos/congé ce jour ?
+  const isOff=(s,w)=>asArr(s[w]).some(sl=>sl.type==="repos"||sl.type==="conge");
+  const nextOff=()=>{for(let i=0;i<30;i++){const d=new Date();d.setDate(d.getDate()+i);const s=S.schedule[fmt(d)]||{};if(isOff(s,"raphy")&&isOff(s,"mehdi"))return i===0?"aujourd'hui":`dans ${i} jour${i>=2?"s":""}`;} return"non encore planifié"};
   const planning14=()=>{let out="";for(let i=0;i<14;i++){const d=new Date();d.setDate(d.getDate()+i);const key=fmt(d);const s=S.schedule[key]||{};const jour=d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"});const r=getShift(s,"raphy");const m=getShift(s,"mehdi");if(r!=="non planifié"||m!=="non planifié"){out+=`${i===0?"Aujourd'hui":i===1?"Demain":jour} → Raphy: ${r} | Mehdi: ${m}\n`;}}return out||"Aucun planning saisi pour les 2 prochaines semaines.";};
-  // Prochains jours OFF du profil connecté (pour répondre "quand je suis en off")
-  const myOffDays=()=>{const me=S.profile||"raphy";let out=[];for(let i=0;i<21;i++){const d=new Date();d.setDate(d.getDate()+i);const s=S.schedule[fmt(d)]||{};const sl=s[me];if(sl&&(sl.type==="repos"||sl.type==="conge")){const j=i===0?"aujourd'hui":i===1?"demain":d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"});out.push(j);}}return out.length?out.slice(0,8).join(", "):"aucun repos planifié dans les 3 prochaines semaines";};
-  // Suis-je en off aujourd'hui ?
-  const meToday=()=>{const me=S.profile||"raphy";const sl=slots[me];if(!sl)return"pas de planning saisi pour aujourd'hui";if(sl.type==="repos"||sl.type==="conge")return"OUI, en repos aujourd'hui 🎉";const sh=SHIFT_TYPES.find(t=>t.id===sl.type);return"non, "+(sh?sh.label:sl.type)+" aujourd'hui";};
+  const myOffDays=()=>{const me=S.profile||"raphy";let out=[];for(let i=0;i<21;i++){const d=new Date();d.setDate(d.getDate()+i);const s=S.schedule[fmt(d)]||{};if(isOff(s,me)){const j=i===0?"aujourd'hui":i===1?"demain":d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"short"});out.push(j);}}return out.length?out.slice(0,8).join(", "):"aucun repos planifié dans les 3 prochaines semaines";};
+  const meToday=()=>{const me=S.profile||"raphy";const arr=asArr(slots[me]);if(!arr.length)return"pas de planning saisi pour aujourd'hui";if(arr.some(sl=>sl.type==="repos"||sl.type==="conge"))return"OUI, en repos aujourd'hui 🎉";return"non, "+getShift(slots,me)+" aujourd'hui";};
   const recentMsgs=S.messages.slice(-8).map(m=>`${m.who==="raphy"?"Raphy":"Mehdi"}: "${m.text}"`).join(" | ");
   const goals=S.goals.filter(g=>!g.done).map(g=>g.title).join(", ");
   const goalsDone=S.goals.filter(g=>g.done).map(g=>g.title).join(", ");
@@ -2530,6 +2714,18 @@ function buildIAContext(){
     if(dm)dismoiStr=`\n\n💬 LEURS RÉPONSES INTIMES RÉCENTES (Dis-moi tout) :\n${dm}`;
   }
 
+  // Personnalité personnalisée par le couple (réglée dans les Paramètres)
+  const perso=lsGet("mahmoud_perso")||"";
+  const tone=lsGet("mahmoud_tone")||"equilibre";
+  const toneMap={
+    doux:"\n\n⚙️ RÉGLAGE DEMANDÉ : sois surtout DOUX, tendre et attentionné. Très peu de taquineries.",
+    equilibre:"\n\n⚙️ RÉGLAGE DEMANDÉ : équilibre entre douceur, humour et complicité.",
+    drole:"\n\n⚙️ RÉGLAGE DEMANDÉ : sois plutôt DRÔLE et léger (mais sans jamais forcer une blague qui tombe à plat).",
+    direct:"\n\n⚙️ RÉGLAGE DEMANDÉ : sois CONCIS et DIRECT, va droit au but, peu de fioritures."
+  };
+  const lang=lsGet("mahmoud_lang")||"fr";
+  const langMap={fr:"",arabe:"\n\n⚙️ LANGUE : réponds en arabe dialectal (darija algérienne) écrit en lettres latines, de façon naturelle et décontractée.",mix:"\n\n⚙️ LANGUE : mélange le français et quelques expressions de dialecte algérien (darija) écrites en lettres latines, naturellement, comme le ferait un jeune franco-algérien."};
+  const persoStr=(toneMap[tone]||"")+(langMap[lang]||"")+(perso?`\n\n⚙️ CONSIGNES PERSO DU COUPLE (à respecter absolument) : ${perso}`:"");
   // Infos personnalisées stockées
   const customInfo = lsGet("mahmoud_infos") || [];
   const customInfoStr = customInfo.length ? "\n\n📌 INFOS PERSONNELLES PARTAGÉES PAR LE COUPLE :\n" + customInfo.map(i=>`- ${i.text} (ajouté par ${i.who==="raphy"?"Raphy":"Mehdi"} le ${i.date})`).join("\n") : "";
@@ -2604,15 +2800,18 @@ Si c'est MEHDI :
 - Tu observes ce qui se passe dans l'app (leurs humeurs, leurs statuts, leurs messages, leurs réponses au quiz) et tu réagis dessus comme un vrai pote attentif — par exemple si Raphy a mis une humeur triste, tu peux la réconforter ; si Mehdi vient de finir un défi, tu peux le féliciter
 - Plus ils te parlent, mieux tu les connais — adapte-toi à leur façon de parler
 
-📏 RÈGLES DE STYLE :
-- TOUJOURS en français, naturel et vivant
-- LONGUEUR : écris des réponses naturelles et COMPLÈTES — termine toujours tes phrases et tes idées, ne coupe jamais au milieu. En général 2 à 5 phrases, plus si la discussion le mérite (ils se confient, demandent un conseil, racontent leur journée). Sois vivant et développé sans tomber dans le blabla inutile.
-- Emojis avec parcimonie — quand ça ajoute quelque chose, pas à chaque phrase
-- Le chambrage c'est ~30% — le reste c'est chaleur, humour, intelligence et bienveillance
-- JAMAIS blessant ou méchant, même en chambrant
-- Tu as une vraie personnalité, des opinions, de la répartie — tu n'es PAS un robot poli et lisse
-- L'historique est PARTAGÉ — Raphy et Mehdi voient tout ce que tu écris
-- Sers-toi des données contextuelles (planning, humeurs, statuts, ce qu'ils ont révélé) quand c'est pertinent, mais sans tout réciter — glisse-les naturellement comme quelqu'un qui les connaît par cœur`;
+📏 RÈGLES DE STYLE (TRÈS IMPORTANT) :
+- TOUJOURS en français, naturel et vivant.
+- INTELLIGENCE AVANT TOUT : réponds vraiment à ce qu'on te demande, avec justesse. Si la question est simple ("je suis en off quand ?", "ça va ?"), réponds COURT et direct (une phrase ou deux suffisent). Ne développe que si le sujet le mérite vraiment (ils se confient, demandent un conseil, une vraie discussion). Adapte la longueur au besoin réel — surtout ne fais JAMAIS un long message pour dire un truc simple.
+- VARIE tes réponses : ne commence jamais deux messages de la même façon, ne réutilise pas les mêmes tournures ni les mêmes vannes. Sois imprévisible et frais à chaque fois.
+- Termine toujours tes phrases, ne coupe jamais au milieu.
+- NE FORCE PAS L'HUMOUR. Mieux vaut être naturel et pertinent que de placer une blague qui tombe à plat. L'humour doit être spontané et bien dosé, pas systématique.
+- Évite les tics de langage et les expressions plaquées comme "mon pote", "mec", "bro", "l'ami" — parle normalement, comme quelqu'un d'attachant et naturel.
+- Emojis avec parcimonie (souvent zéro, c'est très bien).
+- JAMAIS blessant ou méchant.
+- Tu as une vraie personnalité et de la répartie, mais tu n'en fais pas trop — tu n'es ni un robot lisse, ni un clown qui force.
+- L'historique est PARTAGÉ : Raphy et Mehdi voient tout ce que tu écris.
+- Sers-toi du contexte (planning, humeurs, ce qu'ils ont révélé) quand c'est pertinent, naturellement, sans tout réciter.${persoStr}`;
 }
 
 let _iaSending=false;
@@ -3398,6 +3597,8 @@ async function requestPushPermission(){
 function sendPushNotif(title, body){
   if(!("Notification" in window)) return;
   if(Notification.permission !== "granted") return;
+  if(lsGet("notif_push")===false) return;
+  if(typeof isQuietNow==="function" && isQuietNow()) return;
   try {
     new Notification(title, {
       body,
@@ -5112,7 +5313,23 @@ function renderPlus(){
   const el=document.getElementById("plus-zone");
   if(!el)return;
   if(S._plusView){renderPlusFeature(S._plusView);return;}
-  el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+  const shortcuts=[
+    {p:"mots",i:"💌",l:"Mots doux"},{p:"ia",i:"✨",l:"Mahmoud"},{p:"planning",i:"📅",l:"Planning"},
+    {p:"defis",i:"🎮",l:"Défis"},{p:"objectifs",i:"🎯",l:"Objectifs"},{p:"notes",i:"📝",l:"Notes"},
+    {p:"roue",i:"🎡",l:"Roue"},{p:"question",i:"❓",l:"Questions"},{p:"quiz",i:"🧠",l:"Quiz"},
+    {p:"dismoi",i:"💬",l:"Dis-moi tout"},{p:"statut",i:"⚡",l:"Statut"},{p:"dates",i:"🎂",l:"Dates"},
+    {p:"nous",i:"💑",l:"Nous"},{p:"settings",i:"⚙️",l:"Réglages"}
+  ];
+  el.innerHTML=`
+    <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Accès rapide</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:22px">
+      ${shortcuts.map(s=>`<div onclick="goTo('${s.p}')" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 6px;cursor:pointer;text-align:center;transition:border-color .2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:22px">${s.i}</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:4px;font-weight:600">${s.l}</div>
+      </div>`).join("")}
+    </div>
+    <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Outils du couple</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
     ${PLUS_FEATURES.map(f=>`<div onclick="openPlusFeature('${f.id}')" style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;cursor:pointer;transition:border-color .2s" onmouseover="this.style.borderColor='${f.color}'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="font-size:30px;margin-bottom:6px">${f.icon}</div>
       <div style="font-size:13px;font-weight:700">${f.label}</div>
@@ -5585,5 +5802,233 @@ function addJoke(){const t=document.getElementById("joke-term")?.value.trim();if
 function delJoke(id){S.insideJokes=(S.insideJokes||[]).filter(x=>x.id!==id);dbSave("insideJokes");renderPlus();}
 </script>
 
+<script>
+// ════════════════════════════════════════════════════════════
+// CONTRÔLE TOTAL — personnalisation avancée
+// ════════════════════════════════════════════════════════════
+function hexToRgba(hex,a){
+  hex=(hex||"").replace("#","");
+  if(hex.length!==6)return `rgba(200,168,76,${a})`;
+  const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+// Applique TOUTES les personnalisations (appelé au démarrage et après chaque changement)
+function applyAllCustomizations(){
+  const root=document.documentElement;
+  // Couleurs perso
+  const cR=lsGet("color_raphy"), cM=lsGet("color_mehdi"), cG=lsGet("color_accent");
+  if(cR){root.style.setProperty("--rose",cR);root.style.setProperty("--rose-soft",hexToRgba(cR,.12));root.style.setProperty("--rose-border",hexToRgba(cR,.3));}
+  if(cM){root.style.setProperty("--blue",cM);root.style.setProperty("--blue-soft",hexToRgba(cM,.12));root.style.setProperty("--blue-border",hexToRgba(cM,.3));}
+  if(cG){root.style.setProperty("--gold",cG);root.style.setProperty("--gold-soft",hexToRgba(cG,.12));root.style.setProperty("--gold-border",hexToRgba(cG,.3));}
+  // Police
+  const font=lsGet("font_family");
+  if(font){
+    const map={defaut:"",arrondi:"'Comfortaa',cursive",classique:"Georgia,serif",moderne:"'Inter',sans-serif",manuscrit:"'Caveat',cursive"};
+    if(map[font])document.body.style.fontFamily=map[font];
+    else document.body.style.fontFamily="";
+  }
+  // Animations
+  if(lsGet("anim_off"))document.body.classList.add("no-anim");
+  else document.body.classList.remove("no-anim");
+  // Mode compact
+  if(lsGet("compact_mode"))document.body.classList.add("compact");
+  else document.body.classList.remove("compact");
+  // Visibilité des blocs accueil
+  applyHomeVisibility();
+}
+function applyHomeVisibility(){
+  const blocks=["presence","connexion","ritual","slots","weather","onthisday"];
+  blocks.forEach(b=>{
+    const el=document.getElementById("home-block-"+b);
+    if(el)el.style.display=lsGet("hide_"+b)?"none":"";
+  });
+}
+
+// ── Couleurs ──
+function setCoupleColor(who,val){lsSet("color_"+who,val);applyAllCustomizations();}
+function resetColors(){lsSet("color_raphy",null);lsSet("color_mehdi",null);lsSet("color_accent",null);location.reload();}
+
+// ── Police ──
+function setFontFamily(f){lsSet("font_family",f);applyAllCustomizations();updateFontBtns();toast("Police changée");}
+function updateFontBtns(){
+  const cur=lsGet("font_family")||"defaut";
+  document.querySelectorAll(".font-btn").forEach(b=>b.style.borderColor=b.getAttribute("data-font")===cur?"var(--gold)":"var(--border)");
+}
+
+// ── Toggles apparence ──
+function toggleAnim(on){lsSet("anim_off",!on);applyAllCustomizations();toast(on?"Animations activées":"Animations désactivées");}
+function toggleCompact(on){lsSet("compact_mode",on);applyAllCustomizations();toast(on?"Mode compact":"Mode aéré");}
+
+// ── Accueil personnalisable ──
+function toggleHomeBlock(block,show){lsSet("hide_"+block,!show);applyHomeVisibility();}
+
+// ── Notifications fines ──
+function toggleNotifType(type,on){lsSet("notif_"+type,on);}
+function saveQuietHours(){
+  const start=document.getElementById("quiet-start")?.value;
+  const end=document.getElementById("quiet-end")?.value;
+  lsSet("quiet_start",start||"");lsSet("quiet_end",end||"");
+  toast("Heures de silence enregistrées 🌙");
+}
+function isQuietNow(){
+  const s=lsGet("quiet_start"),e=lsGet("quiet_end");
+  if(!s||!e)return false;
+  const now=new Date();const cur=now.getHours()*60+now.getMinutes();
+  const [sh,sm]=s.split(":").map(Number);const [eh,em]=e.split(":").map(Number);
+  const start=sh*60+sm,end=eh*60+em;
+  if(start<end)return cur>=start&&cur<end;
+  return cur>=start||cur<end; // passe minuit
+}
+
+// ── Mahmoud : voix avancée + proactif + langue ──
+function setVoiceGender(g){lsSet("voice_gender",g);updateVoiceGenderBtns();toast("Voix : "+(g==="femme"?"féminine":g==="homme"?"masculine":"par défaut"));}
+function updateVoiceGenderBtns(){
+  const cur=lsGet("voice_gender")||"defaut";
+  document.querySelectorAll(".voice-g-btn").forEach(b=>b.style.borderColor=b.getAttribute("data-g")===cur?"var(--gold)":"var(--border)");
+}
+function setVoiceSpeed(v){lsSet("voice_speed",v);const el=document.getElementById("voice-speed-val");if(el)el.textContent=v+"×";}
+function setMahmoudLang(l){lsSet("mahmoud_lang",l);updateLangBtns();const labels={fr:"Français",arabe:"Arabe (dialecte)",mix:"Mélange FR + dialecte"};toast("Langue de Mahmoud : "+(labels[l]||l));}
+function updateLangBtns(){
+  const cur=lsGet("mahmoud_lang")||"fr";
+  document.querySelectorAll(".lang-btn").forEach(b=>b.style.borderColor=b.getAttribute("data-lang")===cur?"var(--gold)":"var(--border)");
+}
+function toggleProactif(on){lsSet("mahmoud_proactif",on);toast(on?"Mahmoud proactif activé 💬":"Désactivé");if(on)setTimeout(maybeProactiveMessage,2000);}
+
+// ── Données : import / stats / reset total ──
+function importData(){
+  const inp=document.createElement("input");inp.type="file";inp.accept=".json";
+  inp.onchange=e=>{
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{
+        const data=JSON.parse(ev.target.result);
+        if(!confirm("Restaurer ces données ? Les données actuelles seront remplacées."))return;
+        Object.keys(data).forEach(k=>{if(LS_KEYS.includes(k)){S[k]=data[k];dbSave(k);}});
+        toast("Données restaurées ✓");
+        setTimeout(()=>location.reload(),800);
+      }catch(err){toast("Fichier invalide");}
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+}
+function showStorageStats(){
+  let total=0;
+  for(let k in localStorage){if(localStorage.hasOwnProperty(k))total+=(localStorage[k].length+k.length);}
+  const kb=(total/1024).toFixed(1);
+  const msgs=(S.messages||[]).length;
+  const photos=(S.photos||[]).length;
+  alert(`📊 Stockage utilisé : ${kb} Ko\n\n💌 ${msgs} messages\n📸 ${photos} photos\n🎮 ${(S.defiHistory||[]).length} défis\n💬 ${(S.iaHistory||[]).length} messages Mahmoud\n\nTout est aussi sauvegardé sur Firebase ☁️`);
+}
+function resetTotal(){
+  if(!confirm("⚠️ TOUT réinitialiser ? Cette action efface absolument toutes les données du couple et est IRRÉVERSIBLE."))return;
+  if(!confirm("Es-tu vraiment sûr(e) ? Dernière chance. Tout sera perdu."))return;
+  LS_KEYS.forEach(k=>{
+    if(window._db)window._set(window._ref(window._db,"nous/"+k),null).catch(()=>{});
+  });
+  localStorage.clear();
+  toast("Réinitialisation totale...");
+  setTimeout(()=>location.reload(),1000);
+}
+
+// ── Premier jour de la semaine ──
+function setWeekStart(day){lsSet("week_start",day);updateWeekStartBtns();toast("Semaine commence le "+(day==="lundi"?"lundi":"dimanche"));if(S.currentPage==="planning")renderPlanning();}
+function updateWeekStartBtns(){
+  const cur=lsGet("week_start")||"lundi";
+  document.querySelectorAll(".week-btn").forEach(b=>b.style.borderColor=b.getAttribute("data-day")===cur?"var(--gold)":"var(--border)");
+}
+
+// ── Charger toutes les valeurs dans l'UI ──
+function loadAdvancedSettings(){
+  const sv=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=v;};
+  sv("color-raphy-input",lsGet("color_raphy")||"#E8637A");
+  sv("color-mehdi-input",lsGet("color_mehdi")||"#4A9EE8");
+  sv("color-accent-input",lsGet("color_accent")||"#C9A84C");
+  sv("quiet-start",lsGet("quiet_start")||"");
+  sv("quiet-end",lsGet("quiet_end")||"");
+  const sp=lsGet("voice_speed")||"1.05";sv("voice-speed",sp);const spv=document.getElementById("voice-speed-val");if(spv)spv.textContent=sp+"×";
+  // Toggles
+  const chk=(id,v)=>{const el=document.getElementById(id);if(el)el.checked=v;};
+  chk("anim-toggle",!lsGet("anim_off"));
+  chk("compact-toggle",!!lsGet("compact_mode"));
+  chk("proactif-toggle",!!lsGet("mahmoud_proactif"));
+  ["presence","connexion","ritual","slots","weather","onthisday"].forEach(b=>chk("hb-"+b,!lsGet("hide_"+b)));
+  ["motsdoux","defis","mahmoud","anniv","statut"].forEach(n=>chk("nt-"+n,lsGet("notif_"+n)!==false));
+  updateFontBtns();updateVoiceGenderBtns();updateLangBtns();updateWeekStartBtns();
+}
+
+// ── Mahmoud proactif (message spontané occasionnel) ──
+async function maybeProactiveMessage(){
+  if(!lsGet("mahmoud_proactif"))return;
+  if(isQuietNow())return;
+  const last=lsGet("last_proactive")||0;
+  // Max 1 message proactif toutes les 4h
+  if(Date.now()-last<4*3600000)return;
+  const key=lsGet("gemini_key")||GEMINI_KEY;if(!key)return;
+  lsSet("last_proactive",Date.now());
+  const reply=await callGemini(`${shortContext()}\nTu es Mahmoud. Envoie spontanément un petit message sympa au couple (une pensée, une question, une taquinerie légère, ou un rappel mignon selon le moment de la journée). Court, naturel, varié. EN FRANÇAIS.`,200);
+  if(reply){
+    if(!S.iaHistory)S.iaHistory=[];
+    S.iaHistory.push({role:"model",content:reply.trim(),ts:Date.now()});
+    dbSave("iaHistory");
+    addNotif("💬 Mahmoud t'a écrit");
+  }
+}
+</script>
+
+<script>
+// ════════════ PWA : Service Worker + Installation ════════════
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("sw.js").catch(e=>console.log("SW:",e));
+  });
+}
+let _deferredPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();_deferredPrompt=e;
+  const btn=document.getElementById("install-btn");if(btn)btn.style.display="block";
+});
+function installApp(){
+  if(!_deferredPrompt){
+    alert("Pour installer : ouvre le menu de ton navigateur (⋮ ou Partager) puis 'Ajouter à l'écran d'accueil' 📲");
+    return;
+  }
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(()=>{_deferredPrompt=null;const btn=document.getElementById("install-btn");if(btn)btn.style.display="none";});
+}
+window.addEventListener("appinstalled",()=>{const btn=document.getElementById("install-btn");if(btn)btn.style.display="none";});
+
+// ════════════ INDICATEUR HORS-LIGNE ════════════
+function updateOnlineStatus(){
+  let banner=document.getElementById("offline-banner");
+  if(!navigator.onLine){
+    if(!banner){
+      banner=document.createElement("div");banner.id="offline-banner";
+      banner.style.cssText="position:fixed;top:0;left:0;right:0;z-index:3000;background:#5A6070;color:#fff;text-align:center;padding:6px;font-size:12px;font-weight:600";
+      banner.textContent="📶 Hors-ligne — tes données sont sauvegardées, synchro à la reconnexion";
+      document.body.appendChild(banner);
+    }
+  } else if(banner){banner.remove();}
+}
+window.addEventListener("online",updateOnlineStatus);
+window.addEventListener("offline",updateOnlineStatus);
+
+// ════════════ RAPPEL DE SAUVEGARDE (tous les 30 jours) ════════════
+function checkBackupReminder(){
+  const last=lsGet("last_backup_reminder")||0;
+  const installed=lsGet("first_open")||Date.now();
+  if(!lsGet("first_open"))lsSet("first_open",installed);
+  // Rappel si jamais sauvegardé ET app utilisée depuis +30j, max 1 fois/30j
+  if(Date.now()-installed<30*86400000)return;
+  if(Date.now()-last<30*86400000)return;
+  lsSet("last_backup_reminder",Date.now());
+  setTimeout(()=>{
+    if(confirm("💾 Pense à sauvegarder vos souvenirs !\n\nÇa fait un moment. Veux-tu télécharger une sauvegarde de toutes vos données maintenant ? (Paramètres → Sauvegarde)")){
+      if(typeof exportAllData==="function")exportAllData();
+    }
+  },3000);
+}
+</script>
 </body>
 </html>
